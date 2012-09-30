@@ -1,0 +1,39 @@
+
+TODO:
+
+!!! + Make Cafe to return non-zero return status if the commands sequence has
+      terminated with errors. This is _very_ important, because this is the only
+      way to tell a production server to stop an update. Otherwise we'll result
+      with production sites with no Javascripts! This is BLOCKER!
+
+!!  + Check if all targets work correctly.
+!   ~ Check for race conditions in watcher and other file-related parts.
+!   + Write Confluence page about Cafe.
+
+!   ~ Describe dependencies between targets and get toposort or async.auto to
+      determine the right order for running targets.
+
+      Currently argv gets parsed into an object, while object keys
+      are not ordered. This can result in a wrong target order!
+
+      Alternatively we should parse argv into some orderable data structure.
+
+    + Distill and document internal target API, incl. error reporting and handling.
+    + Integrate event emitter, distill and document event API.
+    ~ Write tests.
+    ~ Make arguments concise, uniform, mnemonic.
+    + Flush stdout of reentrant comands like menu and watch and menu watch.
+    + Inter-targets interface
+
+    - Pre-processor for command-lines arguments and grammatics for a few
+      human-friendly languages (including LISP) to allow specifying command
+      sequences of arbitrary complexity, with predicates, loops etc.
+
+    - Finally, a full-featured AI :-)
+
+    - analyze options for bundle
+
+
+compile -t currently fails on emitter.emit
+
+bundle --cs_root=uaprom/cs --js_root=uaprom/public/js/ minify --src=uaprom/public/js/build/

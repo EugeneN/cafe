@@ -1,0 +1,15 @@
+{
+    "bundle": {
+        "bundle": {
+            "cs_root": "uaprom/cs",
+            "js_root": "uaprom/public/js/"
+        },
+        "global": {}
+    },
+    "asd": {
+        "global": {}
+    },
+    "mnu": {
+        "global": {}
+    }
+}
