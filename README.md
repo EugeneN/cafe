@@ -29,7 +29,7 @@ Cafe5 is going to be written in Clojure as an application description DSL librar
 
 #Installation
 
-    npm install -g cafe
+    npm install -g cafe4
 
 #Usage
 
