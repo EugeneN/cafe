@@ -38,7 +38,7 @@ resolve_deps = ({modules, app_root, recipe_deps, ctx}, resolve_deps_cb) ->
                             find_adaptor_cb err, undefined
 
                         else
-                            spec = 
+                            spec =
                                 name: module_name
                                 deps: module_deps
                                 adaptor: adaptor
@@ -54,7 +54,7 @@ resolve_deps = ({modules, app_root, recipe_deps, ctx}, resolve_deps_cb) ->
     if modules
         async.map modules, process_module, (err, found_modules_list) ->
             found_modules = {}
-            
+
             found_modules_list.map (mod_spec) ->
                 if mod_spec isnt undefined
                     found_modules[mod_spec.name] = mod_spec
@@ -88,8 +88,8 @@ toposort = (debug_info, modules) ->
                     have_no_dependencies.push m
 
     unless ordered_modules.length is modules_list.length
-        throw "Cyclic dependency found in #{debug_info.realm}/#{debug_info.bundle.name}"
-            #+ "#{(m.name for m in modules_list when m not in (i.name for i in ordered_modules)).join(', ')}"
+        throw "Cyclic dependency or unknown module found in #{debug_info.realm}/#{debug_info.bundle.name}: " \
+            + "#{(m.name for m in modules_list when m not in (i.name for i in ordered_modules)).join(', ')}"
 
     ordered_modules
 

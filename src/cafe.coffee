@@ -158,6 +158,11 @@ module.exports = ->
                 when 'exit_help'
                     EXIT_STATUS = EXIT_HELP
 
+                when 'bad_recipe'
+                    scream "#{results}"
+                    fb.scream "#{results}"
+                    EXIT_STATUS = EXIT_OTHER_ERROR
+
                 else
                     scream "Error encountered: #{error}"
                     whisper "#{error.stack}"

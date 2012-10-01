@@ -181,7 +181,7 @@ read_json_file.async = (filename, cb) ->
                 scream "Error parsing json file #{filename}: #{e}"
                 whisper "#{e.stack}"
                 cb e
-            
+
 
 trim = (s) -> s.replace /^\s+|\s+$/g, ''
 
@@ -220,7 +220,7 @@ is_file.async = (fn, cb) ->
 
 
 has_ext = (fn, ext) ->
-    re = new RegExp "#{ext}$", 'i'
+    re = new RegExp "\\.#{ext}$", 'i'
     !!fn.match re
 
 has_ext.async = (fn, ext, cb) ->

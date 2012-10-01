@@ -5,7 +5,7 @@ path = require 'path'
 {say, shout, scream, whisper} = (require '../lib/logger') "Adaptor/javascript>"
 async = require 'async'
 
-{JS_EXT, CB_SUCCESS} = require '../defs'
+{JS_JUST_EXT, CB_SUCCESS} = require '../defs'
 
 get_paths = (ctx) ->
     app_root = path.resolve ctx.own_args.app_root
@@ -20,12 +20,12 @@ module.exports = do ->
 
     match = (ctx) ->
         {source_fn} = get_paths ctx
-        (is_file source_fn) and (has_ext source_fn, JS_EXT)
+        (is_file source_fn) and (has_ext source_fn, JS_JUST_EXT)
 
     match.async = (ctx, cb) ->
         {source_fn} = get_paths ctx
-        async.parallel [((is_file_cb) -> is_file.async source_fn, is_file_cb), 
-                        ((is_file_cb) -> has_ext.async source_fn, JS_EXT, is_file_cb)],
+        async.parallel [((is_file_cb) -> is_file.async source_fn, is_file_cb),
+                        ((is_file_cb) -> has_ext.async source_fn, JS_JUST_EXT, is_file_cb)],
                         (err, res) ->
                             if not err and (and_ res...)
                                 cb CB_SUCCESS, true
