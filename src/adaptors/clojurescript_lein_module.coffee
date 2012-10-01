@@ -3,7 +3,7 @@ fs = require 'fs'
 path = require 'path'
 cs = require 'coffee-script'
 {exec} = require 'child_process'
-{say, shout, scream, whisper} = (require '../lib/logger') "Adaptor/Cakefile>"
+{say, shout, scream, whisper} = (require '../lib/logger') "Adaptor/Leinmodule>"
 {maybe_build, is_dir, is_file, has_ext, and_,
  get_mtime, newer, walk, newest, extend} = require '../lib/utils'
 async = require 'async'
