@@ -10,7 +10,7 @@
 
   exec = require('child_process').exec;
 
-  _ref = (require('../lib/logger'))("Adaptor/Cakefile>"), say = _ref.say, shout = _ref.shout, scream = _ref.scream, whisper = _ref.whisper;
+  _ref = (require('../lib/logger'))("Adaptor/Leinmodule>"), say = _ref.say, shout = _ref.shout, scream = _ref.scream, whisper = _ref.whisper;
 
   _ref1 = require('../lib/utils'), maybe_build = _ref1.maybe_build, is_dir = _ref1.is_dir, is_file = _ref1.is_file, has_ext = _ref1.has_ext, and_ = _ref1.and_, get_mtime = _ref1.get_mtime, newer = _ref1.newer, walk = _ref1.walk, newest = _ref1.newest, extend = _ref1.extend;
 
@@ -108,7 +108,7 @@
               }
               return cb(CB_SUCCESS, void 0);
             } else {
-              ctx.fb.say("Cake cafebuild " + mod_src + " brewed");
+              ctx.fb.say("" + (args.join(' ')) + " " + mod_src + " brewed");
               if (stdout) {
                 ctx.fb.say(("STDOUT: " + stdout).replace(/\n$/, ''));
               }

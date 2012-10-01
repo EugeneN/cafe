@@ -81,7 +81,7 @@ module.exports = do ->
                         cb CB_SUCCESS, undefined
 
                     else
-                        ctx.fb.say "Cake cafebuild #{mod_src} brewed"
+                        ctx.fb.say "#{args.join ' '} #{mod_src} brewed"
                         ctx.fb.say ("STDOUT: #{stdout}".replace /\n$/, '') if stdout
                         ctx.fb.say ("STDERR: #{stderr}".replace /\n$/, '') if stderr
                         cb CB_SUCCESS, target_full_fn
