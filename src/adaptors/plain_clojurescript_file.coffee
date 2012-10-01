@@ -4,7 +4,7 @@ path = require 'path'
 cs = require 'coffee-script'
 {exec} = require 'child_process'
 {is_file, has_ext, get_mtime, newer, and_} = require '../lib/utils'
-{say, shout, scream, whisper} = (require '../lib/logger') "Adaptor/livescript>"
+{say, shout, scream, whisper} = (require '../lib/logger') "Adaptor/clojurescript>"
 async = require 'async'
 
 {FILE_ENCODING, TMP_BUILD_DIR_SUFFIX, CLOJURESCRIPT_EXT, JS_EXT, CLOJURESCRIPT_BIN, CLJS_OPTS,
