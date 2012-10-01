@@ -12,7 +12,7 @@
 
   _ref = require('../lib/utils'), is_file = _ref.is_file, has_ext = _ref.has_ext, get_mtime = _ref.get_mtime, newer = _ref.newer, and_ = _ref.and_;
 
-  _ref1 = (require('../lib/logger'))("Adaptor/livescript>"), say = _ref1.say, shout = _ref1.shout, scream = _ref1.scream, whisper = _ref1.whisper;
+  _ref1 = (require('../lib/logger'))("Adaptor/clojurescript>"), say = _ref1.say, shout = _ref1.shout, scream = _ref1.scream, whisper = _ref1.whisper;
 
   async = require('async');
 

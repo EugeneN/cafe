@@ -107,6 +107,10 @@ default_config =
     CLOJURESCRIPT_BIN: 'cljsc'
     CLOJURESCRIPT_EXT: 'cljs'
 
+    LEIN_BIN: 'lein'
+    LEIN_ARGS: 'cljsbuild once'
+    PROJECT_CLJ: 'project.clj'
+
     LIVESCRIPT_BIN: 'livescript'
     LIVESCRIPT_EXT: 'ls'
 
