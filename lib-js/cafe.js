@@ -151,6 +151,16 @@
           case 'exit_help':
             EXIT_STATUS = EXIT_HELP;
             break;
+          case 'bad_recipe':
+            scream("" + results);
+            fb.scream("" + results);
+            EXIT_STATUS = EXIT_OTHER_ERROR;
+            break;
+          case 'bad_ctx':
+            scream("" + results);
+            fb.scream("" + results);
+            EXIT_STATUS = EXIT_OTHER_ERROR;
+            break;
           default:
             scream("Error encountered: " + error);
             whisper("" + error.stack);

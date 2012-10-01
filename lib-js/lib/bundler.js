@@ -87,7 +87,7 @@
   };
 
   toposort = function(debug_info, modules) {
-    var cur_module, dep, have_no_dependencies, m, modules_list, modules_without_deps, name, ordered_modules, pos, _i, _len;
+    var cur_module, dep, have_no_dependencies, i, m, modules_list, modules_without_deps, name, ordered_modules, pos, _i, _len;
     modules_list = (function() {
       var _results;
       _results = [];
@@ -135,7 +135,25 @@
       }
     }
     if (ordered_modules.length !== modules_list.length) {
-      throw "Cyclic dependency found in " + debug_info.realm + "/" + debug_info.bundle.name;
+      throw ("Cyclic dependency or unknown module found in " + debug_info.realm + "/" + debug_info.bundle.name + ": ") + ("" + (((function() {
+        var _j, _len1, _results;
+        _results = [];
+        for (_j = 0, _len1 = modules_list.length; _j < _len1; _j++) {
+          m = modules_list[_j];
+          if (__indexOf.call((function() {
+            var _k, _len2, _results1;
+            _results1 = [];
+            for (_k = 0, _len2 = ordered_modules.length; _k < _len2; _k++) {
+              i = ordered_modules[_k];
+              _results1.push(i.name);
+            }
+            return _results1;
+          })(), m) < 0) {
+            _results.push(m.name);
+          }
+        }
+        return _results;
+      })()).join(', ')));
     }
     return ordered_modules;
   };

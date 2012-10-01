@@ -7,8 +7,8 @@ cs = require 'coffee-script'
 {say, shout, scream, whisper} = (require '../lib/logger') "Adaptor/clojurescript>"
 async = require 'async'
 
-{FILE_ENCODING, TMP_BUILD_DIR_SUFFIX, CLOJURESCRIPT_EXT, JS_EXT, CLOJURESCRIPT_BIN, CLJS_OPTS,
- CB_SUCCESS} = require '../defs'
+{FILE_ENCODING, TMP_BUILD_DIR_SUFFIX, CLOJURESCRIPT_EXT, JS_EXT, 
+ CLOJURESCRIPT_BIN, CLOJURESCRIPT_OPTS, CB_SUCCESS} = require '../defs'
 
 
 get_target_fn = (app_root, module_name) ->
@@ -19,11 +19,15 @@ get_target_fn = (app_root, module_name) ->
 get_paths = (ctx) ->
     app_root = path.resolve ctx.own_args.app_root
     module_name = ctx.own_args.mod_name
+    lib_dir = path.resolve app_root, TMP_BUILD_DIR_SUFFIX
+
 
     {
         source_fn: path.resolve app_root, module_name
         target_fn: (get_target_fn (path.resolve ctx.own_args.app_root),
                                   (path.basename module_name))
+        lib_dir: lib_dir
+        goog_lib: path.resolve lib_dir, 'cljs/core.js'
     }
 
 module.exports = do ->
@@ -56,11 +60,15 @@ module.exports = do ->
             cb CB_SUCCESS, (group_deps or [])
 
         harvest = (cb) ->
-            {source_fn, target_fn} = get_paths ctx
+            {source_fn, target_fn, lib_dir, goog_lib} = get_paths ctx
+
+            CLOJURESCRIPT_OPTS = """{:output-dir "#{lib_dir}" :output-to "#{target_fn}"}"""
+
+            cmd = "#{CLOJURESCRIPT_BIN} #{source_fn} '#{CLOJURESCRIPT_OPTS}'"
 
             if ctx.own_args.f or newer source_fn, target_fn
-                exec "#{CLOJURESCRIPT_BIN} #{source_fn} #{CLJS_OPTS} > #{target_fn}", (err, stdout, stderr) ->
-                    if err
+                ctx.fb.shout "Going to run: " + cmd
+                exec cmd, (err, stdout, stderr) -> if err
                         ctx.fb.scream "Error compiling #{source_fn}: #{err}"
                         ctx.fb.scream "STDOUT: #{stdout}" if stdout
                         ctx.fb.scream "STDERR: #{stderr}" if stderr
@@ -70,11 +78,11 @@ module.exports = do ->
                         ctx.fb.say "ClojureScript #{source_fn} brewed"
                         ctx.fb.say "STDOUT: #{stdout}" if stdout
                         ctx.fb.say "STDERR: #{stderr}" if stderr
-                        cb CB_SUCCESS, target_fn
+                        cb CB_SUCCESS, [goog_lib, target_fn]
 
             else
                 ctx.fb.shout "ClojureScript #{source_fn} still hot"
-                cb CB_SUCCESS, target_fn, "COMPILE_MAYBE_SKIPPED"
+                cb CB_SUCCESS, [goog_lib, target_fn], "COMPILE_MAYBE_SKIPPED"
 
         last_modified = (cb) ->
             {source_fn} = get_paths ctx

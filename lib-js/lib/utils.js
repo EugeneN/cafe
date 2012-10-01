@@ -298,7 +298,7 @@
 
   has_ext = function(fn, ext) {
     var re;
-    re = new RegExp("" + ext + "$", 'i');
+    re = new RegExp("\\." + ext + "$", 'i');
     return !!fn.match(re);
   };
 

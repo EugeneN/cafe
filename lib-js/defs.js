@@ -70,7 +70,7 @@
     BUNDLE_ITEM_HDR: function(file_path) {
       return "/* ZB:" + (path.basename(file_path)) + " */\n";
     },
-    BUNDLE_ITEM_FTR: ';',
+    BUNDLE_ITEM_FTR: ';\n',
     TARGET_PATH: TARGET_PATH,
     ADAPTORS_PATH: ADAPTORS_PATH,
     ADAPTORS_LIB: ADAPTORS_LIB,
@@ -99,9 +99,11 @@
     TELNET_UI_PORT: 8888,
     SUB_CAFE: SUB_CAFE,
     LISPY_BIN: 'lispy',
-    LISPY_EXT: '.lspy',
+    LISPY_EXT: 'lspy',
+    CLOJURESCRIPT_BIN: 'cljsc',
+    CLOJURESCRIPT_EXT: 'cljs',
     LIVESCRIPT_BIN: 'livescript',
-    LIVESCRIPT_EXT: '.ls',
+    LIVESCRIPT_EXT: 'ls',
     CAKE_BIN: 'cake',
     CAKEFILE: 'Cakefile',
     CAKE_TARGET: 'cafebuild',
@@ -113,7 +115,9 @@
     IAC_WONT_ECHO: [0xff, 0xfc, 0x1],
     CB_SUCCESS: null,
     UI_CMD_PREFIX: '/',
-    CS_RUN_CONCURRENT: true
+    CS_RUN_CONCURRENT: true,
+    CLOJURESCRIPT_OPTS: '{:optimizations :simple :pretty-print true}',
+    JS_JUST_EXT: 'js'
   };
 
   module.exports = extend({}, default_config, user_config);

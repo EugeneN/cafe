@@ -60,7 +60,7 @@ default_config =
     EOL: '\n'
     BUNDLE_HDR: "/* Cafe #{VERSION} #{new Date} */\n"
     BUNDLE_ITEM_HDR: (file_path) -> "/* ZB:#{path.basename file_path} */\n"
-    BUNDLE_ITEM_FTR: ';'
+    BUNDLE_ITEM_FTR: ';\n'
 
 
     TARGET_PATH: TARGET_PATH
@@ -102,9 +102,13 @@ default_config =
     SUB_CAFE: SUB_CAFE
 
     LISPY_BIN: 'lispy'
-    LISPY_EXT: '.lspy'
+    LISPY_EXT: 'lspy'
+
+    CLOJURESCRIPT_BIN: 'cljsc'
+    CLOJURESCRIPT_EXT: 'cljs'
+
     LIVESCRIPT_BIN: 'livescript'
-    LIVESCRIPT_EXT: '.ls'
+    LIVESCRIPT_EXT: 'ls'
 
     CAKE_BIN: 'cake'
     CAKEFILE: 'Cakefile'
@@ -123,5 +127,8 @@ default_config =
     UI_CMD_PREFIX: '/'
 
     CS_RUN_CONCURRENT: true
+
+    CLOJURESCRIPT_OPTS: '{:optimizations :simple :pretty-print true}'
+    JS_JUST_EXT: 'js'
 
 module.exports = extend {}, default_config, user_config
