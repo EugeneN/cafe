@@ -43,7 +43,7 @@ module.exports = do ->
 
     match.async = (ctx, cb) ->
         {mod_src, project_clj} = get_paths ctx
-        async.parallel [((is_dir_cb) -> is_dir.async mod_src, is_dir_cb), 
+        async.parallel [((is_dir_cb) -> is_dir.async mod_src, is_dir_cb),
                         ((is_file_cb) -> is_file.async project_clj, is_file_cb)],
                         (err, res) ->
                             if not err and (and_ res...)
