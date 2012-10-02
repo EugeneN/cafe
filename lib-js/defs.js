@@ -74,7 +74,7 @@
     TARGET_PATH: TARGET_PATH,
     ADAPTORS_PATH: ADAPTORS_PATH,
     ADAPTORS_LIB: ADAPTORS_LIB,
-    WATCH_FN_PATTERN: /^[^\.].+\.coffee$|^[^\.].+\.json$|^[^\.].+\.eco|^[^\.].+\.js$/i,
+    WATCH_FN_PATTERN: /^[^\.].+\.coffee$|^[^\.].+\.json$|^[^\.].+\.eco|^[^\.].+\.js$|^[^\.].+\.cljs$/i,
     RECIPE_EXT: '.json',
     RECIPE: "recipe.json",
     BUILD_DEPS_FN: 'build_deps.json',
