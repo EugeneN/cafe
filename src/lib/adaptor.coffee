@@ -8,7 +8,7 @@ path = require 'path'
 module.exports = ->
     adaptors_names = get_plugins ADAPTORS_PATH
 
-    adaptors = adaptors_names.map (a_name) ->
+    adaptors_names.map (a_name) ->
         try
             require path.join ADAPTORS_LIB, a_name
         catch e
