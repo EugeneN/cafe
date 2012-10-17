@@ -11,9 +11,9 @@
   _ref2 = require('../defs'), ADAPTORS_PATH = _ref2.ADAPTORS_PATH, ADAPTORS_LIB = _ref2.ADAPTORS_LIB;
 
   module.exports = function() {
-    var adaptors, adaptors_names;
+    var adaptors_names;
     adaptors_names = get_plugins(ADAPTORS_PATH);
-    return adaptors = adaptors_names.map(function(a_name) {
+    return adaptors_names.map(function(a_name) {
       try {
         return require(path.join(ADAPTORS_LIB, a_name));
       } catch (e) {

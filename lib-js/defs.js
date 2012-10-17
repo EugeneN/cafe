@@ -107,6 +107,7 @@
     PROJECT_CLJ: 'project.clj',
     LIVESCRIPT_BIN: 'livescript',
     LIVESCRIPT_EXT: 'ls',
+    COFFEESCRIPT_EXT: 'coffee',
     CAKE_BIN: 'cake',
     CAKEFILE: 'Cakefile',
     CAKE_TARGET: 'cafebuild',
