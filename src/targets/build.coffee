@@ -66,7 +66,7 @@ async = require 'async'
  RECIPE_API_LEVEL} = require '../defs'
 
 
-get_build_dir = (build_root) -> path.resolve path.join build_root, TMP_BUILD_DIR_SUFFIX
+get_tmp_build_dir = (build_root) -> path.resolve path.join build_root, TMP_BUILD_DIR_SUFFIX
 
 get_recipe = (recipe_path, level=0) ->
     if level > 3
@@ -122,6 +122,10 @@ check_ctx = (ctx, cb) ->
 get_ctx_recipe = (ctx, ctx_is_valid, cb) ->
     unless ctx_is_valid
         return cb 'bad_ctx'
+
+    tmp_build_dir = get_tmp_build_dir ctx.own_args.app_root
+    unless is_dir tmp_build_dir
+        fs.mkdirSync tmp_build_dir
 
     recipe_path = path.resolve ctx.own_args.app_root, (ctx.own_args.formula or RECIPE)
     recipe = get_recipe recipe_path
@@ -218,7 +222,7 @@ build_bundles = (ctx, bundles, recipe, realm, filtered_bundles, build_bundles_cb
                         global:
                             debug: true
                         minify:
-                            src: path.join (get_build_dir ctx.own_args.build_root), realm
+                            src: path.join (get_tmp_build_dir ctx.own_args.build_root), realm
                             pattern: bundles[index].name
 
                     run_target 'minify', args, ctx, post_build_bundle_cb
@@ -232,7 +236,7 @@ build_bundles = (ctx, bundles, recipe, realm, filtered_bundles, build_bundles_cb
             force_compile: force_compile
             force_bundle: force_bundle
             sorted_modules_list: filtered_bundles[index]
-            build_root: get_build_dir ctx.own_args.build_root
+            build_root: get_tmp_build_dir ctx.own_args.build_root
             ctx: ctx
             cb: build_bundle_cb
         })
@@ -286,7 +290,7 @@ process_realms = (ctx, recipe, cb) ->
                             not_changed).reduce (a, b) -> a and b
 
             unless no_changes
-                fn = path.resolve (get_build_dir ctx.own_args.build_root), BUILD_DEPS_FN
+                fn = path.resolve (get_tmp_build_dir ctx.own_args.build_root), BUILD_DEPS_FN
                 write_build_deps_file ctx, fn, result, cb
 
             else

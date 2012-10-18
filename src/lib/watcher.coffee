@@ -9,8 +9,10 @@ watch = require 'watch'
 
 
 SEP = '/'
-{WATCH_FN_PATTERN, SUB_CAFE} = require '../defs'
+{WATCH_FN_PATTERN, SUB_CAFE, THRESHOLD_INTERVAL} = require '../defs'
 
+THRESHOLD_QUEUE_ACTIVE = false
+THRESHOLD_QUEUE_EMPTY = true
 
 build_cmd = (full_args, build_path) ->
     ###
@@ -53,7 +55,7 @@ build_cmd = (full_args, build_path) ->
 
 build = (ctx, build_cmd_gen, build_root) ->
     cmd_args = build_cmd_gen build_root
-    opts = 
+    opts =
         env: process.env
         cwd: process.env.PWD
 
@@ -86,12 +88,27 @@ path_matches = (paths, s) ->
 
 module.exports =
     watch: (ctx) ->
-        modules = [ctx.watch_root]
+        modules = [path.resolve ctx.watch_root]
         builder = build.partial ctx, build_cmd.partial ctx.orig_ctx.full_args
 
         # for module_root in modules
         modules.map (module_root) ->
-            builder module_root
+
+            check_queue = ->
+                unless THRESHOLD_QUEUE_EMPTY
+                    do_build()
+                else
+                    THRESHOLD_QUEUE_ACTIVE = false
+
+            do_build = ->
+                setTimeout check_queue, THRESHOLD_INTERVAL
+
+                THRESHOLD_QUEUE_ACTIVE = true
+                THRESHOLD_QUEUE_EMPTY = true
+
+                builder module_root
+
+            do_build()
 
             skip = if ctx.orig_ctx.own_args.skip
                 if is_array ctx.orig_ctx.own_args.skip
@@ -102,23 +119,21 @@ module.exports =
             else
                 undefined
 
-            watch.watchTree(
-                module_root
-
-                { ignoreDotFiles: true }
-
+            change_handler =
                 (file, curr, prev) =>
                     unless (skip and (path_matches skip, file))
                         fn = path.basename file
                         if WATCH_FN_PATTERN.test fn
                             if curr and (curr.nlink is 0 or +curr.mtime isnt +prev?.mtime)
-                                ctx.fb.say "Coffee #{file} is cold. Preparing new..."
+                                if THRESHOLD_QUEUE_ACTIVE
+                                    shout "#{file} has been changed, but skipping brewing due to threshold limit"
+                                    THRESHOLD_QUEUE_EMPTY = false
 
-                                builder (_get_build_dir ctx.watch_root, file)
+                                else
+                                    say "Coffee #{file} is cold. Preparing new..."
+                                    do_build()
 
-                                # TODO: implement tests build.
-                                #@build_tests(@_get_build_dir(file))
-            )
+            ctx.fb.scream module_root
+            watch.watchTree module_root, {ignoreDotFiles: true}, change_handler
 
         ctx.fb.say "Started growing Coffee on the plantation '#{ctx.watch_root}'"
-

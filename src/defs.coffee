@@ -137,4 +137,6 @@ default_config =
     CLOJURESCRIPT_OPTS: '{:optimizations :simple :pretty-print true}'
     JS_JUST_EXT: 'js'
 
+    THRESHOLD_INTERVAL: 3000 # ms
+
 module.exports = extend {}, default_config, user_config

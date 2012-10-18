@@ -121,7 +121,8 @@
     UI_CMD_PREFIX: '/',
     CS_RUN_CONCURRENT: true,
     CLOJURESCRIPT_OPTS: '{:optimizations :simple :pretty-print true}',
-    JS_JUST_EXT: 'js'
+    JS_JUST_EXT: 'js',
+    THRESHOLD_INTERVAL: 3000
   };
 
   module.exports = extend({}, default_config, user_config);
