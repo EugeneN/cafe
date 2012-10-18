@@ -1,7 +1,7 @@
 {
   "name": "cafe",
   "description": "Client-side applications build tool",
-  "version": "0.0.4",
+  "version": "0.0.6",
   "author": "E.Naumenko, A.Mostovenko, B.Larin",
   "repository": {
     "type" : "mercurial",
