@@ -24,6 +24,7 @@ help = [
 
 fs = require 'fs'
 path = require 'path'
+async = require 'async'
 
 {is_file} = require '../lib/utils'
 get_adaptors = require '../lib/adaptor'
@@ -32,7 +33,6 @@ get_adaptors = require '../lib/adaptor'
 
 
 compile = (ctx, cb) ->
-    throw 'zzz111'
     unless (ctx.own_args.app_root and ctx.own_args.mod_name) or ctx.own_args.src
         scream "app_root/mod_name or src arguments missing"
         return cb 'ctx_error'
@@ -40,19 +40,27 @@ compile = (ctx, cb) ->
     app_root = ctx.own_args.app_root
     mod_name = ctx.own_args.mod_name
 
-    do_it_factory = (adaptor_factory) ->
+    do_it_factory = (adaptor_factory, mapper_cb) ->
         (err, matches) ->
             if not err and matches
-                ctx.fb.shout "adaptor_factory match #{adaptor_factory}"
-                (adaptor_factory.make_adaptor ctx).harvest cb
+                mapper_cb (adaptor_factory.make_adaptor ctx)
+                
             else
-                ctx.fb.scream "No adaptor found to compile module #{app_root} % #{mod_name}"
-                cb 'adaptor_error'
+                mapper_cb undefined
 
-    (get_adaptors()).map (adaptor_factory) ->
-        throw 'zzz'
-        scream '>>>>!!!!', adaptor_factory
-        adaptor_factory.match.async ctx, (do_it_factory adaptor_factory)
+    mapper = (adaptor_factory, mapper_cb) ->
+        adaptor_factory.match.async ctx, (do_it_factory adaptor_factory, mapper_cb)
+
+    done = (results...) ->
+        adaptr = (results.filter (x) -> x isnt undefined)[0]
+
+        if adaptr
+            adaptr.harvest cb
+        else
+            ctx.fb.scream "No adaptor found" # TODO add module name here
+            cb 'adaptor_error'
+
+    async.map get_adaptors(), mapper, done
 
 
 module.exports = make_target "compile", compile, help

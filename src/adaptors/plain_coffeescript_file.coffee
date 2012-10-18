@@ -13,7 +13,8 @@ cs = require 'coffee-script'
 {say, shout, scream, whisper} = (require '../lib/logger') "Adaptor/coffee>"
 async = require 'async'
 
-{FILE_ENCODING, TMP_BUILD_DIR_SUFFIX, CS_EXT, JS_EXT, CB_SUCCESS} = require '../defs'
+{FILE_ENCODING, TMP_BUILD_DIR_SUFFIX, CS_EXT, JS_EXT, CB_SUCCESS, 
+ COFFEESCRIPT_EXT} = require '../defs'
 
 
 get_target_fn = (app_root, module_name) ->
@@ -26,7 +27,7 @@ get_paths = (ctx) ->
     app_root = path.resolve ctx.own_args.app_root
     module_name = ctx.own_args.mod_name
 
-    src = ctx.own_args.src or (path.resolve app_root, module_name)
+    src = path.resolve (ctx.own_args.src or (path.resolve app_root, module_name))
 
     target_fn = if ctx.own_args.js_path
         get_result_filename src, ctx.own_args.js_path, CS_EXT, JS_EXT
@@ -43,12 +44,13 @@ module.exports = do ->
 
     match = (ctx) ->
         {source_fn} = get_paths ctx
-        (is_file source_fn) and (has_ext source_fn, CS_EXT)
+        (is_file source_fn) and (has_ext source_fn, COFFEESCRIPT_EXT)
 
     match.async = (ctx, cb) ->
         {source_fn} = get_paths ctx
+        
         async.parallel [((is_file_cb) -> is_file.async source_fn, is_file_cb),
-                        ((is_file_cb) -> has_ext.async source_fn, CS_EXT, is_file_cb)],
+                        ((has_ext_cb) -> has_ext.async source_fn, COFFEESCRIPT_EXT, has_ext_cb)],
                         (err, res) ->
                             if not err and (and_ res...)
                                 cb CB_SUCCESS, true

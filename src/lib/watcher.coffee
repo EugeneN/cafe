@@ -33,10 +33,7 @@ build_cmd = (full_args, build_path) ->
         if val is true
             arg1(arg)
         else
-            if command is "compile" and arg is 'src'
-                arg2(arg, build_path)
-            else
-                arg2(arg, val)
+            arg2(arg, val)
 
     # we don't want logo to be printed the second time
     cmdline = ['--nologo', '--child']
@@ -56,8 +53,11 @@ build_cmd = (full_args, build_path) ->
 
 build = (ctx, build_cmd_gen, build_root) ->
     cmd_args = build_cmd_gen build_root
+    opts = 
+        env: process.env
+        cwd: process.env.PWD
 
-    child = spawn SUB_CAFE, cmd_args #, {silent: true}
+    child = spawn SUB_CAFE, cmd_args, opts
 
     child.on 'message', (m) -> ctx.fb.murmur m
 

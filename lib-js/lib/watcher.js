@@ -46,11 +46,7 @@
       if (val === true) {
         return arg1(arg);
       } else {
-        if (command === "compile" && arg === 'src') {
-          return arg2(arg, build_path);
-        } else {
-          return arg2(arg, val);
-        }
+        return arg2(arg, val);
       }
     };
     cmdline = ['--nologo', '--child'];
@@ -74,9 +70,13 @@
   };
 
   build = function(ctx, build_cmd_gen, build_root) {
-    var child, cmd_args;
+    var child, cmd_args, opts;
     cmd_args = build_cmd_gen(build_root);
-    child = spawn(SUB_CAFE, cmd_args);
+    opts = {
+      env: process.env,
+      cwd: process.env.PWD
+    };
+    child = spawn(SUB_CAFE, cmd_args, opts);
     child.on('message', function(m) {
       return ctx.fb.murmur(m);
     });
