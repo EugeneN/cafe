@@ -87,7 +87,7 @@ cook_tea = (current_ctx, my_menu, cb) ->
 cook_menu = (current_ctx, my_menu, cb) ->
     cmd_args = build_cmd current_ctx, my_menu
 
-    current_ctx.fb.say "Repalying command sequence `#{cmd_args.join(" ")}`"
+    current_ctx.fb.say "Replaying command sequence `#{cmd_args.join(" ")}`"
 
     child = spawn SUB_CAFE, cmd_args #, {silent: true}
 
