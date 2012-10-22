@@ -2,6 +2,7 @@ fs = require 'fs'
 path = require 'path'
 async = require 'async'
 watch = require 'watch'
+chokidar = require 'chokidar'
 {fork, spawn} = require 'child_process'
 
 {say, shout, scream, whisper} = (require './logger') "Watcher>"
@@ -90,6 +91,7 @@ module.exports =
     watch: (ctx) ->
         modules = [path.resolve ctx.watch_root]
         builder = build.partial ctx, build_cmd.partial ctx.orig_ctx.full_args
+        watcher = null
 
         # for module_root in modules
         modules.map (module_root) ->
@@ -120,20 +122,33 @@ module.exports =
                 undefined
 
             change_handler =
-                (file, curr, prev) =>
+                (file) =>
                     unless (skip and (path_matches skip, file))
                         fn = path.basename file
                         if WATCH_FN_PATTERN.test fn
-                            if curr and (curr.nlink is 0 or +curr.mtime isnt +prev?.mtime)
-                                if THRESHOLD_QUEUE_ACTIVE
-                                    shout "#{file} has been changed, but skipping brewing due to threshold limit"
-                                    THRESHOLD_QUEUE_EMPTY = false
+                            if THRESHOLD_QUEUE_ACTIVE
+                                shout "#{file} has been changed, but skipping brewing due to threshold limit"
+                                THRESHOLD_QUEUE_EMPTY = false
 
-                                else
-                                    say "Coffee #{file} is cold. Preparing new..."
-                                    do_build()
+                            else
+                                say "Coffee #{file} is cold. Preparing new..."
+                                do_build()
 
             ctx.fb.scream module_root
-            watch.watchTree module_root, {ignoreDotFiles: true}, change_handler
+
+            unless watcher
+                watcher = chokidar.watch module_root, {ignored: /^\./, persistent: true}
+                # TODO: deal with add event. for now if uncument it will always fire add event on root module folder.
+                # provide unlink and add events.
+                #watcher.on 'add', change_handler
+                watcher.on 'change', change_handler
+                watcher.on 'error', (error) -> ctx.fb.scream "watcher encauntered an error #{error}"
+
+            else
+                watcher.add module_root
+
+
+                
+                #watch.watchTree module_root, {ignoreDotFiles: true}, change_handler
 
         ctx.fb.say "Started growing Coffee on the plantation '#{ctx.watch_root}'"

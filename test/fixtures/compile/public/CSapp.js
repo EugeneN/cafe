@@ -63,6 +63,156 @@
   require('spine/lib/tmpl');
 
 }).call(this);
+}, "PAutocomplete": function(exports, require, module) {(function() {
+  var $, DEFAULT_DELAY, DEFAULT_ITEMS_SELECTOR, DEFAULT_MIN_CHARS, EVENT_DROPDOWN_ITEM_HIGHLIGHT, EVENT_DROPDOWN_ITEM_SELECT, EVENT_DROPDOWN_POPUP_SHOW, EVENT_INPUT_ITEM_SELECT, EVENT_ITEM_SELECTED, EVENT_LETTER_ENTERED, EVENT_REQUEST_SUGGESTIONS, PAutocompleteController, PAutocompleteDropdownController, PAutocompleteInputController, Spine, _ref, _ref1,
+    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
+    __hasProp = {}.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+  Spine = require('spine');
+
+  $ = Spine.$;
+
+  _ref = require('controllers/PAutocompleteDropdownController'), PAutocompleteDropdownController = _ref[0], EVENT_DROPDOWN_ITEM_SELECT = _ref[1], EVENT_DROPDOWN_ITEM_HIGHLIGHT = _ref[2], EVENT_DROPDOWN_POPUP_SHOW = _ref[3];
+
+  _ref1 = require('controllers/PAutocompleteInputController'), PAutocompleteInputController = _ref1[0], EVENT_INPUT_ITEM_SELECT = _ref1[1], EVENT_REQUEST_SUGGESTIONS = _ref1[2], EVENT_LETTER_ENTERED = _ref1[3];
+
+  DEFAULT_DELAY = 300;
+
+  DEFAULT_MIN_CHARS = 3;
+
+  DEFAULT_ITEMS_SELECTOR = '.item';
+
+  EVENT_ITEM_SELECTED = 'PA.item_selected';
+
+  PAutocompleteController = (function(_super) {
+
+    __extends(PAutocompleteController, _super);
+
+    function PAutocompleteController(options) {
+      this.process_suggest = __bind(this.process_suggest, this);
+
+      var _this = this;
+      PAutocompleteController.__super__.constructor.apply(this, arguments);
+      if (!('input_selector' in options)) {
+        throw 'input_selector param is missing';
+      }
+      if (!('url' in options)) {
+        throw 'url param is missing';
+      }
+      if (!('template' in options)) {
+        throw 'template param is missing';
+      }
+      if (!('popup_selector' in options)) {
+        throw 'poup_selector param is missing';
+      }
+      if (!('delay' in options)) {
+        options.delay = DEFAULT_DELAY;
+      }
+      if (!('min_input_chars' in options)) {
+        options.min_input_chars = DEFAULT_MIN_CHARS;
+      }
+      if (!('items_selector' in options)) {
+        options.items_selector = DEFAULT_ITEMS_SELECTOR;
+      }
+      if (options.selected_item_handler) {
+        this.selected = options.selected_item_handler;
+      }
+      this.build_suggest_params_handler = options.build_suggest_params_handler || this._get_default_suggest_params;
+      if ('form_id' in options) {
+        this.form_id = options.form_id;
+      }
+      this.suggest_url = options.url;
+      this._dropdown = new PAutocompleteDropdownController({
+        active_item_class: options.active_item_class,
+        popup_selector: options.popup_selector,
+        input_selector: options.input_selector,
+        item_list_selector: options.items_selector,
+        template: options.template
+      });
+      this._input = new PAutocompleteInputController({
+        el: $(options.input_selector),
+        suggest_url: options.url,
+        dropdown: this._dropdown,
+        min_input_chars: options.min_input_chars,
+        delay: options.delay
+      });
+      this._input.bind(EVENT_REQUEST_SUGGESTIONS, this.process_suggest);
+      this._input.bind(EVENT_INPUT_ITEM_SELECT, function(item) {
+        return _this.trigger(EVENT_ITEM_SELECTED, item);
+      });
+      this._dropdown.bind(EVENT_DROPDOWN_ITEM_HIGHLIGHT, function(item) {
+        return _this._input.el.val(item);
+      });
+      this._dropdown.bind(EVENT_DROPDOWN_ITEM_SELECT, function(item) {
+        return _this.trigger(EVENT_ITEM_SELECTED, item);
+      });
+      if (this.selected) {
+        this.bind(EVENT_ITEM_SELECTED, this.selected);
+      }
+      this.process_highlight();
+    }
+
+    PAutocompleteController.prototype.on_item_selected = function(handler) {
+      return this.bind(EVENT_ITEM_SELECTED, handler);
+    };
+
+    PAutocompleteController.prototype.process_suggest = function() {
+      var _this = this;
+      if (this.xhr) {
+        this.xhr.abort();
+      }
+      return this.xhr = $.ajax({
+        url: this.suggest_url,
+        data: this.build_suggest_params_handler(),
+        success: function(data) {
+          return _this._input.process_suggest_items(data);
+        },
+        error: function(xhr, textStatus, err) {
+          return _this.log({
+            textStatus: textStatus,
+            error: err
+          });
+        }
+      });
+    };
+
+    PAutocompleteController.prototype.process_highlight = function() {
+      var make_match_bold,
+        _this = this;
+      make_match_bold = function() {
+        var item, j_item, match, patt, _i, _len, _ref2, _results;
+        if (_this._input.el.val() === "") {
+          return;
+        }
+        patt = new RegExp(_this._input.el.val(), "ig");
+        _ref2 = _this._dropdown.items_list();
+        _results = [];
+        for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
+          item = _ref2[_i];
+          j_item = $(item);
+          match = j_item.text().match(patt);
+          _results.push(j_item.html(j_item.text().replace(patt, "<strong>" + match + "</strong>")));
+        }
+        return _results;
+      };
+      this._dropdown.bind(EVENT_DROPDOWN_POPUP_SHOW, make_match_bold);
+      return this._input.bind(EVENT_LETTER_ENTERED, make_match_bold);
+    };
+
+    PAutocompleteController.prototype._get_default_suggest_params = function() {
+      return {
+        'term': this._input.el.val()
+      };
+    };
+
+    return PAutocompleteController;
+
+  })(Spine.Controller);
+
+  module.exports = PAutocompleteController;
+
+}).call(this);
 }, "controllers/PAutocompleteDropdownController": function(exports, require, module) {(function() {
   var $, DEFAULT_ACTIVE_CLASS, EVENT_DROPDOWN_ITEM_DEACTIVATE, EVENT_DROPDOWN_ITEM_HIGHLIGHT, EVENT_DROPDOWN_ITEM_SELECT, EVENT_DROPDOWN_POPUP_SHOW, PAutocompleteDropdownController, Spine,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
@@ -409,156 +559,6 @@
   })(Spine.Controller);
 
   module.exports = [PAutocompleteInputController, EVENT_INPUT_ITEM_SELECT, EVENT_REQUEST_SUGGESTIONS, EVENT_LETTER_ENTERED];
-
-}).call(this);
-}, "PAutocomplete": function(exports, require, module) {(function() {
-  var $, DEFAULT_DELAY, DEFAULT_ITEMS_SELECTOR, DEFAULT_MIN_CHARS, EVENT_DROPDOWN_ITEM_HIGHLIGHT, EVENT_DROPDOWN_ITEM_SELECT, EVENT_DROPDOWN_POPUP_SHOW, EVENT_INPUT_ITEM_SELECT, EVENT_ITEM_SELECTED, EVENT_LETTER_ENTERED, EVENT_REQUEST_SUGGESTIONS, PAutocompleteController, PAutocompleteDropdownController, PAutocompleteInputController, Spine, _ref, _ref1,
-    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
-    __hasProp = {}.hasOwnProperty,
-    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-
-  Spine = require('spine');
-
-  $ = Spine.$;
-
-  _ref = require('controllers/PAutocompleteDropdownController'), PAutocompleteDropdownController = _ref[0], EVENT_DROPDOWN_ITEM_SELECT = _ref[1], EVENT_DROPDOWN_ITEM_HIGHLIGHT = _ref[2], EVENT_DROPDOWN_POPUP_SHOW = _ref[3];
-
-  _ref1 = require('controllers/PAutocompleteInputController'), PAutocompleteInputController = _ref1[0], EVENT_INPUT_ITEM_SELECT = _ref1[1], EVENT_REQUEST_SUGGESTIONS = _ref1[2], EVENT_LETTER_ENTERED = _ref1[3];
-
-  DEFAULT_DELAY = 300;
-
-  DEFAULT_MIN_CHARS = 3;
-
-  DEFAULT_ITEMS_SELECTOR = '.item';
-
-  EVENT_ITEM_SELECTED = 'PA.item_selected';
-
-  PAutocompleteController = (function(_super) {
-
-    __extends(PAutocompleteController, _super);
-
-    function PAutocompleteController(options) {
-      this.process_suggest = __bind(this.process_suggest, this);
-
-      var _this = this;
-      PAutocompleteController.__super__.constructor.apply(this, arguments);
-      if (!('input_selector' in options)) {
-        throw 'input_selector param is missing';
-      }
-      if (!('url' in options)) {
-        throw 'url param is missing';
-      }
-      if (!('template' in options)) {
-        throw 'template param is missing';
-      }
-      if (!('popup_selector' in options)) {
-        throw 'poup_selector param is missing';
-      }
-      if (!('delay' in options)) {
-        options.delay = DEFAULT_DELAY;
-      }
-      if (!('min_input_chars' in options)) {
-        options.min_input_chars = DEFAULT_MIN_CHARS;
-      }
-      if (!('items_selector' in options)) {
-        options.items_selector = DEFAULT_ITEMS_SELECTOR;
-      }
-      if (options.selected_item_handler) {
-        this.selected = options.selected_item_handler;
-      }
-      this.build_suggest_params_handler = options.build_suggest_params_handler || this._get_default_suggest_params;
-      if ('form_id' in options) {
-        this.form_id = options.form_id;
-      }
-      this.suggest_url = options.url;
-      this._dropdown = new PAutocompleteDropdownController({
-        active_item_class: options.active_item_class,
-        popup_selector: options.popup_selector,
-        input_selector: options.input_selector,
-        item_list_selector: options.items_selector,
-        template: options.template
-      });
-      this._input = new PAutocompleteInputController({
-        el: $(options.input_selector),
-        suggest_url: options.url,
-        dropdown: this._dropdown,
-        min_input_chars: options.min_input_chars,
-        delay: options.delay
-      });
-      this._input.bind(EVENT_REQUEST_SUGGESTIONS, this.process_suggest);
-      this._input.bind(EVENT_INPUT_ITEM_SELECT, function(item) {
-        return _this.trigger(EVENT_ITEM_SELECTED, item);
-      });
-      this._dropdown.bind(EVENT_DROPDOWN_ITEM_HIGHLIGHT, function(item) {
-        return _this._input.el.val(item);
-      });
-      this._dropdown.bind(EVENT_DROPDOWN_ITEM_SELECT, function(item) {
-        return _this.trigger(EVENT_ITEM_SELECTED, item);
-      });
-      if (this.selected) {
-        this.bind(EVENT_ITEM_SELECTED, this.selected);
-      }
-      this.process_highlight();
-    }
-
-    PAutocompleteController.prototype.on_item_selected = function(handler) {
-      return this.bind(EVENT_ITEM_SELECTED, handler);
-    };
-
-    PAutocompleteController.prototype.process_suggest = function() {
-      var _this = this;
-      if (this.xhr) {
-        this.xhr.abort();
-      }
-      return this.xhr = $.ajax({
-        url: this.suggest_url,
-        data: this.build_suggest_params_handler(),
-        success: function(data) {
-          return _this._input.process_suggest_items(data);
-        },
-        error: function(xhr, textStatus, err) {
-          return _this.log({
-            textStatus: textStatus,
-            error: err
-          });
-        }
-      });
-    };
-
-    PAutocompleteController.prototype.process_highlight = function() {
-      var make_match_bold,
-        _this = this;
-      make_match_bold = function() {
-        var item, j_item, match, patt, _i, _len, _ref2, _results;
-        if (_this._input.el.val() === "") {
-          return;
-        }
-        patt = new RegExp(_this._input.el.val(), "ig");
-        _ref2 = _this._dropdown.items_list();
-        _results = [];
-        for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
-          item = _ref2[_i];
-          j_item = $(item);
-          match = j_item.text().match(patt);
-          _results.push(j_item.html(j_item.text().replace(patt, "<strong>" + match + "</strong>")));
-        }
-        return _results;
-      };
-      this._dropdown.bind(EVENT_DROPDOWN_POPUP_SHOW, make_match_bold);
-      return this._input.bind(EVENT_LETTER_ENTERED, make_match_bold);
-    };
-
-    PAutocompleteController.prototype._get_default_suggest_params = function() {
-      return {
-        'term': this._input.el.val()
-      };
-    };
-
-    return PAutocompleteController;
-
-  })(Spine.Controller);
-
-  module.exports = PAutocompleteController;
 
 }).call(this);
 }, "views/dropdown": function(exports, require, module) {module.exports = function(__obj) {

@@ -11,5 +11,16 @@
     },
     "mnu": {
         "global": {}
+    },
+    "dbuild": {
+        "bin/cafe": {},
+        "watch": {
+            "src": "../tmp/cafe",
+            "skip": "../tmp/lib-js"
+        },
+        "compile": {
+            "src": "../tmp/cafe"
+        },
+        "global": {}
     }
 }

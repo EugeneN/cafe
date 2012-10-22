@@ -85,7 +85,7 @@
   cook_menu = function(current_ctx, my_menu, cb) {
     var child, cmd_args;
     cmd_args = build_cmd(current_ctx, my_menu);
-    current_ctx.fb.say("Repalying command sequence `" + (cmd_args.join(" ")) + "`");
+    current_ctx.fb.say("Replaying command sequence `" + (cmd_args.join(" ")) + "`");
     child = spawn(SUB_CAFE, cmd_args);
     child.on('message', function(m) {
       return current_ctx.fb.murmur(m);
