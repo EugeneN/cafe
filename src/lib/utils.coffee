@@ -313,6 +313,18 @@ and_ = (args...) -> args.reduce (a, b) -> !!a and !!b
 
 or_ = (args...) -> args.reduce (a, b) -> !!a or !!b
 
+get_all_relative_files = (filepath) ->
+    """
+    Gets all filenames recursively relative to filepath.
+    """
+
+    files = []
+    next = (dir) ->
+        for file in fs.readdirSync(dir)
+            files.push(file = "#{dir}/#{file}")
+            next(file) if is_dir(file)
+    next filepath
+    files
 
 module.exports = {
     read_slug
@@ -342,6 +354,7 @@ module.exports = {
     reenter
     get_opt
     get_result_filename
+    get_all_relative_files
     and_
     or_
 }

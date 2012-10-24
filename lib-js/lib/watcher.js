@@ -189,11 +189,9 @@
             ignored: /^\./,
             persistent: true
           });
-          watcher.on('add', change_handler);
           watcher.on('change', change_handler);
-          watcher.on('unlink', change_handler);
           return watcher.on('error', function(error) {
-            return scream("watcher encauntered an error " + error);
+            return ctx.fb.scream("watcher encauntered an error " + error);
           });
         } else {
           return watcher.add(module_root);

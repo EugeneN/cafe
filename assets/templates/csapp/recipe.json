@@ -1,0 +1,17 @@
+{
+    "abstract": {
+        "docstr": "This is (a kind of) a docstring. Each bundle can have 'opts' field containtng per-bundle opts. Currently the only supported option is 'minify'. Global opts field also exist, it is overriden by values from per-bundle opts.",
+        "version": 0.1,
+        "api_version": 1,
+        "etc": "blah blah"
+    },
+
+    "opts": {
+    },
+
+    "deps": {
+    },
+
+    "realms": {
+    }
+}
