@@ -23,6 +23,6 @@
     "node-uuid": "*",
     "functools": "*",
     "mkdirp": "*",
-    "chokidar"
+    "chokidar": "*"
   }
 }
