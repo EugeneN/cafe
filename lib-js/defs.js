@@ -122,7 +122,9 @@
     CS_RUN_CONCURRENT: true,
     CLOJURESCRIPT_OPTS: '{:optimizations :simple :pretty-print true}',
     JS_JUST_EXT: 'js',
-    THRESHOLD_INTERVAL: 3000
+    THRESHOLD_INTERVAL: 3000,
+    DEFAULT_CS_DIR: 'csapp',
+    DEFAULT_CS_BUILD_DIR: 'build'
   };
 
   module.exports = extend({}, default_config, user_config);

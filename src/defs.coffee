@@ -139,4 +139,7 @@ default_config =
 
     THRESHOLD_INTERVAL: 3000 # ms
 
+    DEFAULT_CS_DIR : 'csapp'
+    DEFAULT_CS_BUILD_DIR : 'build'
+
 module.exports = extend {}, default_config, user_config
