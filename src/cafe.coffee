@@ -33,6 +33,7 @@ path = require 'path'
 async = require 'async'
 events = require 'events'
 uuid = require 'node-uuid'
+growl = require 'growl'
 
 # dfsdf cloud9 test
 
@@ -120,6 +121,7 @@ module.exports = ->
         {go}
 
     run_seq = (argv, seq, fb) ->
+        is_growl = not argv.global.hasOwnProperty 'nogrowl'
         START_TIME = new Date
 
         done = (error=null, results) =>
@@ -140,11 +142,13 @@ module.exports = ->
                 when 'target_error'
                     whisper 'Error from task'
                     fb.whisper 'Error from task'
+                    growl('Cafe error from task') if is_growl
                     EXIT_STATUS = EXIT_TARGET_ERROR
 
                 when 'sub_cafe_error'
                     whisper "Error from sub-cafe: #{results}"
                     fb.whisper "Error from sub-cafe: #{results}"
+                    growl('Cafe error') if is_growl
                     EXIT_STATUS = results
 
                 when 'partial_success'
@@ -155,6 +159,7 @@ module.exports = ->
                 when 'version_mismatch'
                     whisper "No further processing will be taken"
                     fb.whisper "No further processing will be taken"
+                    growl('Cafe version mismatch') if is_growl
                     EXIT_STATUS = EXIT_VERSION_MISMATCH
 
                 when 'exit_help'
@@ -168,6 +173,7 @@ module.exports = ->
                 when 'bad_ctx'
                     scream "#{results}"
                     fb.scream "#{results}"
+                    growl('Bad context') if is_growl
                     EXIT_STATUS = EXIT_OTHER_ERROR
 
                 else
@@ -175,6 +181,7 @@ module.exports = ->
                     whisper "#{error.stack}"
                     fb.scream "Error encountered: #{error}"
                     fb.whisper "#{error.stack}"
+                    growl("Cafe encountered error #{error}") if is_growl
 
                     EXIT_STATUS = EXIT_OTHER_ERROR
 
