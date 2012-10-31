@@ -91,7 +91,6 @@ module.exports =
     watch: (ctx) ->
         modules = [path.resolve ctx.watch_root]
         builder = build.partial ctx, build_cmd.partial ctx.orig_ctx.full_args
-        watcher = null
 
         # for module_root in modules
         modules.map (module_root) ->
@@ -136,16 +135,13 @@ module.exports =
 
             ctx.fb.scream module_root
 
-            unless watcher
-                watcher = chokidar.watch module_root, {ignored: /^\./, persistent: true}
-                # TODO: deal with add event. for now if uncomment it will always fire add event on root module folder.
-                # provide unlink and add events.
-                #watcher.on 'add', change_handler
-                watcher.on 'change', change_handler
-                watcher.on 'error', (error) -> ctx.fb.scream "watcher encauntered an error #{error}"
+            watcher = chokidar.watch module_root, {ignored: /^\./, persistent: true}
+            # TODO: deal with add event. for now if uncomment it will always fire add event on root module folder.
+            # provide unlink and add events.
+            #watcher.on 'add', change_handler
+            watcher.on 'change', change_handler
+            watcher.on 'error', (error) -> ctx.fb.scream "watcher encauntered an error #{error}"
 
-            else
-                watcher.add module_root
 
 
                 
