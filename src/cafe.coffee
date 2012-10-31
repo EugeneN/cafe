@@ -35,8 +35,6 @@ events = require 'events'
 uuid = require 'node-uuid'
 growl = require 'growl'
 
-# dfsdf cloud9 test
-
 {run_target} = require './lib/target'
 {trim, is_debug_context, get_plugins} = require './lib/utils'
 {say, shout, scream, whisper,
