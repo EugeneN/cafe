@@ -2,7 +2,7 @@
 (function() {
   "This is Cafe's main module.";
 
-  var EVENT_CAFE_DONE, EXIT_HELP, EXIT_NO_STATUS_CODE, EXIT_OTHER_ERROR, EXIT_PARTIAL_SUCCESS, EXIT_SIGINT, EXIT_SIGTERM, EXIT_SUCCESS, EXIT_TARGET_ERROR, EXIT_VERSION_MISMATCH, TARGET_PATH, VERSION, async, events, fs, get_plugins, growl, head, is_debug_context, murmur, nocolor, panic_mode, path, run_target, say, scream, shout, shutup, trim, uuid, whisper, _ref, _ref1, _ref2;
+  var EVENT_CAFE_DONE, EXIT_HELP, EXIT_NO_STATUS_CODE, EXIT_OTHER_ERROR, EXIT_PARTIAL_SUCCESS, EXIT_SIGINT, EXIT_SIGTERM, EXIT_SUCCESS, EXIT_TARGET_ERROR, EXIT_VERSION_MISMATCH, TARGET_PATH, VERSION, async, events, fs, get_plugins, head, is_debug_context, murmur, nocolor, panic_mode, path, run_target, say, scream, shout, shutup, trim, uuid, whisper, _ref, _ref1, _ref2;
 
   head = ["Cafe is the build system for client side applications (and more).\nIt is written in Coffescript in functional and asyncronous way.\n\nThis is a CLI UI for Cafe v.1\n\nParameters:\n    -- debug     - include stack traces and other debug info\n                   into output\n\n    -- nologo    - exclude logo from output, usefull for sub-commands;\n\n    -- nocolor   - do not use color in output, usefull\n                   when directing Cafe's output into a log file;\n\n    -- shutup    - exclude info and warning messages from output.\n                   Error and debug messages will be preserved;\n\n    -- version   - returns the current Cafe's version;\n\n    --nogrowl    - disables growl notifications.\n\n    -- help      - this help.\n\nSub-commands:"];
 
@@ -15,8 +15,6 @@
   events = require('events');
 
   uuid = require('node-uuid');
-
-  growl = require('growl');
 
   run_target = require('./lib/target').run_target;
 
@@ -108,9 +106,8 @@
       };
     };
     run_seq = function(argv, seq, fb) {
-      var done, is_growl,
+      var done,
         _this = this;
-      is_growl = !argv.global.hasOwnProperty('nogrowl');
       START_TIME = new Date;
       done = function(error, results) {
         var EXIT_STATUS;
@@ -134,17 +131,11 @@
           case 'target_error':
             whisper('Error from task');
             fb.whisper('Error from task');
-            if (is_growl) {
-              growl('Cafe error from task');
-            }
             EXIT_STATUS = EXIT_TARGET_ERROR;
             break;
           case 'sub_cafe_error':
             whisper("Error from sub-cafe: " + results);
             fb.whisper("Error from sub-cafe: " + results);
-            if (is_growl) {
-              growl('Cafe error');
-            }
             EXIT_STATUS = results;
             break;
           case 'partial_success':
@@ -155,9 +146,6 @@
           case 'version_mismatch':
             whisper("No further processing will be taken");
             fb.whisper("No further processing will be taken");
-            if (is_growl) {
-              growl('Cafe version mismatch');
-            }
             EXIT_STATUS = EXIT_VERSION_MISMATCH;
             break;
           case 'exit_help':
@@ -171,9 +159,6 @@
           case 'bad_ctx':
             scream("" + results);
             fb.scream("" + results);
-            if (is_growl) {
-              growl('Bad context');
-            }
             EXIT_STATUS = EXIT_OTHER_ERROR;
             break;
           default:
@@ -181,12 +166,9 @@
             whisper("" + error.stack);
             fb.scream("Error encountered: " + error);
             fb.whisper("" + error.stack);
-            if (is_growl) {
-              growl("Cafe encountered error <" + error + ">");
-            }
             EXIT_STATUS = EXIT_OTHER_ERROR;
         }
-        return Emitter.emit(EVENT_CAFE_DONE, EXIT_STATUS);
+        return Emitter.emit(EVENT_CAFE_DONE, EXIT_STATUS, error);
       };
       return async.series(seq, done);
     };

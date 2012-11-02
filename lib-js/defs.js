@@ -124,7 +124,9 @@
     JS_JUST_EXT: 'js',
     THRESHOLD_INTERVAL: 3000,
     DEFAULT_CS_DIR: 'csapp',
-    DEFAULT_CS_BUILD_DIR: 'build'
+    DEFAULT_CS_BUILD_DIR: 'build',
+    SUCCESS_ICO: path.resolve(__dirname, '../assets/img/success.jpg'),
+    FAILURE_ICO: path.resolve(__dirname, '../assets/img/failure.jpg')
   };
 
   module.exports = extend({}, default_config, user_config);

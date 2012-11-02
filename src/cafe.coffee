@@ -35,7 +35,6 @@ path = require 'path'
 async = require 'async'
 events = require 'events'
 uuid = require 'node-uuid'
-growl = require 'growl'
 
 {run_target} = require './lib/target'
 {trim, is_debug_context, get_plugins} = require './lib/utils'
@@ -121,7 +120,6 @@ module.exports = (emitter) ->
         {go}
 
     run_seq = (argv, seq, fb) ->
-        is_growl = not argv.global.hasOwnProperty 'nogrowl'
         START_TIME = new Date
 
         done = (error=null, results) =>
@@ -142,13 +140,11 @@ module.exports = (emitter) ->
                 when 'target_error'
                     whisper 'Error from task'
                     fb.whisper 'Error from task'
-                    growl('Cafe error from task') if is_growl
                     EXIT_STATUS = EXIT_TARGET_ERROR
 
                 when 'sub_cafe_error'
                     whisper "Error from sub-cafe: #{results}"
                     fb.whisper "Error from sub-cafe: #{results}"
-                    growl('Cafe error') if is_growl
                     EXIT_STATUS = results
 
                 when 'partial_success'
@@ -159,7 +155,6 @@ module.exports = (emitter) ->
                 when 'version_mismatch'
                     whisper "No further processing will be taken"
                     fb.whisper "No further processing will be taken"
-                    growl('Cafe version mismatch') if is_growl
                     EXIT_STATUS = EXIT_VERSION_MISMATCH
 
                 when 'exit_help'
@@ -173,7 +168,6 @@ module.exports = (emitter) ->
                 when 'bad_ctx'
                     scream "#{results}"
                     fb.scream "#{results}"
-                    growl('Bad context') if is_growl
                     EXIT_STATUS = EXIT_OTHER_ERROR
 
                 else
@@ -181,11 +175,10 @@ module.exports = (emitter) ->
                     whisper "#{error.stack}"
                     fb.scream "Error encountered: #{error}"
                     fb.whisper "#{error.stack}"
-                    growl("Cafe encountered error <#{error}>") if is_growl
 
                     EXIT_STATUS = EXIT_OTHER_ERROR
 
-            Emitter.emit EVENT_CAFE_DONE, EXIT_STATUS
+            Emitter.emit EVENT_CAFE_DONE, EXIT_STATUS, error
 
         async.series seq, done
 
@@ -193,7 +186,6 @@ module.exports = (emitter) ->
 
     get_targets = ->
         (get_plugins TARGET_PATH).map (target_name) -> target_name
-
 
     {ready, get_version, get_targets}
 
