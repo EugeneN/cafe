@@ -22,6 +22,8 @@ head = [
 
         -- version   - returns the current Cafe's version;
 
+        --nogrowl    - disables growl notifications.
+
         -- help      - this help.
 
     Sub-commands:
@@ -58,9 +60,9 @@ growl = require 'growl'
 } = require './defs'
 
 
-module.exports = ->
+module.exports = (emitter) ->
     Target_path = TARGET_PATH
-    Emitter = new events.EventEmitter
+    Emitter = emitter or new events.EventEmitter
     START_TIME = undefined
     ID = uuid.v4()
 
@@ -179,7 +181,7 @@ module.exports = ->
                     whisper "#{error.stack}"
                     fb.scream "Error encountered: #{error}"
                     fb.whisper "#{error.stack}"
-                    growl("Cafe encountered error #{error}") if is_growl
+                    growl("Cafe encountered error <#{error}>") if is_growl
 
                     EXIT_STATUS = EXIT_OTHER_ERROR
 

@@ -12,8 +12,11 @@ pessimist = require '../../lib/pessimist'
 {is_array} = require '../../lib/utils'
 {draw_logo} = require '../../lib/pictures'
 logger = (require '../../lib/logger') LOG_PREFIX
+events = require 'events'
+growl = require 'growl'
 {EXIT_HELP, PR_SET_PDEATHSIG,
- EXIT_SIGINT, EXIT_SIGINT, SIGTERM, SIGINT} = require '../../defs'
+ EXIT_SIGINT, EXIT_SIGINT, SIGTERM, SIGINT,
+ EXIT_OTHER_ERROR, EVENT_CAFE_DONE} = require '../../defs'
 
 {green, yellow, red} = logger
 
@@ -64,7 +67,7 @@ module.exports = ->
     logger.panic_mode on if argv.global.hasOwnProperty 'debug'
 
     draw_logo fb unless argv.global.hasOwnProperty 'nologo'
-
-    {ready} = cafe_factory()
+    emitter = new events.Emitter
+    {ready} = cafe_factory emitter
     {go} = ready {exit_cb, fb}
     go args: argv

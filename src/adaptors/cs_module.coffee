@@ -44,7 +44,7 @@ build_factory = (mod_src, ctx) ->
             compiler.build (err, result) ->
                 if err
                     ctx.fb.scream "Compile failed: #{err}"
-                    cb 'adaptor_error', err
+                    cb "Failed to compile spine app #{mod_src}", err
                 else
                     if do_tests
                         compiler.build_tests (err, result) -> cb err, result
