@@ -17,10 +17,12 @@ pessimist = require '../../lib/pessimist'
 {draw_logo} = require '../../lib/pictures'
 logger = (require '../../lib/logger') LOG_PREFIX
 
-{EXIT_HELP, PR_SET_PDEATHSIG,
- EXIT_SIGINT, EXIT_SIGINT, SIGTERM, SIGINT,
- EXIT_OTHER_ERROR, EVENT_CAFE_DONE, EXIT_SUCCESS,
-SUCCESS_ICO, FAILURE_ICO} = require '../../defs'
+{
+    EXIT_HELP, PR_SET_PDEATHSIG, EXIT_SIGINT,
+    EXIT_SIGINT, SIGTERM, SIGINT,
+    EXIT_OTHER_ERROR, EXIT_TARGET_ERROR, EVENT_CAFE_DONE,
+    EXIT_SUCCESS, SUCCESS_ICO, FAILURE_ICO
+} = require '../../defs'
 
 {green, yellow, red} = logger
 
@@ -65,10 +67,10 @@ subscribe = (emitter) ->
         switch status
             when EXIT_OTHER_ERROR
                 growl("Cafe error <#{error}>", {image: FAILURE_ICO})
-                console.log path.resolve(FAILURE_ICO)
+            when EXIT_TARGET_ERROR
+                growl("Cafe target error <#{error}>", {image: FAILURE_ICO})
             when EXIT_SUCCESS
                 growl("Cafe success :)", {image: SUCCESS_ICO})
-                console.log path.resolve(SUCCESS_ICO)
 
 module.exports = ->
     argv = pessimist process.argv
@@ -79,10 +81,7 @@ module.exports = ->
     is_growl = not argv.global.hasOwnProperty 'nogrowl'
     draw_logo fb unless argv.global.hasOwnProperty 'nologo'
     emitter = new events.EventEmitter
-
-    if is_growl
-        subscribe emitter
-
+    (subscribe emitter) if is_growl
     {ready} = cafe_factory emitter
     {go} = ready {exit_cb, fb}
     go args: argv
