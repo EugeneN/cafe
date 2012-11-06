@@ -22,6 +22,8 @@ head = [
 
         -- version   - returns the current Cafe's version;
 
+        --nogrowl    - disables growl notifications.
+
         -- help      - this help.
 
     Sub-commands:
@@ -33,8 +35,6 @@ path = require 'path'
 async = require 'async'
 events = require 'events'
 uuid = require 'node-uuid'
-
-# dfsdf cloud9 test
 
 {run_target} = require './lib/target'
 {trim, is_debug_context, get_plugins} = require './lib/utils'
@@ -59,9 +59,9 @@ uuid = require 'node-uuid'
 } = require './defs'
 
 
-module.exports = ->
+module.exports = (emitter) ->
     Target_path = TARGET_PATH
-    Emitter = new events.EventEmitter
+    Emitter = emitter or new events.EventEmitter
     START_TIME = undefined
     ID = uuid.v4()
 
@@ -178,7 +178,7 @@ module.exports = ->
 
                     EXIT_STATUS = EXIT_OTHER_ERROR
 
-            Emitter.emit EVENT_CAFE_DONE, EXIT_STATUS
+            Emitter.emit EVENT_CAFE_DONE, EXIT_STATUS, error
 
         async.series seq, done
 
@@ -186,7 +186,6 @@ module.exports = ->
 
     get_targets = ->
         (get_plugins TARGET_PATH).map (target_name) -> target_name
-
 
     {ready, get_version, get_targets}
 

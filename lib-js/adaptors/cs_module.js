@@ -70,7 +70,7 @@
         return compiler.build(function(err, result) {
           if (err) {
             ctx.fb.scream("Compile failed: " + err);
-            return cb('adaptor_error', err);
+            return cb("Failed to compile spine app " + mod_src, err);
           } else {
             if (do_tests) {
               return compiler.build_tests(function(err, result) {

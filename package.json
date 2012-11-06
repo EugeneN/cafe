@@ -23,6 +23,10 @@
     "node-uuid": "*",
     "functools": "*",
     "mkdirp": "*",
+<<<<<<< HEAD
     "chokidar": "*"
+=======
+    "growl": "*"
+>>>>>>> growl
   }
 }

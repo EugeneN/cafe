@@ -183,6 +183,7 @@
           }
         };
         ctx.fb.scream(module_root);
+<<<<<<< HEAD
         watcher = chokidar.watch(module_root, {
           ignored: /^\./,
           persistent: true
@@ -191,6 +192,20 @@
         return watcher.on('error', function(error) {
           return ctx.fb.scream("watcher encauntered an error " + error);
         });
+=======
+        if (!watcher) {
+          watcher = chokidar.watch(module_root, {
+            ignored: /^\./,
+            persistent: true
+          });
+          watcher.on('change', change_handler);
+          return watcher.on('error', function(error) {
+            return ctx.fb.scream("watcher encauntered an error " + error);
+          });
+        } else {
+          return watcher.add(module_root);
+        }
+>>>>>>> growl
       });
       return ctx.fb.say("Started growing Coffee on the plantation '" + ctx.watch_root + "'");
     }
