@@ -31,7 +31,5 @@ Cafe5 is going to be written in Clojure as an application description DSL librar
 
     npm install -g cafe4
 
-#Usage
-
-Please see the [cafe guide](http://kyle/confluence/cafe) for usage instructions. 
-TODO
+#Changelog
+-- Added growl notifications. (can be disabled by option --nogrowl).
