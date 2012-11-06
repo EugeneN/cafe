@@ -1,3 +1,7 @@
+"""
+This module is used for generation basic modules structure.
+"""
+
 fs     = require('fs')
 path     = require('path')
 {is_dir, get_all_relative_files} = require('../utils')
@@ -9,6 +13,16 @@ parse = (data, values) ->
 
 
 make_skelethon = ({skelethon_path, result_path, values, replace_map, fb}) ->
+    """
+    @skelethon_path: path where skelethon templates are placed.
+    @result_path: path where we need to insert module skelethon.
+    @values: replace values. Dict of values that will be inserted instead of
+        placeholders in skelethon files.({'placeholder_name': value} 
+        Placeholder's format - {{placeholder name}}
+    @replace_map: if we need to replace some filenames we may 
+        provide replace map.
+    """
+
     throw "skelethon path is not set" unless skelethon_path
     throw "result path is not set" unless result_path
 
