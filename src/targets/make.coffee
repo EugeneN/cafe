@@ -11,13 +11,13 @@ help = [
 
 path = require 'path'
 fs = require 'fs'
-Template = require '../lib/template'
 {make_target} = require '../lib/target'
 {camelize, expandPath, filter_dict} = require '../lib/utils'
 {say, shout, scream, whisper} = require('../lib/logger') "Make>"
+{make_skelethon} = require '../lib/skelethon/skelethon'
 
 
-make_app = (name) ->
+make_app = (name, ctx) ->
     throw "Bad name `#{name}`" unless name
 
     template = __dirname + "/../../assets/templates/app"
@@ -27,27 +27,45 @@ make_app = (name) ->
     throw(_path + " already exists") if fs.existsSync(_path)
 
     fs.mkdirSync _path, 0o0775
-    (new Template(template, _path, values)).write()
+
+    replace_file_names_map = 
+        "index.coffee":"#{name}.coffee"
+        "index_tests.coffee":"#{name}Tests.coffee"
+
+    make_skelethon
+        skelethon_path: template
+        result_path: _path
+        values: values
+        replace_map: replace_file_names_map
+        fb: ctx.fb
 
 
-make_controller = (name) ->
+make_controller = (name, ctx) ->
     throw "Bad name `#{name}`" unless name
 
     template = __dirname + "/../../assets/templates/controller.coffee"
     values = {name: camelize path.basename(name) }
     c_path = expandPath(name, "./app/controllers/") + ".coffee"
 
-    (new Template(template, c_path, values)).write()
+    make_skelethon
+        skelethon_path: template
+        result_path: c_path
+        values: values
+        fb: ctx.fb
 
 
-make_model = (name) ->
+make_model = (name, ctx) ->
     throw "Bad name `#{name}`" unless name
 
     template = __dirname + "/../../assets/templates/model.coffee"
     values = {name: camelize path.basename(name) }
     c_path = expandPath(name, "./app/models/") + ".coffee"
 
-    (new Template(template, c_path, values)).write()
+    make_skelethon
+        skelethon_path: template
+        result_path: c_path
+        values: values
+        fb: ctx.fb
 
 
 maker = (ctx, cb) ->
@@ -55,9 +73,9 @@ maker = (ctx, cb) ->
 
     try
         switch args[0]
-            when "app" then make_app args[1]
-            when "controller" then make_controller args[1]
-            when "model" then make_model args[1]
+            when "app" then make_app args[1], ctx
+            when "controller" then make_controller args[1], ctx
+            when "model" then make_model args[1], ctx
             else ctx.print_help()
 
     catch e

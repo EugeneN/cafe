@@ -15,17 +15,23 @@
   };
 
   make_skelethon = function(_arg) {
-    var fb, result_path, skelethon_path, values;
-    skelethon_path = _arg.skelethon_path, result_path = _arg.result_path, values = _arg.values, fb = _arg.fb;
+    var fb, replace_map, result_path, skelethon_path, values;
+    skelethon_path = _arg.skelethon_path, result_path = _arg.result_path, values = _arg.values, replace_map = _arg.replace_map, fb = _arg.fb;
     if (!skelethon_path) {
       throw "skelethon path is not set";
     }
     if (!result_path) {
       throw "result path is not set";
     }
+    skelethon_path = path.normalize(skelethon_path);
     return (get_all_relative_files(skelethon_path)).map(function(_path) {
-      var data, out;
+      var data, dir, file, out;
       out = _path.replace(skelethon_path, '');
+      dir = path.dirname(out);
+      file = path.basename(out);
+      if (replace_map != null ? replace_map.hasOwnProperty(file) : void 0) {
+        out = path.join(dir, replace_map[file]);
+      }
       out = path.join(result_path, out);
       out = path.normalize(out);
       if (is_dir(_path)) {

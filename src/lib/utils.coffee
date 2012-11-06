@@ -318,6 +318,8 @@ get_all_relative_files = (filepath) ->
     Gets all filenames recursively relative to filepath.
     """
 
+    return [filepath] unless (is_dir filepath)
+
     files = []
     next = (dir) ->
         for file in fs.readdirSync(dir)

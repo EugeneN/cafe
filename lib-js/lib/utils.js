@@ -452,6 +452,9 @@
     "Gets all filenames recursively relative to filepath.";
 
     var files, next;
+    if (!(is_dir(filepath))) {
+      return [filepath];
+    }
     files = [];
     next = function(dir) {
       var file, _i, _len, _ref2, _results;
