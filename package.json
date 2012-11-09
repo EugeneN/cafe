@@ -1,11 +1,11 @@
 {
-  "name": "cafe",
+  "name": "cafe4",
   "description": "Client-side applications build tool",
-  "version": "0.0.6",
+  "version": "0.0.71",
   "author": "E.Naumenko, A.Mostovenko, B.Larin",
   "repository": {
-    "type" : "mercurial",
-    "url": "http://kyle/hg/cs"
+    "type" : "git",
+    "url": "https://github.com/EugeneN/cafe"
   },
   "engine" : [ "node >=0.1.102" ],
   "main" : "./lib/cafe.js",
