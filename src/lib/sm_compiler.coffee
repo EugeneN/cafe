@@ -3,7 +3,7 @@
 
 fs        = require 'fs'
 path      = require 'path'
-_package   = require './package'
+_package   = require './stitch'
 exec = require('child_process').exec
 
 {add, is_file, read_slug} = require './utils'
@@ -60,13 +60,13 @@ class SM_Compiler
 
     build: (cb) ->
         try
-            source = @hemPackage().compile()
-            js_path = @_get_js_path()
+            source = @module().compile (err, source) =>
+                js_path = @_get_js_path()
 
-            @_write_file js_path, source, =>
-                @fb.say "#{js_path} brewed."
-                @emitter.emit "COMPILE_DONE"
-                cb? null, js_path
+                @_write_file js_path, source, =>
+                    @fb.say "#{js_path} brewed."
+                    @emitter.emit "COMPILE_DONE"
+                    cb? null, js_path
 
         catch error
             @fb.scream "Failed to build #{@base_path} #{error}"
@@ -110,7 +110,7 @@ class SM_Compiler
             @fb.scream "File with the tests could not be found"
             cb?()
 
-    hemPackage: ->
+    module: ->
         _package.createPackage
             dependencies: @options.dependencies
             paths: @options.paths

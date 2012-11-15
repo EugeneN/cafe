@@ -7,7 +7,7 @@
 
   path = require('path');
 
-  _package = require('./package');
+  _package = require('./stitch');
 
   exec = require('child_process').exec;
 
@@ -77,15 +77,17 @@
     };
 
     SM_Compiler.prototype.build = function(cb) {
-      var js_path, source,
+      var source,
         _this = this;
       try {
-        source = this.hemPackage().compile();
-        js_path = this._get_js_path();
-        return this._write_file(js_path, source, function() {
-          _this.fb.say("" + js_path + " brewed.");
-          _this.emitter.emit("COMPILE_DONE");
-          return typeof cb === "function" ? cb(null, js_path) : void 0;
+        return source = this.module().compile(function(err, source) {
+          var js_path;
+          js_path = _this._get_js_path();
+          return _this._write_file(js_path, source, function() {
+            _this.fb.say("" + js_path + " brewed.");
+            _this.emitter.emit("COMPILE_DONE");
+            return typeof cb === "function" ? cb(null, js_path) : void 0;
+          });
         });
       } catch (error) {
         this.fb.scream("Failed to build " + this.base_path + " " + error);
@@ -137,7 +139,7 @@
       }
     };
 
-    SM_Compiler.prototype.hemPackage = function() {
+    SM_Compiler.prototype.module = function() {
       return _package.createPackage({
         dependencies: this.options.dependencies,
         paths: this.options.paths,
