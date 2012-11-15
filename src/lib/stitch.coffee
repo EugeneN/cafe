@@ -103,8 +103,9 @@ exports.Package = class Package
               return require(name, '');
             }
             this.#{@identifier}.define = function(bundle) {
-              for (var key in bundle){
+              for (var key in bundle)
                 modules[key] = bundle[key];
+              for(var key in bundle){
                 var mod = {};
                 bundle[key]({}, require, mod)
                 if(mod.hasOwnProperty('#{@load_time_exports_id}'))
