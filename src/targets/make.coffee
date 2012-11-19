@@ -68,6 +68,27 @@ make_model = (name, ctx) ->
         fb: ctx.fb
 
 
+make_module = (name, ctx) ->
+    throw "Need module name" unless name
+
+    template = __dirname + "/../../assets/templates/module"
+    values = {name}
+    _path = path.normalize(name)
+    throw(_path + " already exists") if fs.existsSync(_path)
+
+    fs.mkdirSync _path, 0o0775
+
+    replace_file_names_map =
+        "module.coffee":"#{name}.coffee"
+
+    make_skelethon
+        skelethon_path: template
+        result_path: _path
+        values: values
+        replace_map: replace_file_names_map
+        fb: ctx.fb
+
+
 maker = (ctx, cb) ->
     args = Object.keys(ctx.full_args).filter (k) -> k not in ['make', 'global']
 
@@ -76,6 +97,7 @@ maker = (ctx, cb) ->
             when "app" then make_app args[1], ctx
             when "controller" then make_controller args[1], ctx
             when "model" then make_model args[1], ctx
+            when "module" then make_module args[1], ctx
             else ctx.print_help()
 
     catch e

@@ -1,0 +1,8 @@
+{
+  "dependencies": [],
+  "libs": [],
+  "paths": ["./src"],
+  "jsPath": "{{name}}.js",
+  "recipe": ["CSLib"],
+  "ns" : "{{name}}"
+}

@@ -13,6 +13,12 @@ async = require 'async'
  CAFE_TMP_BUILD_ROOT_ENV_NAME, CAFE_TARGET_FN_ENV_NAME} = require '../defs'
 
 
+{put_to_tmp_storage, get_from_tmp_storage, put_to_client_storage, get_from_client_storage} = require '../services/storage'
+stitch = require '../lib/stitch'
+
+partial = (fn, args...) -> _.bind fn, null, args...
+
+
 get_target_fn = (js_path, app_root, target_fn) ->
     if js_path
         path.resolve js_path, target_fn
@@ -64,42 +70,45 @@ module.exports = do ->
 
             cb CB_SUCCESS, (group_deps or [])
 
-        harvest = (cb, opts={}) ->
+        harvest = (harvest_cb, opts={}) ->
             {mod_src, target_full_fn, target_fn, tmp_build_root} = get_paths ctx
 
-            do_compile = (cb) ->
-                args = [CAKE_BIN, CAKE_TARGET]
+          check_maybe_do = (cb) ->
+            maybe_build mod_name, (changed, filename) ->
+              if changed or (extend ctx, opts).own_args.f
+                cb null
+              else
+                cb true, "MAYBE_SKIP"
+
+            do_cake = (err, cb) ->
                 opts =
                     cwd: mod_src
-                    env: process.env
+                    env: add process.env, {NODE_PATH}
 
-                opts.env[CAFE_TMP_BUILD_ROOT_ENV_NAME] = tmp_build_root
-                opts.env[CAFE_TARGET_FN_ENV_NAME] = target_fn
-                opts.env['NODE_PATH'] = NODE_PATH
+                exec ([CAKE_BIN, CAKE_TARGET].join ' '), opts, (err, results) ->
+                  # results = [stderr, stdout] or any
+                  cb err, safe_parse_json_or_undefined results?[1]
 
-                exec (args.join ' '), opts, (err, stdout, stderr) ->
-                    if err
-                        ctx.fb.scream "Error compiling #{mod_src}: #{err}"
-                        ctx.fb.scream ("STDOUT: #{stdout}".replace /\n$/, '') if stdout
-                        ctx.fb.scream ("STDERR: #{stderr}".replace /\n$/, '') if stderr
-                        cb CB_SUCCESS, undefined
 
-                    else
-                        ctx.fb.say "Cake cafebuild #{mod_src} brewed"
-                        ctx.fb.say ("STDOUT: #{stdout}".replace /\n$/, '') if stdout
-                        ctx.fb.say ("STDERR: #{stderr}".replace /\n$/, '') if stderr
-                        cb CB_SUCCESS, target_full_fn
+            done = (err, res) ->
+              switch err
+                when null
+                  ctx.fb.say 'OK'
+                  harvest_cb err
 
-            if (extend ctx, opts).own_args.f
-                do_compile cb
-            else
-                maybe_build mod_src, target_full_fn, (state, filename) ->
-                    if state
-                        do_compile cb
-                    else
-                        ctx.fb.shout "#{mod_src} still hot"
-                        ctx.emitter.emit "COMPILE_MAYBE_SKIPPED"
-                        cb? CB_SUCCESS, filename, "COMPILE_MAYBE_SKIPPED"
+                when "MAYBE_SKIP"
+                  ctx.fb.shout "maybe skipped"
+                  harvest_cb null
+
+                else
+                  ctx.fb.scream "not ok"
+                  harvest_cb err, res
+
+            # stitch = (err, [[fn1, data],[fn2, data],[fnn, data]]) -> ...
+            # put_to_tmp_storage = (key, data, cb) -> ...
+
+            async.series check_maybe_do, do_cake, stitch, (partial put_to_tmp_storage, mod_name), done
+
 
         last_modified = (cb) ->
             {mod_src} = get_paths ctx
