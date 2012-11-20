@@ -7,13 +7,16 @@ cs = require 'coffee-script'
 {maybe_build, is_dir, is_file, has_ext, and_,
  get_mtime, newer, walk, newest, extend} = require '../lib/utils'
 async = require 'async'
+stitch = new require('../lib/stitch')
+Package = new stitch.Package {}
+_ = require 'underscore'
 
 {FILE_ENCODING, TMP_BUILD_DIR_SUFFIX, JS_EXT,
  CAKE_BIN, CAKE_TARGET, NODE_PATH, CAKEFILE, CB_SUCCESS,
  CAFE_TMP_BUILD_ROOT_ENV_NAME, CAFE_TARGET_FN_ENV_NAME} = require '../defs'
 
 
-{put_to_tmp_storage, get_from_tmp_storage, put_to_client_storage, get_from_client_storage} = require '../services/storage'
+#{put_to_tmp_storage, get_from_tmp_storage, put_to_client_storage, get_from_client_storage} = require '../services/storage'
 stitch = require '../lib/stitch'
 
 partial = (fn, args...) -> _.bind fn, null, args...
@@ -73,41 +76,62 @@ module.exports = do ->
         harvest = (harvest_cb, opts={}) ->
             {mod_src, target_full_fn, target_fn, tmp_build_root} = get_paths ctx
 
-          check_maybe_do = (cb) ->
-            maybe_build mod_name, (changed, filename) ->
-              if changed or (extend ctx, opts).own_args.f
-                cb null
-              else
-                cb true, "MAYBE_SKIP"
+            check_maybe_do = (cb) ->
+              maybe_build mod_src, target_full_fn, (changed, filename) ->
+                if changed or (extend ctx, opts).own_args.f
+                  cb()
+                else
+                  cb 'Maybe skipped'
 
-            do_cake = (err, cb) ->
+            do_cake = (cb) ->
                 opts =
                     cwd: mod_src
-                    env: add process.env, {NODE_PATH}
+                    env: process.env
 
                 exec ([CAKE_BIN, CAKE_TARGET].join ' '), opts, (err, results) ->
-                  # results = [stderr, stdout] or any
-                  cb err, safe_parse_json_or_undefined results?[1]
+                  cb err, results
 
+            safe_parse_json_or_undefined = (result, cb) ->
+              console.log result
+              try
+                cb null, (JSON.parse result)
+              catch ex
+                throw ex
+                cb 'Parser error'
+
+            stitching = (files, cb) ->
+                sources = {}
+                for [fn, source] in files
+                    ext_length = (path.extname fn).length
+                    filename = fn.slice 0, -ext_length
+                    sources[filename] = {filename: fn, source: source}
+
+                cb null, Package.get_result_bundle sources
+
+            put_to_tmp_storage = (key, data, cb) ->
+                fs.writeFile key, data, (err) ->
+                    (cb err) if err
+                    cb? null, key
 
             done = (err, res) ->
-              switch err
-                when null
-                  ctx.fb.say 'OK'
-                  harvest_cb err
+                switch err
+                    when null
+                      ctx.fb.say 'OK'
+                      harvest_cb CB_SUCCESS, target_full_fn
+                    when "MAYBE_SKIP"
+                      ctx.fb.shout "maybe skipped"
+                      harvest_cb null
+                    else
+                      ctx.fb.scream "not ok"
+                      harvest_cb err, res
 
-                when "MAYBE_SKIP"
-                  ctx.fb.shout "maybe skipped"
-                  harvest_cb null
-
-                else
-                  ctx.fb.scream "not ok"
-                  harvest_cb err, res
-
-            # stitch = (err, [[fn1, data],[fn2, data],[fnn, data]]) -> ...
-            # put_to_tmp_storage = (key, data, cb) -> ...
-
-            async.series check_maybe_do, do_cake, stitch, (partial put_to_tmp_storage, mod_name), done
+            async.waterfall([
+              check_maybe_do
+              do_cake
+              safe_parse_json_or_undefined
+              stitching
+              (partial put_to_tmp_storage, target_full_fn)]
+              don11e)
 
 
         last_modified = (cb) ->

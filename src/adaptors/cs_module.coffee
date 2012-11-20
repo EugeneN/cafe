@@ -68,7 +68,7 @@ build_factory = (mod_src, ctx) ->
                     emitter.emit "COMPILE_MAYBE_SKIPPED"
                     cb? CB_SUCCESS, filename, "COMPILE_MAYBE_SKIPPED"
 
-get _paths = (ctx) ->
+get_paths = (ctx) ->
     app_root = path.resolve ctx.own_args.app_root
     module_name = ctx.own_args.mod_name
     js_path = ctx.own_args.js_path
@@ -77,7 +77,6 @@ get _paths = (ctx) ->
     mod_src = if ctx.own_args.src
         path.resolve ctx.own_args.src
     else
-      console.log (path.resolve app_root, mod_suffix, module_name)
       path.resolve app_root, mod_suffix, module_name
 
 

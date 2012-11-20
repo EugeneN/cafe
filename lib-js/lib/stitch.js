@@ -52,6 +52,8 @@
   exports.Package = Package = (function() {
 
     function Package(config) {
+      this.get_result_bundle = __bind(this.get_result_bundle, this);
+
       this.compileSources = __bind(this.compileSources, this);
 
       this.compileDependencies = __bind(this.compileDependencies, this);
@@ -91,21 +93,24 @@
     Package.prototype.compileSources = function(callback) {
       var _this = this;
       return async.reduce(this.paths, {}, _.bind(this.gatherSourcesFromPath, this), function(err, sources) {
-        var filename, index, name, result, source, _ref1;
         if (err) {
           return callback(err);
         }
-        result = "(function(/*! Stitch !*/) {\n  if (!this." + _this.identifier + ") {\n    var modules = {}, cache = {}, require = function(name, root) {\n      var path = expand(root, name), module = cache[path], fn;\n      if (module) {\n        return module.exports;\n      } else if (fn = modules[path] || modules[path = expand(path, './index')]) {\n        module = {id: path, exports: {}};\n        try {\n          cache[path] = module;\n          fn(module.exports, function(name) {\n            return require(name, dirname(path));\n          }, module);\n          return module.exports;\n        } catch (err) {\n          delete cache[path];\n          throw err;\n        }\n      } else {\n        throw 'module \\'' + name + '\\' not found';\n      }\n    }, expand = function(root, name) {\n      var results = [], parts, part;\n      if (/^\\.\\.?(\\/|$)/.test(name)) {\n        parts = [root, name].join('/').split('/');\n      } else {\n        parts = name.split('/');\n      }\n      for (var i = 0, length = parts.length; i < length; i++) {\n        part = parts[i];\n        if (part == '..') {\n          results.pop();\n        } else if (part != '.' && part != '') {\n          results.push(part);\n        }\n      }\n      return results.join('/');\n    }, dirname = function(path) {\n      return path.split('/').slice(0, -1).join('/');\n    };\n    this." + _this.identifier + " = function(name) {\n      return require(name, '');\n    }\n    this." + _this.identifier + ".define = function(bundle) {\n      for (var key in bundle)\n        modules[key] = bundle[key];\n      for(var key in bundle){\n        var mod = {};\n        bundle[key]({}, require, mod)\n        if(mod.hasOwnProperty('" + _this.load_time_exports_id + "'))\n            mod." + _this.load_time_exports_id + "(this)\n        }\n    };\n  }\n  return this." + _this.identifier + ".define;\n}).call(this)({";
-        index = 0;
-        for (name in sources) {
-          _ref1 = sources[name], filename = _ref1.filename, source = _ref1.source;
-          result += index++ === 0 ? "" : ", ";
-          result += JSON.stringify(name);
-          result += ": function(exports, require, module) {" + source + "}";
-        }
-        result += "});\n";
-        return callback(err, result);
+        return callback(err, _this.get_result_bundle(sources));
       });
+    };
+
+    Package.prototype.get_result_bundle = function(sources) {
+      var filename, index, name, result, source, _ref1;
+      result = "(function(/*! Stitch !*/) {\n  if (!this." + this.identifier + ") {\n    var modules = {}, cache = {}, require = function(name, root) {\n      var path = expand(root, name), module = cache[path], fn;\n      if (module) {\n        return module.exports;\n      } else if (fn = modules[path] || modules[path = expand(path, './index')]) {\n        module = {id: path, exports: {}};\n        try {\n          cache[path] = module;\n          fn(module.exports, function(name) {\n            return require(name, dirname(path));\n          }, module);\n          return module.exports;\n        } catch (err) {\n          delete cache[path];\n          throw err;\n        }\n      } else {\n        throw 'module \\'' + name + '\\' not found';\n      }\n    }, expand = function(root, name) {\n      var results = [], parts, part;\n      if (/^\\.\\.?(\\/|$)/.test(name)) {\n        parts = [root, name].join('/').split('/');\n      } else {\n        parts = name.split('/');\n      }\n      for (var i = 0, length = parts.length; i < length; i++) {\n        part = parts[i];\n        if (part == '..') {\n          results.pop();\n        } else if (part != '.' && part != '') {\n          results.push(part);\n        }\n      }\n      return results.join('/');\n    }, dirname = function(path) {\n      return path.split('/').slice(0, -1).join('/');\n    };\n    this." + this.identifier + " = function(name) {\n      return require(name, '');\n    }\n    this." + this.identifier + ".define = function(bundle) {\n      for (var key in bundle)\n        modules[key] = bundle[key];\n      for(var key in bundle){\n        var mod = {};\n        bundle[key]({}, require, mod)\n        if(mod.hasOwnProperty('" + this.load_time_exports_id + "'))\n            mod." + this.load_time_exports_id + "(this)\n        }\n    };\n  }\n  return this." + this.identifier + ".define;\n}).call(this)({";
+      index = 0;
+      for (name in sources) {
+        _ref1 = sources[name], filename = _ref1.filename, source = _ref1.source;
+        result += index++ === 0 ? "" : ", ";
+        result += JSON.stringify(name);
+        result += ": function(exports, require, module) {" + source + "}";
+      }
+      return result += "});\n";
     };
 
     Package.prototype.createServer = function() {

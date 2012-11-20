@@ -57,7 +57,9 @@ exports.Package = class Package
   compileSources: (callback) =>
     async.reduce @paths, {}, _.bind(@gatherSourcesFromPath, @), (err, sources) =>
       return callback err if err
+      callback err, (@get_result_bundle sources)
 
+  get_result_bundle: (sources) =>
       result = """
         (function(/*! Stitch !*/) {
           if (!this.#{@identifier}) {
@@ -127,7 +129,6 @@ exports.Package = class Package
         });\n
       """
 
-      callback err, result
 
   createServer: ->
     (req, res, next) =>
