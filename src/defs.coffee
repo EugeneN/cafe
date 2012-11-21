@@ -116,7 +116,7 @@ default_config =
 
     COFFEESCRIPT_EXT: 'coffee'
 
-    CAKE_BIN: 'cake'
+    CAKE_BIN: '/usr/bin/cake'
     CAKEFILE: 'Cakefile'
     CAKE_TARGET: 'cafebuild'
     CAFE_TMP_BUILD_ROOT_ENV_NAME: 'CAFE_TMP_BUILD_ROOT'

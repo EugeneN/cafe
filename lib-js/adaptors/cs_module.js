@@ -150,24 +150,15 @@
       var get_deps, harvest, last_modified, type;
       type = 'csmodule';
       get_deps = function(recipe_deps, cb) {
-        var module_name, slug_path;
+        var deps, group, group_deps, module_name;
         module_name = ctx.own_args.mod_name;
-        slug_path = get_paths(ctx).slug_path;
-        return read_json_file.async(slug_path, function(err, slug) {
-          var deps, group, group_deps, slug_deps, _ref4;
-          if (err) {
-            cb(err);
+        for (group in recipe_deps) {
+          deps = recipe_deps[group];
+          if (group === module_name) {
+            group_deps = deps.concat();
           }
-          slug_deps = ((_ref4 = slug.recipe) != null ? _ref4.concat() : void 0) || [];
-          for (group in recipe_deps) {
-            deps = recipe_deps[group];
-            if (group === module_name) {
-              group_deps = deps.concat();
-            }
-          }
-          slug_deps.concat(group_deps || []);
-          return cb(CB_SUCCESS, slug_deps);
-        });
+        }
+        return cb(CB_SUCCESS, group_deps || []);
       };
       harvest = function(cb, opts) {
         var args, js_path, mod_src, _ref4;

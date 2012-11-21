@@ -2,13 +2,14 @@
 fs = require 'fs'
 path = require 'path'
 cs = require 'coffee-script'
-{exec} = require 'child_process'
+{exec, spawn, fork} = require 'child_process'
 {say, shout, scream, whisper} = (require '../lib/logger') "Adaptor/Cakefile>"
 {maybe_build, is_dir, is_file, has_ext, and_,
  get_mtime, newer, walk, newest, extend} = require '../lib/utils'
 async = require 'async'
-stitch = new require('../lib/stitch')
-Package = new stitch.Package {}
+{stitch_sources} = require '../lib/stitcher'
+{put_to_tmp_storage} = require '../lib/storage'
+
 _ = require 'underscore'
 
 {FILE_ENCODING, TMP_BUILD_DIR_SUFFIX, JS_EXT,
@@ -45,7 +46,6 @@ get_paths = (ctx) ->
     {mod_src, cakefile, target_fn, target_full_fn, tmp_build_root}
 
 module.exports = do ->
-
     match = (ctx) ->
         {mod_src, cakefile} = get_paths ctx
         (is_dir mod_src) and (is_file cakefile)
@@ -81,46 +81,36 @@ module.exports = do ->
                 if changed or (extend ctx, opts).own_args.f
                   cb()
                 else
-                  cb 'Maybe skipped'
+                  cb 'MAYBE_SKIP'
 
             do_cake = (cb) ->
+                sources = null
+
                 opts =
                     cwd: mod_src
                     env: process.env
+                    silent: true
 
-                exec ([CAKE_BIN, CAKE_TARGET].join ' '), opts, (err, results) ->
-                  cb err, results
+                child = fork CAKE_BIN, [CAKE_TARGET], opts
 
-            safe_parse_json_or_undefined = (result, cb) ->
-              console.log result
-              try
-                cb null, (JSON.parse result)
-              catch ex
-                throw ex
-                cb 'Parser error'
+                child.on 'message', (m) ->
+                  child.kill()
+                  sources = JSON.parse m
 
-            stitching = (files, cb) ->
-                sources = {}
-                for [fn, source] in files
-                    ext_length = (path.extname fn).length
-                    filename = fn.slice 0, -ext_length
-                    sources[filename] = {filename: fn, source: source}
-
-                cb null, Package.get_result_bundle sources
-
-            put_to_tmp_storage = (key, data, cb) ->
-                fs.writeFile key, data, (err) ->
-                    (cb err) if err
-                    cb? null, key
+                child.on 'exit', (status_code) ->
+                  if sources
+                    cb CB_SUCCESS, sources
+                  else
+                    cb 'fork_error', status_code
 
             done = (err, res) ->
                 switch err
                     when null
-                      ctx.fb.say 'OK'
+                      ctx.fb.say "Cake module #{mod_src} was brewed"
                       harvest_cb CB_SUCCESS, target_full_fn
                     when "MAYBE_SKIP"
                       ctx.fb.shout "maybe skipped"
-                      harvest_cb null
+                      harvest_cb null, target_full_fn
                     else
                       ctx.fb.scream "not ok"
                       harvest_cb err, res
@@ -128,10 +118,9 @@ module.exports = do ->
             async.waterfall([
               check_maybe_do
               do_cake
-              safe_parse_json_or_undefined
-              stitching
+              stitch_sources
               (partial put_to_tmp_storage, target_full_fn)]
-              don11e)
+              done)
 
 
         last_modified = (cb) ->

@@ -108,21 +108,12 @@ module.exports = do ->
         get_deps = (recipe_deps, cb) ->
             module_name = ctx.own_args.mod_name
 
-            {slug_path} = get_paths ctx
+            for group, deps of recipe_deps
+              if group is module_name
+                # making copy here because dependencies changed in toposort
+                group_deps = deps.concat()
 
-            read_json_file.async slug_path, (err, slug) ->
-                cb err if err
-
-                slug_deps = slug.recipe?.concat() or []
-
-                for group, deps of recipe_deps
-                    if group is module_name
-                        # making copy here because dependencies are changed in toposort
-                        group_deps = deps.concat()
-
-                slug_deps.concat(group_deps or [])
-
-                cb CB_SUCCESS, slug_deps
+            cb CB_SUCCESS, (group_deps or [])
 
         harvest = (cb, opts={}) ->
             {mod_src, js_path} = get_paths ctx
