@@ -17,7 +17,6 @@ _ = require 'underscore'
  CAFE_TMP_BUILD_ROOT_ENV_NAME, CAFE_TARGET_FN_ENV_NAME} = require '../defs'
 
 
-#{put_to_tmp_storage, get_from_tmp_storage, put_to_client_storage, get_from_client_storage} = require '../services/storage'
 stitch = require '../lib/stitch'
 
 partial = (fn, args...) -> _.bind fn, null, args...

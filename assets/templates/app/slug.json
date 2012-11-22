@@ -1,14 +1,6 @@
 {
   "dependencies": [],
   "libs": [],
-  "paths": ["./app"],
-  
-  "public": "../../public/js/cs/",
+  "paths": ["./{{name}}"],
   "jsPath": "{{name}}.js",
-  
-  "folderTests": "../../public/js/cs/tests/",
-  "fileTests": "./tests/{{name}}Tests.coffee",
-  
-  "required_modules": [],
-  "recipe": ["CSLib"]
 }
