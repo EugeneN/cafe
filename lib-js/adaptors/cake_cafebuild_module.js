@@ -144,7 +144,7 @@
               ctx.fb.shout("maybe skipped");
               return harvest_cb(null, target_full_fn);
             default:
-              ctx.fb.scream("not ok");
+              ctx.fb.scream("Error during compilation of Cake module " + mod_src + " err - " + err);
               return harvest_cb(err, res);
           }
         };

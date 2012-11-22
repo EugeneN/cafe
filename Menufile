@@ -22,5 +22,13 @@
             "src": "../tmp/cafe"
         },
         "global": {}
+    },
+    "DNA_Examples_buid": {
+        "build": {
+            "app_root": "../DNA_Examples/cs",
+            "build_root": "../DNA_Examples/public",
+            "f": true
+        },
+        "global": {}
     }
 }

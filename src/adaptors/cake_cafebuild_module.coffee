@@ -111,7 +111,7 @@ module.exports = do ->
                       ctx.fb.shout "maybe skipped"
                       harvest_cb null, target_full_fn
                     else
-                      ctx.fb.scream "not ok"
+                      ctx.fb.scream "Error during compilation of Cake module #{mod_src} err - #{err}"
                       harvest_cb err, res
 
             async.waterfall([
