@@ -4,30 +4,33 @@ path = require 'path'
 
 exports.stitch_sources = (files, cb) ->
     """
-    Accepts compiled files sources in two formats(single pair, or array):
+    Accepts sources and dependencies for bundling.
+        sources: {filename, source}
+        dependencies: [source, source ...]
 
-     1. ['filename', source]
-     2. [['filename', source], ['filename1', source1]]
-
-    Returns stitched modules.
+    Returns stitched module.
     """
 
     Package = new stitch.Package {}
-    sources = {}
 
     fn_without_ext = (filename) ->
         ext_length = (path.extname filename).length
         filename.slice 0, -ext_length
 
-    for f in files
-        if f instanceof Array
-            [fn, source] = f
-            filename = fn_without_ext fn
-            sources[filename] = {filename: fn, source: source}
+    pack = if files.sources
+        sources = {}
+        if files.sources instanceof Array
+            for f in files.sources
+                {filename, source} = f
+                _filename = fn_without_ext filename
+                sources[_filename] = {filename, source}
         else
-            [fn, source] = files
-            filename = fn_without_ext fn
-            sources[filename] = {filename: fn, source: source}
-            break
+            {filename, source} = files.sources
+            _filename = fn_without_ext filename
+            sources[_filename] = {filename, source}
 
-    cb CB_SUCCESS, Package.get_result_bundle sources
+        Package.get_result_bundle sources
+
+    deps = files.dependencies?.join('\n')
+
+    cb CB_SUCCESS, [deps, pack].join('\n')

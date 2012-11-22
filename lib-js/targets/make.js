@@ -17,7 +17,7 @@
   make_skelethon = require('../lib/skelethon/skelethon').make_skelethon;
 
   make_app = function(name, ctx) {
-    var replace_file_names_map, template, values, _path;
+    var replace_dir_names, template, values, _path;
     if (!name) {
       throw "Bad name `" + name + "`";
     }
@@ -30,15 +30,14 @@
       throw _path + " already exists";
     }
     fs.mkdirSync(_path, 0x1fd);
-    replace_file_names_map = {
-      "index.coffee": "" + name + ".coffee",
-      "index_tests.coffee": "" + name + "Tests.coffee"
+    replace_dir_names = {
+      'app': name
     };
     return make_skelethon({
       skelethon_path: template,
       result_path: _path,
       values: values,
-      replace_map: replace_file_names_map,
+      replace_dir_names: replace_dir_names,
       fb: ctx.fb
     });
   };
@@ -80,7 +79,7 @@
   };
 
   make_module = function(name, ctx) {
-    var replace_file_names_map, template, values, _path;
+    var replace_dir_names, template, values, _path;
     if (!name) {
       throw "Need module name";
     }
@@ -93,15 +92,15 @@
       throw _path + " already exists";
     }
     fs.mkdirSync(_path, 0x1fd);
-    replace_file_names_map = {
-      "module.coffee": "" + name + ".coffee"
+    replace_dir_names = {
+      'src': name
     };
     return make_skelethon({
       skelethon_path: template,
       result_path: _path,
       values: values,
-      replace_map: replace_file_names_map,
-      fb: ctx.fb
+      fb: ctx.fb,
+      replace_dir_names: replace_dir_names
     });
   };
 

@@ -28,15 +28,14 @@ make_app = (name, ctx) ->
 
     fs.mkdirSync _path, 0o0775
 
-    replace_file_names_map = 
-        "index.coffee":"#{name}.coffee"
-        "index_tests.coffee":"#{name}Tests.coffee"
+    replace_dir_names =
+        'app': name
 
     make_skelethon
         skelethon_path: template
         result_path: _path
         values: values
-        replace_map: replace_file_names_map
+        replace_dir_names: replace_dir_names
         fb: ctx.fb
 
 
@@ -78,15 +77,15 @@ make_module = (name, ctx) ->
 
     fs.mkdirSync _path, 0o0775
 
-    replace_file_names_map =
-        "module.coffee":"#{name}.coffee"
+    replace_dir_names =
+        'src': name
 
     make_skelethon
         skelethon_path: template
         result_path: _path
         values: values
-        replace_map: replace_file_names_map
         fb: ctx.fb
+        replace_dir_names: replace_dir_names
 
 
 maker = (ctx, cb) ->

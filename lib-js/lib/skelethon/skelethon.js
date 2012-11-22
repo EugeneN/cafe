@@ -17,9 +17,9 @@
   };
 
   make_skelethon = function(_arg) {
-    var fb, replace_map, result_path, skelethon_path, values;
-    skelethon_path = _arg.skelethon_path, result_path = _arg.result_path, values = _arg.values, replace_map = _arg.replace_map, fb = _arg.fb;
-    "@skelethon_path: path where skelethon templates are placed.\n@result_path: path where we need to insert module skelethon.\n@values: replace values. Dict of values that will be inserted instead of\n    placeholders in skelethon files.({'placeholder_name': value} \n    Placeholder's format - {{placeholder name}}\n@replace_map: if we need to replace some filenames we may \n    provide replace map.";
+    var fb, replace_dir_names, replace_file_names, result_path, skelethon_path, values;
+    skelethon_path = _arg.skelethon_path, result_path = _arg.result_path, values = _arg.values, replace_file_names = _arg.replace_file_names, replace_dir_names = _arg.replace_dir_names, fb = _arg.fb;
+    "@skelethon_path: path where skelethon templates are placed.\n\n@result_path: path where we need to insert module skelethon.\n\n@values: replace values. Dict of values that will be inserted instead of\n    placeholders in skelethon files.({'placeholder_name': value} \n    Placeholder's format - {{placeholder name}}\n\n@replace_file_names: if we need to replace some filenames we may \n    provide replace map.\n\n@replace_dir_names: dict with dir_name_to_replace: new_dirname";
 
     if (!skelethon_path) {
       throw "skelethon path is not set";
@@ -29,11 +29,15 @@
     }
     skelethon_path = path.normalize(skelethon_path);
     return (get_all_relative_files(skelethon_path)).map(function(_path) {
-      var data, dir, file, out;
+      var data, dir, dir_to_replace, file, out, source_dir;
       out = _path.replace(skelethon_path, '');
+      for (source_dir in replace_dir_names) {
+        dir_to_replace = replace_dir_names[source_dir];
+        out = out.replace("/" + source_dir, "/" + dir_to_replace);
+      }
       dir = path.dirname(out);
       file = path.basename(out);
-      if (replace_map != null ? replace_map.hasOwnProperty(file) : void 0) {
+      if (typeof replace_map !== "undefined" && replace_map !== null ? replace_map.hasOwnProperty(file) : void 0) {
         out = path.join(dir, replace_map[file]);
       }
       out = path.join(result_path, out);

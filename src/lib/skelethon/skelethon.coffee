@@ -12,15 +12,28 @@ parse = (data, values) ->
         values[key]
 
 
-make_skelethon = ({skelethon_path, result_path, values, replace_map, fb}) ->
+make_skelethon = ({
+    skelethon_path
+    result_path
+    values
+    replace_file_names
+    replace_dir_names
+    fb
+    }) ->
+
     """
     @skelethon_path: path where skelethon templates are placed.
+
     @result_path: path where we need to insert module skelethon.
+
     @values: replace values. Dict of values that will be inserted instead of
         placeholders in skelethon files.({'placeholder_name': value} 
         Placeholder's format - {{placeholder name}}
-    @replace_map: if we need to replace some filenames we may 
+
+    @replace_file_names: if we need to replace some filenames we may 
         provide replace map.
+
+    @replace_dir_names: dict with dir_name_to_replace: new_dirname
     """
 
     throw "skelethon path is not set" unless skelethon_path
@@ -30,6 +43,10 @@ make_skelethon = ({skelethon_path, result_path, values, replace_map, fb}) ->
 
     (get_all_relative_files skelethon_path).map (_path) ->
         out = _path.replace skelethon_path, ''
+
+        for source_dir, dir_to_replace of replace_dir_names
+            out = out.replace "/#{source_dir}", "/#{dir_to_replace}"
+
         dir = path.dirname out
         file = path.basename out
         if (replace_map?.hasOwnProperty file)

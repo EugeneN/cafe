@@ -9,36 +9,43 @@
   path = require('path');
 
   exports.stitch_sources = function(files, cb) {
-    "Accepts compiled files sources in two formats(single pair, or array):\n\n 1. ['filename', source]\n 2. [['filename', source], ['filename1', source1]]\n\nReturns stitched modules.";
+    "Accepts sources and dependencies for bundling.\n    sources: {filename, source}\n    dependencies: [source, source ...]\n\nReturns stitched module.";
 
-    var Package, f, filename, fn, fn_without_ext, source, sources, _i, _len;
+    var Package, deps, f, filename, fn_without_ext, pack, source, sources, _filename, _ref;
     Package = new stitch.Package({});
-    sources = {};
     fn_without_ext = function(filename) {
       var ext_length;
       ext_length = (path.extname(filename)).length;
       return filename.slice(0, -ext_length);
     };
-    for (_i = 0, _len = files.length; _i < _len; _i++) {
-      f = files[_i];
-      if (f instanceof Array) {
-        fn = f[0], source = f[1];
-        filename = fn_without_ext(fn);
-        sources[filename] = {
-          filename: fn,
-          source: source
-        };
-      } else {
-        fn = files[0], source = files[1];
-        filename = fn_without_ext(fn);
-        sources[filename] = {
-          filename: fn,
-          source: source
-        };
-        break;
+    pack = (function() {
+      var _i, _len, _ref, _ref1;
+      if (files.sources) {
+        sources = {};
+        if (files.sources instanceof Array) {
+          _ref = files.sources;
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            f = _ref[_i];
+            filename = f.filename, source = f.source;
+            _filename = fn_without_ext(filename);
+            sources[_filename] = {
+              filename: filename,
+              source: source
+            };
+          }
+        } else {
+          _ref1 = files.sources, filename = _ref1.filename, source = _ref1.source;
+          _filename = fn_without_ext(filename);
+          sources[_filename] = {
+            filename: filename,
+            source: source
+          };
+        }
+        return Package.get_result_bundle(sources);
       }
-    }
-    return cb(CB_SUCCESS, Package.get_result_bundle(sources));
+    })();
+    deps = (_ref = files.dependencies) != null ? _ref.join('\n') : void 0;
+    return cb(CB_SUCCESS, [deps, pack].join('\n'));
   };
 
 }).call(this);
