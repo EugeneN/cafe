@@ -112,7 +112,7 @@ module.exports = (emitter) ->
                     if (seq.length is 0) then (no_action_handler fb) else (run_seq args, seq, fb)
 
             # making updating explicit until issue with sudo password will be solved
-            if process.getuid() is 0
+            if process.getuid?() is 0
                 run_target 'update', args, proto_ctx, cb
             else
                 cb()

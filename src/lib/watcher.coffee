@@ -1,7 +1,4 @@
-fs = require 'fs'
 path = require 'path'
-async = require 'async'
-watch = require 'watch'
 chokidar = require 'chokidar'
 {fork, spawn} = require 'child_process'
 
@@ -141,10 +138,5 @@ module.exports =
             #watcher.on 'add', change_handler
             watcher.on 'change', change_handler
             watcher.on 'error', (error) -> ctx.fb.scream "watcher encauntered an error #{error}"
-
-
-
-                
-                #watch.watchTree module_root, {ignoreDotFiles: true}, change_handler
 
         ctx.fb.say "Started growing Coffee on the plantation '#{ctx.watch_root}'"

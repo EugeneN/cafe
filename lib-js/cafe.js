@@ -95,7 +95,7 @@
             }
           }
         };
-        if (process.getuid() === 0) {
+        if ((typeof process.getuid === "function" ? process.getuid() : void 0) === 0) {
           return run_target('update', args, proto_ctx, cb);
         } else {
           return cb();

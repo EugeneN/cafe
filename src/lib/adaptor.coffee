@@ -1,16 +1,19 @@
 path = require 'path'
+fs = require 'fs'
 {is_file, is_dir, get_plugins} = require './utils'
 {say, shout, scream, whisper} = (require './logger') "libadaptor>"
 
-{ADAPTORS_PATH, ADAPTORS_LIB} = require '../defs'
-
+{ADAPTORS_PATH, ADAPTOR_FN, ADAPTORS_LIB, JS_EXT} = require '../defs'
 
 module.exports = ->
-    adaptors_names = get_plugins ADAPTORS_PATH
+    fn_pattern = "#{ADAPTOR_FN}#{JS_EXT}" 
 
-    adaptors_names.map (a_name) ->
-        try
-            require path.join ADAPTORS_LIB, a_name
-        catch e
-            scream "Can't load adaptor '#{a_name}': #{e}"
-            throw e
+    (fs.readdirSync ADAPTORS_PATH)\
+       .map((p) -> path.join(ADAPTORS_PATH, p))\
+       .filter((fn) -> (is_dir fn) and fn_pattern in fs.readdirSync fn)
+       .map (d) ->
+           try
+               require(path.join d, fn_pattern)
+            catch e
+                scream "Can't load adaptor '#{d}': #{e}"
+                throw e

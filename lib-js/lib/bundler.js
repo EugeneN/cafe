@@ -30,6 +30,9 @@
     ' Resolves deps and assigns an adaptor to each module ';
 
     adaptors = get_adaptors();
+    if (!(adaptors.length > 0)) {
+      throw 'No adaptors found for build';
+    }
     app_root = path.resolve(ctx.own_args.app_root);
     process_module = function(module_name, process_module_cb) {
       var args, find_adaptor, new_ctx;

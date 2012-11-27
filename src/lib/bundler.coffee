@@ -18,6 +18,10 @@ resolve_deps = ({modules, app_root, recipe_deps, ctx}, resolve_deps_cb) ->
     ''' Resolves deps and assigns an adaptor to each module '''
 
     adaptors = get_adaptors() # sync for now
+
+    unless adaptors.length > 0
+        throw 'No adaptors found for build'
+
     app_root = path.resolve ctx.own_args.app_root
 
     process_module = (module_name, process_module_cb) ->

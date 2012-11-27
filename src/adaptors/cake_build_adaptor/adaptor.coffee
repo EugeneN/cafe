@@ -1,23 +1,20 @@
-# Plain coffescript file adaptor blah blah
 fs = require 'fs'
 path = require 'path'
 cs = require 'coffee-script'
 {exec, spawn, fork} = require 'child_process'
-{say, shout, scream, whisper} = (require '../lib/logger') "Adaptor/Cakefile>"
+{say, shout, scream, whisper} = (require '../../lib/logger') "Adaptor/Cakefile>"
 {maybe_build, is_dir, is_file, has_ext, and_,
- get_mtime, newer, walk, newest, extend} = require '../lib/utils'
+ get_mtime, newer, walk, newest, extend} = require '../../lib/utils'
 async = require 'async'
-{stitch_sources} = require '../lib/stitcher'
-{put_to_tmp_storage} = require '../lib/storage'
+{stitch_sources} = require '../../lib/stitcher'
+{put_to_tmp_storage} = require '../../lib/storage'
 
 _ = require 'underscore'
 
 {FILE_ENCODING, TMP_BUILD_DIR_SUFFIX, JS_EXT,
  CAKE_BIN, CAKE_TARGET, NODE_PATH, CAKEFILE, CB_SUCCESS,
- CAFE_TMP_BUILD_ROOT_ENV_NAME, CAFE_TARGET_FN_ENV_NAME} = require '../defs'
+ CAFE_TMP_BUILD_ROOT_ENV_NAME, CAFE_TARGET_FN_ENV_NAME} = require '../../defs'
 
-
-stitch = require '../lib/stitch'
 
 partial = (fn, args...) -> _.bind fn, null, args...
 

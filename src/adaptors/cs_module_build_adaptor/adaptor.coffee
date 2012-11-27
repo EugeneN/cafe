@@ -4,13 +4,13 @@ fs = require 'fs'
 path = require 'path'
 async = require 'async'
 
-Compiler = require '../lib/sm_compiler'
-{maybe_build, toArray, add, read_json_file, get_mtime, and_, or_} = require '../lib/utils'
-{is_file, is_dir, is_debug_context, extend, walk, newest} = require '../lib/utils'
-{say, shout, scream, whisper} = (require '../lib/logger') "Adaptor/CsModule>"
+Compiler = require '../../lib/sm_compiler'
+{maybe_build, toArray, add, read_json_file, get_mtime, and_, or_} = require '../../lib/utils'
+{is_file, is_dir, is_debug_context, extend, walk, newest} = require '../../lib/utils'
+{say, shout, scream, whisper} = (require '../../lib/logger') "Adaptor/CsModule>"
 
 {SLUG_FN, TMP_BUILD_DIR_SUFFIX, CS_ADAPTOR_PATH_SUFFIX, 
- CB_SUCCESS, CS_RUN_CONCURRENT} = require '../defs'
+ CB_SUCCESS, CS_RUN_CONCURRENT} = require '../../defs'
 
 build_cs_mod = (ctx, cb) ->
     {mod_src, slug_path} = get_paths ctx

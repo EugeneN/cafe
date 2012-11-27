@@ -1,11 +1,11 @@
 # Plain old javascript file adaptor blah blah
 fs = require 'fs'
 path = require 'path'
-{is_file, has_ext, get_mtime, and_} = require '../lib/utils'
-{say, shout, scream, whisper} = (require '../lib/logger') "Adaptor/javascript>"
+{is_file, has_ext, get_mtime, and_} = require '../../lib/utils'
+{say, shout, scream, whisper} = (require '../../lib/logger') "Adaptor/javascript>"
 async = require 'async'
 
-{JS_JUST_EXT, CB_SUCCESS} = require '../defs'
+{JS_JUST_EXT, CB_SUCCESS} = require '../../defs'
 
 get_paths = (ctx) ->
     app_root = path.resolve ctx.own_args.app_root
