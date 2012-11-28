@@ -1,19 +1,19 @@
-# Spine modules compiller.
-# TODO: write documentation headers.
+"""
+Slug.json module compiler.
+"""
 
 fs        = require 'fs'
 path      = require 'path'
-_package   = require './stitch'
+_package   = require '../../lib/stitch'
 exec = require('child_process').exec
 
-{add, is_file, read_slug} = require './utils'
-{say, shout, scream, whisper} = (require './logger') "CSMCompiler>"
+{add, is_file, read_slug} = require '../../lib/utils'
 
-{SLUG_FN} = require '../defs'
+{SLUG_FN} = require '../../defs'
 
 class SM_Compiler
     ###
-    Spine module compiler.
+    Slug.json module compiler.
     ###
 
     constructor: (@base_path, @ctx, options = {}) ->

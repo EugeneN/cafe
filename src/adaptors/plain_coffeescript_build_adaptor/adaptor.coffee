@@ -9,12 +9,12 @@ cs = require 'coffee-script'
     newer
     get_result_filename
     and_
-} = require '../lib/utils'
-{say, shout, scream, whisper} = (require '../lib/logger') "Adaptor/coffee>"
+} = require '../../lib/utils'
+{say, shout, scream, whisper} = (require '../../lib/logger') "Adaptor/coffee>"
 async = require 'async'
 
 {FILE_ENCODING, TMP_BUILD_DIR_SUFFIX, CS_EXT, JS_EXT, CB_SUCCESS, 
- COFFEESCRIPT_EXT} = require '../defs'
+ COFFEESCRIPT_EXT} = require '../../defs'
 
 
 get_target_fn = (app_root, module_name) ->

@@ -3,14 +3,14 @@ fs = require 'fs'
 path = require 'path'
 cs = require 'coffee-script'
 {exec} = require 'child_process'
-{say, shout, scream, whisper} = (require '../lib/logger') "Adaptor/Leinmodule>"
+{say, shout, scream, whisper} = (require '../../lib/logger') "Adaptor/Leinmodule>"
 {maybe_build, is_dir, is_file, has_ext, and_,
- get_mtime, newer, walk, newest, extend} = require '../lib/utils'
+ get_mtime, newer, walk, newest, extend} = require '../../lib/utils'
 async = require 'async'
 
 {FILE_ENCODING, TMP_BUILD_DIR_SUFFIX, JS_EXT,
  LEIN_BIN, NODE_PATH, PROJECT_CLJ, CB_SUCCESS, LEIN_ARGS,
- } = require '../defs'
+ } = require '../../defs'
 
 
 get_target_fn = (js_path, app_root, target_fn) ->
