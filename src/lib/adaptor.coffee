@@ -12,8 +12,4 @@ module.exports = ->
        .map((p) -> path.join(ADAPTORS_PATH, p))\
        .filter((fn) -> (is_dir fn) and fn_pattern in fs.readdirSync fn)
        .map (d) ->
-           try
-               require(path.join d, fn_pattern)
-            catch e
-                scream "Can't load adaptor '#{d}': #{e}"
-                throw e
+            require(path.join d, fn_pattern)

@@ -33,6 +33,7 @@ TARGET_PATH = path.resolve __dirname, './targets/'
 ADAPTORS_PATH = path.resolve __dirname, "./adaptors"
 ADAPTORS_LIB = path.resolve __dirname, "./adaptors"
 ADAPTOR_FN = 'adaptor'
+SKELETHON_FN = 'skelethon'
 
 SUB_CAFE = path.resolve __dirname, '../bin/cafe'
 
@@ -67,6 +68,7 @@ default_config =
     TARGET_PATH: TARGET_PATH
     ADAPTORS_PATH: ADAPTORS_PATH
     ADAPTOR_FN: ADAPTOR_FN
+    SKELETHON_FN: SKELETHON_FN
     ADAPTORS_LIB: ADAPTORS_LIB
 
     WATCH_FN_PATTERN: /^[^\.].+\.coffee$|^[^\.].+\.json$|^[^\.].+\.eco|^[^\.].+\.js$|^[^\.].+\.cljs$/i
