@@ -128,8 +128,8 @@ module.exports = (emitter) ->
                     EXIT_STATUS = EXIT_SUCCESS
 
                 when 'stop'
-                    whisper 'Stop from task'
-                    fb.whisper 'Stop from task'
+                    #whisper 'Stop from task'
+                    #fb.whisper 'Stop from task'
                     EXIT_STATUS = EXIT_SUCCESS
 
                 when 'sigint'

@@ -21,12 +21,7 @@
     }).filter(function(fn) {
       return (is_dir(fn)) && __indexOf.call(fs.readdirSync(fn), fn_pattern) >= 0;
     }).map(function(d) {
-      try {
-        return require(path.join(d, fn_pattern));
-      } catch (e) {
-        scream("Can't load adaptor '" + d + "': " + e);
-        throw e;
-      }
+      return require(path.join(d, fn_pattern));
     });
   };
 

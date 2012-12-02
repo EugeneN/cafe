@@ -119,8 +119,6 @@
             EXIT_STATUS = EXIT_SUCCESS;
             break;
           case 'stop':
-            whisper('Stop from task');
-            fb.whisper('Stop from task');
             EXIT_STATUS = EXIT_SUCCESS;
             break;
           case 'sigint':

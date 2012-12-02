@@ -1,6 +1,6 @@
 {
   "dependencies": [],
   "libs": [],
-  "paths": ["./{{name}}"],
+  "paths": ["./app"],
   "jsPath": "{{name}}.js",
 }

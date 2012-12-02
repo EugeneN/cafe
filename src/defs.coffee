@@ -33,6 +33,7 @@ TARGET_PATH = path.resolve __dirname, './targets/'
 ADAPTORS_PATH = path.resolve __dirname, "./adaptors"
 ADAPTORS_LIB = path.resolve __dirname, "./adaptors"
 ADAPTOR_FN = 'adaptor'
+SKELETHON_ASSETS_PATH = path.resolve __dirname, "../assets/adaptors/"
 SKELETHON_FN = 'skelethon'
 
 SUB_CAFE = path.resolve __dirname, '../bin/cafe'
@@ -147,5 +148,6 @@ default_config =
     DEFAULT_CS_BUILD_DIR : 'build'
     SUCCESS_ICO : path.resolve __dirname, '../assets/img/success.jpg'
     FAILURE_ICO : path.resolve __dirname, '../assets/img/failure.jpg'
+    SKELETHON_ASSETS_PATH: SKELETHON_ASSETS_PATH  
 
 module.exports = extend {}, default_config, user_config

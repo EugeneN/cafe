@@ -148,4 +148,6 @@ module.exports = do ->
 
         {type, get_deps, harvest, last_modified}
 
-    {match, make_adaptor}
+    make_skelethon =  -> require './skelethon'
+
+    {match, make_adaptor, make_skelethon}

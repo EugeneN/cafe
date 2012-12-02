@@ -1,0 +1,1 @@
+exports.cake_create = ->
