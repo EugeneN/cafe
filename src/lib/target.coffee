@@ -32,7 +32,6 @@ make_target = (name, exec_func, help, single) ->
     # context object to pass to targets
     # put here everything targets may or will ever need
 
-
     run = (full_args, emitter, fb, cb) ->
         ctx =
             name: name

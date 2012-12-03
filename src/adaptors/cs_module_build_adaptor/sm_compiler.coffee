@@ -8,7 +8,6 @@ _package   = require '../../lib/stitch'
 exec = require('child_process').exec
 
 {add, is_file, read_slug} = require '../../lib/utils'
-
 {SLUG_FN} = require '../../defs'
 
 class SM_Compiler
@@ -29,15 +28,10 @@ class SM_Compiler
     readSlug: (slug) ->
         if is_file slug
             json_slug = read_slug path.dirname slug
-
-            scream slug, json_slug
-
             json_slug.paths = json_slug.paths.map @_abs_path
             json_slug.public = @_abs_path json_slug.public
             json_slug.fileTests = @_abs_path json_slug.fileTests
             json_slug.folderTests =@_abs_path json_slug.folderTests
-            # TODO: handle other arguments paths overriding.
-
             json_slug
         else
             {}
@@ -71,7 +65,7 @@ class SM_Compiler
         catch error
             @fb.scream "Failed to build #{@base_path} #{error}"
             @fb.whisper "#{error.stack}"
-            scream "Failed to build #{@base_path} #{error}"
+            @fb.scream "Failed to build #{@base_path} #{error}"
             whisper "#{error.stack}"
 
             @emitter.emit "COMPILE_FAIL"

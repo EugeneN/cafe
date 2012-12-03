@@ -327,12 +327,16 @@
         })).reduce(function(a, b) {
           return a && b;
         });
-        if (!no_changes) {
-          fn = path.resolve(get_tmp_build_dir(ctx.own_args.build_root), BUILD_DEPS_FN);
-          return write_build_deps_file(ctx, fn, result, cb);
-        } else {
+        if (no_changes) {
           ctx.fb.shout("" + BUILD_DEPS_FN + " still hot");
           return cb(CB_SUCCESS);
+        } else {
+          if (ctx.own_args.just_files) {
+            return cb(CB_SUCCESS);
+          } else {
+            fn = path.resolve(get_tmp_build_dir(ctx.own_args.build_root), BUILD_DEPS_FN);
+            return write_build_deps_file(ctx, fn, result, cb);
+          }
         }
       }
     };

@@ -42,11 +42,9 @@ uuid = require 'node-uuid'
  murmur, shutup, panic_mode, nocolor} = (require './lib/logger')()
 {
     VERSION
-
     TARGET_PATH
-
     EVENT_CAFE_DONE
-
+    EVENT_BUNDLE_CREATED
     EXIT_SUCCESS
     EXIT_TARGET_ERROR
     EXIT_OTHER_ERROR
@@ -89,11 +87,14 @@ module.exports = (emitter) ->
             emitter: Emitter
             fb: fb
 
+        bundles = []
+        Emitter.on EVENT_BUNDLE_CREATED, (bundle_path) -> bundles.push bundle_path
+
         # the one and only exit point
         Emitter.on EVENT_CAFE_DONE, (status) ->
             say "Coffee #{ID} brewed in <#{(new Date - START_TIME) / 1000} seconds> at #{new Date}"
             fb.say "Coffee #{ID} brewed in <#{(new Date - START_TIME) / 1000} seconds> at #{new Date}"
-            exit_cb (if status is undefined then EXIT_NO_STATUS_CODE else status)
+            exit_cb (if status is undefined then EXIT_NO_STATUS_CODE else status), bundles
 
 
         # global entry point

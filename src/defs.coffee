@@ -86,6 +86,7 @@ default_config =
     UPDATE_CMD: "sudo npm install -g #{REPO_URL}#{CAFE_TARBALL}"
 
     EVENT_CAFE_DONE: 'CAFE_DONE'
+    EVENT_BUNDLE_CREATED: 'CAFE.BUNDLE.CREATED'
 
     EXIT_SUCCESS: 0
     EXIT_TARGET_ERROR: 1

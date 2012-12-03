@@ -78,10 +78,14 @@ module.exports = ->
     logger.nocolor on if argv.global.hasOwnProperty 'nocolor'
     logger.shutup on if argv.global.hasOwnProperty 'shutup'
     logger.panic_mode on if argv.global.hasOwnProperty 'debug'
+
     is_growl = not argv.global.hasOwnProperty 'nogrowl'
     draw_logo fb unless argv.global.hasOwnProperty 'nologo'
+
     emitter = new events.EventEmitter
+
     (subscribe emitter) if is_growl
+
     {ready} = cafe_factory emitter
     {go} = ready {exit_cb, fb}
     go args: argv

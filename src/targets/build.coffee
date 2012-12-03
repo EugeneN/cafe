@@ -289,13 +289,16 @@ process_realms = (ctx, recipe, cb) ->
                             result[name] = bundles
                             not_changed).reduce (a, b) -> a and b
 
-            unless no_changes
-                fn = path.resolve (get_tmp_build_dir ctx.own_args.build_root), BUILD_DEPS_FN
-                write_build_deps_file ctx, fn, result, cb
-
-            else
+            if no_changes
                 ctx.fb.shout "#{BUILD_DEPS_FN} still hot"
                 cb CB_SUCCESS
+
+            else
+                if ctx.own_args.just_files
+                    cb CB_SUCCESS
+                else
+                    fn = path.resolve (get_tmp_build_dir ctx.own_args.build_root), BUILD_DEPS_FN
+                    write_build_deps_file ctx, fn, result, cb
 
     # Build level 0 entry point
     async.map ([k, v] for k, v of recipe.realms), process_realm, done_processing_realms

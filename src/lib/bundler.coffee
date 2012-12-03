@@ -11,7 +11,7 @@ get_adaptors = require './adaptor'
 {say, shout, scream, whisper} = (require './logger') "lib-bundle>"
 
 {SLUG_FN, FILE_ENCODING, BUILD_FILE_EXT, RECIPE, VERSION, EOL, CB_SUCCESS,
- BUNDLE_HDR, BUNDLE_ITEM_HDR, BUNDLE_ITEM_FTR} = require '../defs'
+ BUNDLE_HDR, BUNDLE_ITEM_HDR, BUNDLE_ITEM_FTR, EVENT_BUNDLE_CREATED} = require '../defs'
 
 
 resolve_deps = ({modules, app_root, recipe_deps, ctx}, resolve_deps_cb) ->
@@ -101,8 +101,14 @@ toposort = (debug_info, modules) ->
 build_bundle = ({realm, bundle_name, bundle_opts, force_compile, force_bundle,
                  sorted_modules_list, build_root, ctx, cb}) ->
 
+    get_target_path = ->
+        if ctx.own_args.just_files
+            path.dirname(path.resolve build_root)
+        else
+          path.resolve build_root, realm
+
     get_target_fn = ->
-        path.resolve build_root, realm, (bundle_name + BUILD_FILE_EXT)
+        path.resolve get_target_path(), (bundle_name + BUILD_FILE_EXT)
 
     write_bundle = (file_list, cb) ->
         read_file = (fn, cb) ->
@@ -120,9 +126,11 @@ build_bundle = ({realm, bundle_name, bundle_opts, force_compile, force_bundle,
                 ctx.fb.scream """Failed to write bundle #{realm}/#{bundle_name}#{BUILD_FILE_EXT}:
                                  #{err}
                               """
+
                 cb 'target_error', err
             else
                 ctx.fb.say "Bundle #{realm}/#{bundle_name}#{BUILD_FILE_EXT} built."
+                ctx.emitter.emit EVENT_BUNDLE_CREATED, get_target_fn()
                 cb()
 
         do_it = (err) ->
@@ -135,7 +143,7 @@ build_bundle = ({realm, bundle_name, bundle_opts, force_compile, force_bundle,
                                   FILE_ENCODING,
                                   done)
 
-        mkdirp (path.resolve build_root, realm), do_it
+        mkdirp get_target_path(), do_it
 
     seq = (m.adaptor.harvest for m in sorted_modules_list)
     seq2 = (m.adaptor.last_modified for m in sorted_modules_list)

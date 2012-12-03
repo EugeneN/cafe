@@ -14,10 +14,24 @@ get_adaptors = require '../lib/adaptor'
 u = require 'underscore'
 path = require 'path'
 
+list = (ctx, cb) ->
+  skels = get_adaptors()
+          .map((a) -> a.make_skelethon?())
+          .filter((a) -> a?)
+          .reduce((a, b) -> u.extend(a, b))
+
+  records = (k for k, v of skels).map((k) -> "  -#{k}").join("  \r\n")
+
+  ctx.fb.say "List of available skelethons: \r\n#{records} \r\n"
+  cb 'stop'
+
+
 skelethon = (ctx, cb) ->
 
     args = Object.keys(ctx.full_args)\
            .filter (k) -> k not in ['skelethon', 'global']
+
+    list(ctx, cb) if 'list' in args
 
     skels = get_adaptors()\
             .map((a) -> a.make_skelethon?())\
@@ -33,6 +47,7 @@ skelethon = (ctx, cb) ->
             skel_values.skelethon_path
         )
         skel_values.fb = ctx.fb
+        console.log skel_values
 
         make_skelethon skel_values
     else

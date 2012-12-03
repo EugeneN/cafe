@@ -26,14 +26,14 @@ expandPath = (_path, dir) ->
 exports.slugmodule = (ctx_args) ->
     name = ctx_args[1]
     throw "Need module name" unless name
-    values = {name}
+    values = {name: path.basename(name)}
     _path = path.normalize(name)
     throw(_path + " already exists") if fs.existsSync(_path)
 
     fs.mkdirSync _path, 0o0775
 
     replace_dir_names =
-        'src': name
+        'src': path.basename(name)
 
     skelethon_path: SLUG_ASSETS_PATH
     result_path: _path
@@ -70,11 +70,9 @@ exports.spineapp = (ctx_args) ->
     throw "Bad name `#{name}`" unless name
 
     template = "#{SPINE_ASSETS_PATH}/app"
-    values = {name}
+    values = {name: path.basename(name)}
     _path = path.normalize(name)
-
     throw(_path + " already exists") if fs.existsSync(_path)
-
     fs.mkdirSync _path, 0o0775
 
     skelethon_path: template
