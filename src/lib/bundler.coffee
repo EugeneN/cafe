@@ -3,6 +3,7 @@ path = require 'path'
 async = require 'async'
 mkdirp = require 'mkdirp'
 {map, reduce} = require 'functools'
+{wrap_bundle, wrap_modules} = require '../lib/wrapper/wrapper'
 
 
 get_adaptors = require './adaptor'
@@ -11,7 +12,8 @@ get_adaptors = require './adaptor'
 {say, shout, scream, whisper} = (require './logger') "lib-bundle>"
 
 {SLUG_FN, FILE_ENCODING, BUILD_FILE_EXT, RECIPE, VERSION, EOL, CB_SUCCESS,
- BUNDLE_HDR, BUNDLE_ITEM_HDR, BUNDLE_ITEM_FTR, EVENT_BUNDLE_CREATED} = require '../defs'
+ BUNDLE_HDR, BUNDLE_ITEM_HDR, BUNDLE_ITEM_FTR, EVENT_BUNDLE_CREATED, FILE_TYPE_COMMONJS,
+ FILE_TYPE_PLAINJS } = require '../defs'
 
 
 resolve_deps = ({modules, app_root, recipe_deps, ctx}, resolve_deps_cb) ->
@@ -110,17 +112,7 @@ build_bundle = ({realm, bundle_name, bundle_opts, force_compile, force_bundle,
     get_target_fn = ->
         path.resolve get_target_path(), (bundle_name + BUILD_FILE_EXT)
 
-    write_bundle = (file_list, cb) ->
-        read_file = (fn, cb) ->
-            fs.readFile fn, FILE_ENCODING, (err, data) ->
-                if err
-                    cb CB_SUCCESS, [fn, "/* Can't read: #{err} */"]
-                else
-                    cb CB_SUCCESS, [fn, data]
-
-        merge = (a, [fn, fc]) ->
-            reduce ((x, y) -> x + y), [a, (BUNDLE_ITEM_HDR fn), fc, BUNDLE_ITEM_FTR]
-
+    write_bundle = (results, cb) ->
         done = (err) ->
             if err
                 ctx.fb.scream """Failed to write bundle #{realm}/#{bundle_name}#{BUILD_FILE_EXT}:
@@ -137,11 +129,12 @@ build_bundle = ({realm, bundle_name, bundle_opts, force_compile, force_bundle,
             if err
                 cb 'fs_error', err
             else
-                map.async read_file, file_list, (err, out) ->
-                    (fs.writeFile get_target_fn(),
-                                  (BUNDLE_HDR + (reduce merge, ([''].concat out))),
-                                  FILE_ENCODING,
-                                  done)
+                fs.writeFile(
+                    get_target_fn()
+                    wrap_bundle(wrap_modules results)
+                    FILE_ENCODING
+                    done
+                )
 
         mkdirp get_target_path(), do_it
 
@@ -175,14 +168,12 @@ build_bundle = ({realm, bundle_name, bundle_opts, force_compile, force_bundle,
                         cb CB_SUCCESS, [realm, bundle_name, not_changed]
 
             if force_bundle
-                write_bundle (flatten results), (write_cb false)
-
+                write_bundle (results), (write_cb false)
             else
                 done_seq2 = (err, result) ->
                     if err
                         ctx.fb.scream "Error getting last_modified: #{err}"
                         cb? 'target_error', err
-
                     else
                         recipe_mtime = (get_mtime (path.resolve ctx.own_args.app_root,
                                                                 (ctx.own_args.formula or RECIPE)))
@@ -195,10 +186,10 @@ build_bundle = ({realm, bundle_name, bundle_opts, force_compile, force_bundle,
                             0
 
                         unless max_src_mtime < target_mtime
-                            write_bundle (flatten results), (write_cb false)
+                            write_bundle results, (write_cb false)
                         else
                             ctx.fb.shout "Bundle #{realm}/#{bundle_name} still hot"
-                            write_bundle (flatten results), (write_cb true)
+                            write_bundle results, (write_cb true)
 
                 # maybe bundle check
                 async.map seq2, seq2_harvester, done_seq2

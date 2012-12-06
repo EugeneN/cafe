@@ -6,8 +6,6 @@ cs = require 'coffee-script'
 {maybe_build, is_dir, is_file, has_ext, and_,
  get_mtime, newer, walk, newest, extend} = require '../../lib/utils'
 async = require 'async'
-{stitch_sources} = require '../../lib/stitcher'
-{put_to_tmp_storage} = require '../../lib/storage'
 
 _ = require 'underscore'
 
@@ -18,28 +16,18 @@ _ = require 'underscore'
 
 partial = (fn, args...) -> _.bind fn, null, args...
 
-
-get_target_fn = (js_path, app_root, target_fn) ->
-    if js_path
-        path.resolve js_path, target_fn
-    else
-        (path.resolve app_root,
-                      TMP_BUILD_DIR_SUFFIX,
-                      target_fn)
+fn_without_ext = (filename) ->
+    ext_length = (path.extname filename).length
+    filename.slice 0, -ext_length
 
 get_paths = (ctx) ->
     app_root = path.resolve ctx.own_args.app_root
     module_name = ctx.own_args.mod_name
     src = ctx.own_args.src
-    js_path = ctx.own_args.js_path
-
     mod_src = src or path.resolve app_root, module_name
     cakefile = path.resolve mod_src, CAKEFILE
-    target_fn = path.basename module_name + JS_EXT
-    target_full_fn = get_target_fn js_path, app_root, target_fn
-    tmp_build_root = js_path or path.resolve app_root, TMP_BUILD_DIR_SUFFIX
 
-    {mod_src, cakefile, target_fn, target_full_fn, tmp_build_root}
+    {mod_src, cakefile}
 
 module.exports = do ->
     match = (ctx) ->
@@ -60,63 +48,32 @@ module.exports = do ->
         type = 'cakefile'
 
         get_deps = (recipe_deps, cb) ->
-            module_name = ctx.own_args.mod_name
+            cb CB_SUCCESS, recipe_deps
 
-            for group, deps of recipe_deps
-                if group is module_name
-                    # making copy here because dependencies changed in toposort
-                    group_deps = deps.concat()
+        harvest = (harvest_cb) ->
+            {mod_src} = get_paths ctx
+            sources = null
 
-            cb CB_SUCCESS, (group_deps or [])
+            opts =
+                cwd: mod_src
+                env: process.env
 
-        harvest = (harvest_cb, opts={}) ->
-            {mod_src, target_full_fn, target_fn, tmp_build_root} = get_paths ctx
+            child = fork CAKE_BIN, [CAKE_TARGET], opts
 
-            check_maybe_do = (cb) ->
-              maybe_build mod_src, target_full_fn, (changed, filename) ->
-                if changed or (extend ctx, opts).own_args.f
-                  cb()
+            child.on 'message', (modules) ->
+                child.kill()
+                sources = JSON.parse modules
+
+                for module in sources
+                    module.filename = fn_without_ext module.filename
+
+            child.on 'exit', (status_code) ->
+                if sources
+                    ctx.fb.say "Cake module #{mod_src} was brewed"
+                    harvest_cb CB_SUCCESS, {sources:sources, ns: path.basename(mod_src)}
                 else
-                  cb 'MAYBE_SKIP'
-
-            do_cake = (cb) ->
-                sources = null
-
-                opts =
-                    cwd: mod_src
-                    env: process.env
-                    silent: true
-
-                child = fork CAKE_BIN, [CAKE_TARGET], opts
-
-                child.on 'message', (m) ->
-                  child.kill()
-                  sources = JSON.parse m
-
-                child.on 'exit', (status_code) ->
-                  if sources
-                    cb CB_SUCCESS, sources
-                  else
-                    cb 'fork_error', status_code
-
-            done = (err, res) ->
-                switch err
-                    when null
-                      ctx.fb.say "Cake module #{mod_src} was brewed"
-                      harvest_cb CB_SUCCESS, target_full_fn
-                    when "MAYBE_SKIP"
-                      ctx.fb.shout "maybe skipped"
-                      harvest_cb null, target_full_fn
-                    else
-                      ctx.fb.scream "Error during compilation of Cake module #{mod_src} err - #{err}"
-                      harvest_cb err, res
-
-            async.waterfall([
-              check_maybe_do
-              do_cake
-              stitch_sources
-              (partial put_to_tmp_storage, target_full_fn)]
-              done)
+                    ctx.fb.scream "Error during compilation of Cake module #{mod_src}"
+                    harvest_cb 'fork_error', status_code
 
 
         last_modified = (cb) ->
@@ -128,14 +85,10 @@ module.exports = do ->
                         newest (results.map (filename) -> get_mtime filename)
                     catch ex
                         0
-
                     cb CB_SUCCESS, max_time
-
                 else
                     cb CB_SUCCESS, 0
 
         {type, get_deps, harvest, last_modified}
 
-    make_skelethon = -> require './skelethon'
-
-    {match, make_adaptor, make_skelethon}
+    {match, make_adaptor}

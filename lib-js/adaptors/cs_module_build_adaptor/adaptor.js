@@ -68,13 +68,7 @@
             ctx.fb.scream("Compile failed: " + err);
             return cb("Failed to compile spine app " + mod_src, err);
           } else {
-            if (do_tests) {
-              return compiler.build_tests(function(err, result) {
-                return cb(err, result);
-              });
-            } else {
-              return cb(err, result);
-            }
+            return cb(err, result);
           }
         });
       };

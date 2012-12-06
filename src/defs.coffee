@@ -134,6 +134,9 @@ default_config =
     IAC_WILL_ECHO: [0xff,0xfb,0x1]
     IAC_WONT_ECHO: [0xff,0xfc,0x1]
 
+    FILE_TYPE_COMMONJS: 'commonjs'
+    FILE_TYPE_PLAINJS: 'plainjs'
+
     CB_SUCCESS: null
 
     UI_CMD_PREFIX: '/'

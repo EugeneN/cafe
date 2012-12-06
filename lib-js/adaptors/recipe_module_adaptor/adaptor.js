@@ -131,7 +131,6 @@
         };
         do_recipe = function(cb) {
           var argv, cafe_factory, emitter, exit_cb, go, ready;
-          console.log(arguments);
           ctx.fb.say("Harvesting recipe module");
           emitter = new events.EventEmitter;
           cafe_factory = require('../../cafe');
