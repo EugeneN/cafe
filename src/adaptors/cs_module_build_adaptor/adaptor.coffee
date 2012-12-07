@@ -42,6 +42,7 @@ build_factory = (mod_src, ctx) ->
 
     (cb) ->
         do_compile = (do_tests, cb) ->
+            # CONTINUE FROM HERE: ....
             compiler = new Compiler mod_src, ctx, { public: js_path }
             compiler.build (err, result) ->
                 if err
@@ -70,19 +71,14 @@ build_factory = (mod_src, ctx) ->
 get_paths = (ctx) ->
     app_root = path.resolve ctx.own_args.app_root
     module_name = ctx.own_args.mod_name
-    js_path = ctx.own_args.js_path
-    mod_suffix = ctx.own_args.mod_suffix
-
     mod_src = if ctx.own_args.src
         path.resolve ctx.own_args.src
     else
-      path.resolve app_root, mod_suffix, module_name
+      path.resolve app_root, module_name
 
-
-    js_path = path.resolve app_root, (js_path or TMP_BUILD_DIR_SUFFIX)
     slug_path = path.resolve mod_src, SLUG_FN
 
-    {mod_src, js_path, slug_path}
+    {mod_src, slug_path}
 
 module.exports = do ->
 
@@ -115,6 +111,7 @@ module.exports = do ->
             cb CB_SUCCESS, (group_deps or [])
 
         harvest = (cb, opts={}) ->
+
             {mod_src, js_path} = get_paths ctx
 
             args =

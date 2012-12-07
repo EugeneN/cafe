@@ -48,7 +48,14 @@ module.exports = do ->
         type = 'cakefile'
 
         get_deps = (recipe_deps, cb) ->
-            cb CB_SUCCESS, recipe_deps
+            module_name = ctx.own_args.mod_name
+
+            for group, deps of recipe_deps
+                if group is module_name
+                    # making copy here because dependencies changed in toposort
+                    group_deps = deps.concat()
+
+            cb CB_SUCCESS, (group_deps or [])
 
         harvest = (harvest_cb) ->
             {mod_src} = get_paths ctx

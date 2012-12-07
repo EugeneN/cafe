@@ -65,7 +65,6 @@ default_config =
     BUNDLE_ITEM_HDR: (file_path) -> "/* ZB:#{path.basename file_path} */\n"
     BUNDLE_ITEM_FTR: ';\n'
 
-
     TARGET_PATH: TARGET_PATH
     ADAPTORS_PATH: ADAPTORS_PATH
     ADAPTOR_FN: ADAPTOR_FN
@@ -80,7 +79,6 @@ default_config =
     RECIPE_API_LEVEL: 3
 
     MENU_FILENAME: './Menufile'
-
 
     VERSION_CHECK_URL: "#{REPO_URL}cafe/#{VERSION_FILE}"
     UPDATE_CMD: "sudo npm install -g #{REPO_URL}#{CAFE_TARBALL}"

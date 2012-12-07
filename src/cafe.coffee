@@ -96,7 +96,6 @@ module.exports = (emitter) ->
             fb.say "Coffee #{ID} brewed in <#{(new Date - START_TIME) / 1000} seconds> at #{new Date}"
             exit_cb (if status is undefined then EXIT_NO_STATUS_CODE else status), bundles
 
-
         # global entry point
         go = ({args}) ->
             cb = ->

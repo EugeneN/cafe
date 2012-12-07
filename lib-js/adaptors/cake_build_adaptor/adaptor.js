@@ -86,6 +86,7 @@
       };
       harvest = function(harvest_cb) {
         var child, mod_src, opts, sources;
+        console.log(ctx);
         mod_src = get_paths(ctx).mod_src;
         sources = null;
         opts = {

@@ -47,6 +47,9 @@
         own_args: full_args[name] || {},
         emitter: emitter,
         fb: fb,
+        cafelib: {
+          utils: require('./utils')
+        },
         print_help: function(cb) {
           var h, _i, _len, _ref2;
           if (ctx.help) {
