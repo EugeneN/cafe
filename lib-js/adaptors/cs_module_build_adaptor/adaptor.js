@@ -97,17 +97,13 @@
   };
 
   get_paths = function(ctx) {
-    var app_root, js_path, mod_src, mod_suffix, module_name, slug_path;
+    var app_root, mod_src, module_name, slug_path;
     app_root = path.resolve(ctx.own_args.app_root);
     module_name = ctx.own_args.mod_name;
-    js_path = ctx.own_args.js_path;
-    mod_suffix = ctx.own_args.mod_suffix;
-    mod_src = ctx.own_args.src ? path.resolve(ctx.own_args.src) : path.resolve(app_root, mod_suffix, module_name);
-    js_path = path.resolve(app_root, js_path || TMP_BUILD_DIR_SUFFIX);
+    mod_src = ctx.own_args.src ? path.resolve(ctx.own_args.src) : path.resolve(app_root, module_name);
     slug_path = path.resolve(mod_src, SLUG_FN);
     return {
       mod_src: mod_src,
-      js_path: js_path,
       slug_path: slug_path
     };
   };
