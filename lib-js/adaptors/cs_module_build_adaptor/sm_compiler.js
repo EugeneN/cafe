@@ -29,8 +29,6 @@
       if (options == null) {
         options = {};
       }
-      this._write_file = __bind(this._write_file, this);
-
       this._abs_path = __bind(this._abs_path, this);
 
       this.emitter = this.ctx.emitter;
@@ -45,9 +43,6 @@
       if (is_file(slug)) {
         json_slug = read_slug(path.dirname(slug));
         json_slug.paths = json_slug.paths.map(this._abs_path);
-        json_slug["public"] = this._abs_path(json_slug["public"]);
-        json_slug.fileTests = this._abs_path(json_slug.fileTests);
-        json_slug.folderTests = this._abs_path(json_slug.folderTests);
         return json_slug;
       } else {
         return {};
@@ -60,82 +55,12 @@
       }
     };
 
-    SM_Compiler.prototype._get_js_path = function() {
-      return path.join(this.options["public"], this.options.jsPath);
-    };
-
-    SM_Compiler.prototype._write_file = function(filename, source, cb) {
-      var _this = this;
-      return fs.writeFile(filename, source, function(err) {
-        if (err) {
-          throw err;
-        } else {
-          return cb();
-        }
-      });
-    };
-
     SM_Compiler.prototype.build = function(cb) {
       var source,
         _this = this;
       try {
-        return source = this.module().compile(function(err, source) {
-          var js_path;
-          js_path = _this._get_js_path();
-          return _this._write_file(js_path, source, function() {
-            _this.fb.say("" + js_path + " brewed.");
-            _this.emitter.emit("COMPILE_DONE");
-            return typeof cb === "function" ? cb(null, js_path) : void 0;
-          });
-        });
-      } catch (error) {
-        this.fb.scream("Failed to build " + this.base_path + " " + error);
-        this.fb.whisper("" + error.stack);
-        this.fb.scream("Failed to build " + this.base_path + " " + error);
-        whisper("" + error.stack);
-        this.emitter.emit("COMPILE_FAIL");
-        return typeof cb === "function" ? cb('target_error') : void 0;
-      }
-    };
-
-    SM_Compiler.prototype.build_tests = function(cb) {
-      var COFFEE, cmd, cwd, filename, folder_tests,
-        _this = this;
-      COFFEE = '/usr/bin/coffee';
-      if (!((this.options.fileTests != null) || (this.options.folderTests != null))) {
-        this.fb.shout("Test folder is not set " + this.base_path);
-        this.emitter.emit("COMPILE_TESTS_SKIP");
-        if (typeof cb === "function") {
-          cb();
-        }
-        return;
-      }
-      filename = this.options.fileTests;
-      folder_tests = this.options.folderTests;
-      if (filename) {
-        cmd = "" + COFFEE + " -c -o " + folder_tests + " " + filename;
-        cwd = this.base_path;
-        return exec(cmd, {
-          cwd: cwd
-        }, function(err, stdout, stderr) {
-          if (err) {
-            _this.fb.scream("Build failed for tests: " + err);
-            if (typeof cb === "function") {
-              cb();
-            }
-            return _this.emitter.emit("COMPILE_TESTS_FAIL");
-          } else {
-            _this.fb.say("Tests built for " + filename);
-            if (typeof cb === "function") {
-              cb();
-            }
-            return _this.emitter.emit("COMPILE_TESTS_DONE");
-          }
-        });
-      } else {
-        this.fb.scream("File with the tests could not be found");
-        return typeof cb === "function" ? cb() : void 0;
-      }
+        return source = this.module().compile(function(err, source) {});
+      } catch (_error) {}
     };
 
     SM_Compiler.prototype.module = function() {

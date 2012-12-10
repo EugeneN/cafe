@@ -3,7 +3,6 @@
 fs = require 'fs'
 path = require 'path'
 async = require 'async'
-
 Compiler = require './sm_compiler'
 
 {
@@ -13,6 +12,10 @@ Compiler = require './sm_compiler'
 
 {SLUG_FN, TMP_BUILD_DIR_SUFFIX, CS_ADAPTOR_PATH_SUFFIX, 
  CB_SUCCESS, CS_RUN_CONCURRENT} = require '../../defs'
+
+fn_without_ext = (filename) ->
+    ext_length = (path.extname filename).length
+    filename.slice 0, -ext_length
 
 build_cs_mod = (ctx, cb) ->
     {mod_src, slug_path} = get_paths ctx
@@ -26,12 +29,13 @@ build_cs_mod = (ctx, cb) ->
                             seq = modules.map (module_path) -> build_factory module_path, ctx
                             runner = (worker, cb) -> worker cb
                             if CS_RUN_CONCURRENT
-                                async.map seq, runner, (err, result) -> cb err, result
+                                async.map seq, runner, (err, result) -> cb err, result[0]
                             else
-                                async.series seq, (err, result) -> cb err, result
+                                async.series seq, (err, result) -> cb err, result[0]
                         else
                             ctx.fb.scream "Bad module source path `#{mod_src}`, can't continue"
                             cb 'target_error'
+
 
 build_factory = (mod_src, ctx) ->
     {slug_path, js_path} = get_paths ctx
@@ -42,14 +46,26 @@ build_factory = (mod_src, ctx) ->
 
     (cb) ->
         do_compile = (do_tests, cb) ->
-            # CONTINUE FROM HERE: ....
-            compiler = new Compiler mod_src, ctx, { public: js_path }
-            compiler.build (err, result) ->
-                if err
-                    ctx.fb.scream "Compile failed: #{err}"
-                    cb "Failed to compile spine app #{mod_src}", err
-                else
-                    cb err, result
+            # Read slug
+            slug = ctx.cafelib.utils.read_slug(mod_src, ctx.cafelib.utils.slug)
+            slug.paths = slug.paths.map (p) -> path.resolve(path.join mod_src, p)
+            slug.libs = slug.libs.map (p) -> path.resolve(path.join mod_src, p)
+
+            paths = ctx.cafelib.utils.get_all_relative_files(
+                slug.paths[0]
+                null
+                /^[^\.].+\.coffee$|^[^\.].+\.js$|^[^\.].+\.eco$/i
+            )
+
+            {coffee, eco} = require './compilers'
+            compiler = ctx.cafelib.make_compiler [coffee, eco]
+            modules = compiler.compile paths
+
+            sources = modules.map ({path:p, source:source}) ->
+                filename: (fn_without_ext (path.basename p))
+                source: source
+
+            cb null, {sources: sources, ns: path.basename mod_src}
 
         new_cb = (ev, cb, err, result) ->
             emitter.emit ev

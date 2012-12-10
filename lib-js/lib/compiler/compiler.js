@@ -5,13 +5,18 @@
   p = require('path');
 
   make_compiler = function(compilers) {
+    var c, validate_compiler, _i, _len;
     compilers || (compilers = []);
+    validate_compiler = function(compiler) {
+      return (compiler.hasOwnProperty('ext')) && (compiler.hasOwnProperty('compile'));
+    };
+    for (_i = 0, _len = compilers.length; _i < _len; _i++) {
+      c = compilers[_i];
+      if (!(validate_compiler(c))) {
+        throw "Copmiler " + c + " has wrong interface";
+      }
+    }
     return {
-      validate_compiler: function(compiler) {
-        return [compiler.hasOwnProperty('ext'), compiler.hasOwnProperty('compile')].reduce(a, b)(function() {
-          return a && b;
-        });
-      },
       register_compiler_by_path: function(path) {
         "Registers compiler by filename.";
 
@@ -35,14 +40,14 @@
 
         var get_compiler;
         get_compiler = function(path, compilers) {
-          var c, _i, _len;
-          for (_i = 0, _len = compilers.length; _i < _len; _i++) {
-            c = compilers[_i];
-            if (c.ext === (p.exname(path)).slice(1)) {
+          var _j, _len1;
+          for (_j = 0, _len1 = compilers.length; _j < _len1; _j++) {
+            c = compilers[_j];
+            if (c.ext === (p.extname(path)).slice(1)) {
               return c;
             }
           }
-          throw "No compiler is registered for path " + p;
+          throw "No compiler is registered for path " + path;
         };
         return paths.map(function(p) {
           return {

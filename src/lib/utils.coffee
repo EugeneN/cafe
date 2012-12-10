@@ -313,19 +313,31 @@ and_ = (args...) -> args.reduce (a, b) -> !!a and !!b
 
 or_ = (args...) -> args.reduce (a, b) -> !!a or !!b
 
-get_all_relative_files = (filepath) ->
+get_all_relative_files = (filepath, exclude_pattern=null, include_pattern=null) ->
     """
     Gets all filenames recursively relative to filepath.
+    @filepath: dir path
+    @exclude_pattern: regexp for exclude files patterns
+    @include_pattern: regexp for include files patterns
     """
 
     return [filepath] unless (is_dir filepath)
 
+    is_match = (fn) ->
+        include = if include_pattern then include_pattern.test(fn) else true
+        exclude = if exclude_pattern then !exclude_pattern.test(fn) else true
+        include and exclude
+
     files = []
+
     next = (dir) ->
         for file in fs.readdirSync(dir)
-            files.push(file = "#{dir}/#{file}")
-            next(file) if is_dir(file)
+            file = "#{dir}/#{file}"
+            files.push file if (is_match file)
+            next(file) if (is_dir file)
+
     next filepath
+
     files
 
 module.exports = {

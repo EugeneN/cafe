@@ -17,7 +17,6 @@ wrap_modules = (modules) ->
     """
     @moduels: list of dict with values {sources, ns}
     """
-
     (wrap_module(m.sources, m.ns) for m in modules).join('\n')
 
 
@@ -28,7 +27,10 @@ wrap_module = (sources, ns) ->
 
     [
         "require.define('#{ns}', {"
-        (wrap_file(s.source, s.filename, s.type) for s in sources).join ',\n'
+        if sources.length
+            (wrap_file(s.source, s.filename, s.type) for s in sources).join ',\n'
+        else
+            (wrap_file sources.source, sources.filename, sources.type)
         "});\n\n"
     ].join('\n')
 

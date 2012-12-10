@@ -3,13 +3,12 @@ p = require 'path'
 make_compiler = (compilers)->
     compilers or= []
 
-    validate_compiler: (compiler) ->
-        [
-            (compiler.hasOwnProperty 'ext')
-            (compiler.hasOwnProperty 'compile')
+    validate_compiler = (compiler) ->
+        (compiler.hasOwnProperty 'ext') and (compiler.hasOwnProperty 'compile')
 
-        ].reduce(a, b) -> a and b
 
+    for c in compilers
+        throw "Copmiler #{c} has wrong interface" unless (validate_compiler c)
 
     register_compiler_by_path: (path) ->
         """
@@ -39,9 +38,9 @@ make_compiler = (compilers)->
 
         get_compiler = (path, compilers) ->
             for c in compilers
-                return c if c.ext is  (p.exname path)[1..]
+                return c if c.ext is  (p.extname path)[1..]
 
-            throw "No compiler is registered for path #{p}" # TODO: link to instruction for cafe compiler registration.
+            throw "No compiler is registered for path #{path}" # TODO: link to instruction for cafe compiler registration.
 
         paths.map((p) -> {path:p, source: (get_compiler(p, compilers).compile p)})
 

@@ -448,13 +448,25 @@
     });
   };
 
-  get_all_relative_files = function(filepath) {
-    "Gets all filenames recursively relative to filepath.";
+  get_all_relative_files = function(filepath, exclude_pattern, include_pattern) {
+    var files, is_match, next;
+    if (exclude_pattern == null) {
+      exclude_pattern = null;
+    }
+    if (include_pattern == null) {
+      include_pattern = null;
+    }
+    "Gets all filenames recursively relative to filepath.\n@filepath: dir path\n@exclude_pattern: regexp for exclude files patterns\n@include_pattern: regexp for include files patterns";
 
-    var files, next;
     if (!(is_dir(filepath))) {
       return [filepath];
     }
+    is_match = function(fn) {
+      var exclude, include;
+      include = include_pattern ? include_pattern.test(fn) : true;
+      exclude = exclude_pattern ? !exclude_pattern.test(fn) : true;
+      return include && exclude;
+    };
     files = [];
     next = function(dir) {
       var file, _i, _len, _ref2, _results;
@@ -462,7 +474,10 @@
       _results = [];
       for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
         file = _ref2[_i];
-        files.push(file = "" + dir + "/" + file);
+        file = "" + dir + "/" + file;
+        if (is_match(file)) {
+          files.push(file);
+        }
         if (is_dir(file)) {
           _results.push(next(file));
         } else {

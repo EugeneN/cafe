@@ -2,12 +2,17 @@ CoffeeScript = require 'coffee-script'
 eco = require 'eco'
 fs = require 'fs'
 
-exports.coffee = () ->
+exports.coffee =
     ext: 'coffee'
     compile: (path) -> CoffeeScript.compile fs.readFileSync path, 'utf8'
 
 
-exports.eco = () ->
+exports.eco =
     ext: 'eco'
-    compile: (path) -> eco.compile fs.readFileSync path, 'utf8'
+    compile: (path) ->
+        if eco.precompile
+            content = eco.precompile fs.readFileSync path, 'utf8'
+            "module.exports = #{content}"
+        else
+            eco.compile fs.readFileSync path, 'utf8'
 

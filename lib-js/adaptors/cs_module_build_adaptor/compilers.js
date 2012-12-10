@@ -8,22 +8,24 @@
 
   fs = require('fs');
 
-  exports.coffee = function() {
-    return {
-      ext: 'coffee',
-      compile: function(path) {
-        return CoffeeScript.compile(fs.readFileSync(path, 'utf8'));
-      }
-    };
+  exports.coffee = {
+    ext: 'coffee',
+    compile: function(path) {
+      return CoffeeScript.compile(fs.readFileSync(path, 'utf8'));
+    }
   };
 
-  exports.eco = function() {
-    return {
-      ext: 'eco',
-      compile: function(path) {
+  exports.eco = {
+    ext: 'eco',
+    compile: function(path) {
+      var content;
+      if (eco.precompile) {
+        content = eco.precompile(fs.readFileSync(path, 'utf8'));
+        return "module.exports = " + content;
+      } else {
         return eco.compile(fs.readFileSync(path, 'utf8'));
       }
-    };
+    }
   };
 
 }).call(this);

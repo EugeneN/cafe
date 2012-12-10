@@ -42,7 +42,10 @@ make_target = (name, exec_func, help, single) ->
             own_args: full_args[name] or {}
             emitter: emitter
             fb: fb
-            cafelib: {utils: require './utils'}
+            cafelib: {
+                utils: require './utils'
+                make_compiler: require './compiler/compiler'
+                }
             print_help: (cb) ->
                 if ctx.help
                     fb.murmur h for h in ctx.help

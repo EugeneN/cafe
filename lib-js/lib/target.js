@@ -48,7 +48,8 @@
         emitter: emitter,
         fb: fb,
         cafelib: {
-          utils: require('./utils')
+          utils: require('./utils'),
+          make_compiler: require('./compiler/compiler')
         },
         print_help: function(cb) {
           var h, _i, _len, _ref2;

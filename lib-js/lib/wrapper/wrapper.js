@@ -33,7 +33,7 @@
 
     var s;
     return [
-      "require.define('" + ns + "', {", ((function() {
+      "require.define('" + ns + "', {", sources.length ? ((function() {
         var _i, _len, _results;
         _results = [];
         for (_i = 0, _len = sources.length; _i < _len; _i++) {
@@ -41,7 +41,7 @@
           _results.push(wrap_file(s.source, s.filename, s.type));
         }
         return _results;
-      })()).join(',\n'), "});\n\n"
+      })()).join(',\n') : wrap_file(sources.source, sources.filename, sources.type), "});\n\n"
     ].join('\n');
   };
 

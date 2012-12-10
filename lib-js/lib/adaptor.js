@@ -21,7 +21,7 @@
     }).filter(function(fn) {
       return (is_dir(fn)) && __indexOf.call(fs.readdirSync(fn), fn_pattern) >= 0;
     }).map(function(d) {
-      return require(path.join(d), fn_pattern);
+      return require(path.join(d, fn_pattern));
     });
   };
 
