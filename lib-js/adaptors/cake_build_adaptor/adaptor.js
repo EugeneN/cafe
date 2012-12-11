@@ -97,6 +97,9 @@
           var module, _i, _len, _results;
           child.kill();
           sources = JSON.parse(modules);
+          if (!sources.length) {
+            sources = [sources];
+          }
           _results = [];
           for (_i = 0, _len = sources.length; _i < _len; _i++) {
             module = sources[_i];

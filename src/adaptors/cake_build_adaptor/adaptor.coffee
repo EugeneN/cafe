@@ -71,6 +71,8 @@ module.exports = do ->
                 child.kill()
                 sources = JSON.parse modules
 
+                sources = [sources] unless sources.length
+
                 for module in sources
                     module.filename = fn_without_ext module.filename
 

@@ -25,10 +25,10 @@
     };
     require = function(name, root, ns) {
       var fn, module, path;
-      if ((ns != null) && !((expand(root, name)) in modules)) {
-        name = "" + ns + "/" + (expand('', name));
-      }
       path = expand(root, name);
+      if ((ns != null) && !(modules[path] || modules[expand(path, './index')])) {
+        path = "" + ns + "/" + (expand('', name));
+      }
       module = cache[path];
       if (module) {
         return module.exports;

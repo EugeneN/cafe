@@ -136,7 +136,7 @@
           cafe_factory = require('../../cafe');
           ready = cafe_factory(emitter).ready;
           exit_cb = function(status_code, bundles) {
-            return cb(null, bundles[0]);
+            return cb(null, bundles);
           };
           go = ready({
             exit_cb: exit_cb,
@@ -146,7 +146,7 @@
             build: {
               app_root: mod_src,
               build_root: tmp_build_root,
-              just_files: true
+              just_compile: true
             }
           };
           return go({
@@ -157,10 +157,10 @@
           switch (err) {
             case null:
               ctx.fb.say("Recipe module " + mod_src + " was brewed");
-              return harvest_cb(CB_SUCCESS, target_full_fn);
+              return harvest_cb(CB_SUCCESS, res);
             case "MAYBE_SKIP":
               ctx.fb.shout("maybe skipped");
-              return harvest_cb(null, target_full_fn);
+              return harvest_cb(null, res);
             default:
               ctx.fb.scream("Error during compilation of recipe module " + mod_src + " err - " + err);
               return harvest_cb(err, res);

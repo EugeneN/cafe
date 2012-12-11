@@ -164,27 +164,19 @@
   };
 
   build_bundle = function(_arg) {
-    var build_root, bundle_name, bundle_opts, cb, ctx, done, force_bundle, force_compile, get_target_fn, get_target_path, m, opts, realm, seq, seq2, seq2_harvester, seq_harvester, sorted_modules_list, write_bundle;
+    var build_root, bundle_name, bundle_opts, cb, ctx, done, force_bundle, force_compile, get_target_fn, m, opts, realm, seq, seq2, seq2_harvester, seq_harvester, sorted_modules_list, write_bundle;
     realm = _arg.realm, bundle_name = _arg.bundle_name, bundle_opts = _arg.bundle_opts, force_compile = _arg.force_compile, force_bundle = _arg.force_bundle, sorted_modules_list = _arg.sorted_modules_list, build_root = _arg.build_root, ctx = _arg.ctx, cb = _arg.cb;
-    get_target_path = function() {
-      if (ctx.own_args.just_files) {
-        return path.dirname(path.resolve(build_root));
-      } else {
-        return path.resolve(build_root, realm);
-      }
-    };
     get_target_fn = function() {
-      return path.resolve(get_target_path(), bundle_name + BUILD_FILE_EXT);
+      return path.resolve(path.resolve(build_root, realm), bundle_name + BUILD_FILE_EXT);
     };
     write_bundle = function(results, cb) {
-      var do_it, done;
+      var build_dir_path, do_it, done;
       done = function(err) {
         if (err) {
           ctx.fb.scream("Failed to write bundle " + realm + "/" + bundle_name + BUILD_FILE_EXT + ":\n" + err);
           return cb('target_error', err);
         } else {
           ctx.fb.say("Bundle " + realm + "/" + bundle_name + BUILD_FILE_EXT + " built.");
-          ctx.emitter.emit(EVENT_BUNDLE_CREATED, get_target_fn());
           return cb();
         }
       };
@@ -192,10 +184,23 @@
         if (err) {
           return cb('fs_error', err);
         } else {
-          return fs.writeFile(get_target_fn(), wrap_bundle(wrap_modules(results)), FILE_ENCODING, done);
+          if (!ctx.own_args.just_compile) {
+            return fs.writeFile(get_target_fn(), wrap_bundle(wrap_modules(results), BUNDLE_HDR), FILE_ENCODING, done);
+          } else {
+            ctx.fb.whisper("'just_compile mode' is on, so no result bundle was written");
+            ctx.emitter.emit(EVENT_BUNDLE_CREATED, results);
+            return cb();
+          }
         }
       };
-      return mkdirp(get_target_path(), do_it);
+      if (!ctx.own_args.just_compile) {
+        build_dir_path = path.resolve(build_root, realm);
+        ctx.fb.whisper("Creating build dir " + build_dir_path);
+        return mkdirp(build_dir_path, do_it);
+      } else {
+        ctx.fb.whisper("Skip creating build dir");
+        return do_it(null);
+      }
     };
     seq = (function() {
       var _i, _len, _results;
@@ -247,7 +252,7 @@
           };
         };
         if (force_bundle) {
-          return write_bundle(results, write_cb(false));
+          return write_bundle(flatten(results), write_cb(false));
         } else {
           done_seq2 = function(err, result) {
             var max_src_mtime, recipe_mtime, target_mtime;
@@ -265,10 +270,10 @@
                 }
               })();
               if (!(max_src_mtime < target_mtime)) {
-                return write_bundle(results, write_cb(false));
+                return write_bundle(flatten(results), write_cb(false));
               } else {
                 ctx.fb.shout("Bundle " + realm + "/" + bundle_name + " still hot");
-                return write_bundle(results, write_cb(true));
+                return write_bundle(flatten(results), write_cb(true));
               }
             }
           };

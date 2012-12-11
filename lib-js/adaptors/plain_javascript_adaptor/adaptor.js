@@ -63,10 +63,17 @@
         return cb(CB_SUCCESS, group_deps || []);
       };
       harvest = function(cb) {
-        var target_fn;
+        var source, target_fn;
         target_fn = get_paths(ctx).target_fn;
         if (is_file(target_fn)) {
-          return cb(CB_SUCCESS, target_fn, "COMPILE_MAYBE_SKIPPED");
+          source = fs.readFileSync(target_fn);
+          return cb(CB_SUCCESS, {
+            sources: {
+              filename: target_fn,
+              source: source,
+              type: "plainjs"
+            }
+          }, "COMPILE_MAYBE_SKIPPED");
         } else {
           return cb(CB_SUCCESS, void 0);
         }

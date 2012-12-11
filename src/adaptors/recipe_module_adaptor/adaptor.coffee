@@ -99,28 +99,27 @@ module.exports = do ->
               {ready} = cafe_factory emitter
 
               exit_cb = (status_code, bundles) ->
-                cb null, bundles[0]
+                cb null, bundles
 
               {go} = ready {exit_cb, fb}
 
               argv = {build: {
                 app_root: mod_src
                 build_root: tmp_build_root
-                just_files: true
+                just_compile: true
                 }
               }
 
               go {args: argv}
 
-
             done = (err, res) ->
                 switch err
                     when null
                       ctx.fb.say "Recipe module #{mod_src} was brewed"
-                      harvest_cb CB_SUCCESS, target_full_fn
+                      harvest_cb CB_SUCCESS, res
                     when "MAYBE_SKIP"
                       ctx.fb.shout "maybe skipped"
-                      harvest_cb null, target_full_fn
+                      harvest_cb null, res
                     else
                       ctx.fb.scream "Error during compilation of recipe module #{mod_src} err - #{err}"
                       harvest_cb err, res
@@ -140,9 +139,7 @@ module.exports = do ->
                         newest (results.map (filename) -> get_mtime filename)
                     catch ex
                         0
-
                     cb CB_SUCCESS, max_time
-
                 else
                     cb CB_SUCCESS, 0
 

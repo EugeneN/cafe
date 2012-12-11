@@ -49,23 +49,23 @@ build_factory = (mod_src, ctx) ->
             # Read slug
             slug = ctx.cafelib.utils.read_slug(mod_src, ctx.cafelib.utils.slug)
             slug.paths = slug.paths.map (p) -> path.resolve(path.join mod_src, p)
-            slug.libs = slug.libs.map (p) -> path.resolve(path.join mod_src, p)
-
-            paths = ctx.cafelib.utils.get_all_relative_files(
-                slug.paths[0]
-                null
-                /^[^\.].+\.coffee$|^[^\.].+\.js$|^[^\.].+\.eco$/i
-            )
 
             {coffee, eco} = require './compilers'
             compiler = ctx.cafelib.make_compiler [coffee, eco]
-            modules = compiler.compile paths
 
-            sources = modules.map ({path:p, source:source}) ->
-                filename: (fn_without_ext (path.basename p))
-                source: source
+            sources = slug.paths.map (slug_path) ->
+                paths = ctx.cafelib.utils.get_all_relative_files(
+                    slug_path
+                    null
+                    /^[^\.].+\.coffee$|^[^\.].+\.js$|^[^\.].+\.eco$/i
+                )
 
-            cb null, {sources: sources, ns: path.basename mod_src}
+                (compiler.compile paths).map ({path: p, source: source}) ->
+                    filename: fn_without_ext (path.relative slug_path, p)
+                    source: source
+                    type: "commonjs"
+
+            cb null, {sources: (ctx.cafelib.utils.flatten sources), ns: path.basename mod_src}
 
         new_cb = (ev, cb, err, result) ->
             emitter.emit ev
@@ -111,7 +111,6 @@ module.exports = do ->
                                 cb CB_SUCCESS, true
                             else
                                 cb CB_SUCCESS, false
-
 
     make_adaptor = (ctx) ->
         type = 'csmodule'

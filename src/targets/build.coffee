@@ -123,10 +123,6 @@ get_ctx_recipe = (ctx, ctx_is_valid, cb) ->
     unless ctx_is_valid
         return cb 'bad_ctx'
 
-    tmp_build_dir = get_tmp_build_dir ctx.own_args.app_root
-    unless is_dir tmp_build_dir
-        fs.mkdirSync tmp_build_dir
-
     recipe_path = path.resolve ctx.own_args.app_root, (ctx.own_args.formula or RECIPE)
     recipe = get_recipe recipe_path
 
@@ -294,7 +290,7 @@ process_realms = (ctx, recipe, cb) ->
                 cb CB_SUCCESS
 
             else
-                if ctx.own_args.just_files
+                if ctx.own_args.just_compile
                     cb CB_SUCCESS
                 else
                     fn = path.resolve (get_tmp_build_dir ctx.own_args.build_root), BUILD_DEPS_FN

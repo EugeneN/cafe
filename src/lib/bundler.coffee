@@ -103,14 +103,8 @@ toposort = (debug_info, modules) ->
 build_bundle = ({realm, bundle_name, bundle_opts, force_compile, force_bundle,
                  sorted_modules_list, build_root, ctx, cb}) ->
 
-    get_target_path = ->
-        if ctx.own_args.just_files
-            path.dirname(path.resolve build_root)
-        else
-          path.resolve build_root, realm
-
     get_target_fn = ->
-        path.resolve get_target_path(), (bundle_name + BUILD_FILE_EXT)
+        path.resolve (path.resolve build_root, realm), (bundle_name + BUILD_FILE_EXT)
 
     write_bundle = (results, cb) ->
         done = (err) ->
@@ -122,21 +116,33 @@ build_bundle = ({realm, bundle_name, bundle_opts, force_compile, force_bundle,
                 cb 'target_error', err
             else
                 ctx.fb.say "Bundle #{realm}/#{bundle_name}#{BUILD_FILE_EXT} built."
-                ctx.emitter.emit EVENT_BUNDLE_CREATED, get_target_fn()
+
                 cb()
 
         do_it = (err) ->
             if err
                 cb 'fs_error', err
             else
-                fs.writeFile(
-                    get_target_fn()
-                    wrap_bundle(wrap_modules results)
-                    FILE_ENCODING
-                    done
-                )
+                unless ctx.own_args.just_compile
+                    fs.writeFile(
+                        get_target_fn()
+                        wrap_bundle((wrap_modules results), BUNDLE_HDR)
+                        FILE_ENCODING
+                        done
+                    )
+                else
+                    ctx.fb.whisper "'just_compile mode' is on, so no result bundle was written"
+                    ctx.emitter.emit EVENT_BUNDLE_CREATED, results
+                    cb()
 
-        mkdirp get_target_path(), do_it
+        unless ctx.own_args.just_compile
+            build_dir_path = (path.resolve build_root, realm)
+            ctx.fb.whisper "Creating build dir #{build_dir_path}"
+            mkdirp build_dir_path, do_it
+        else
+            ctx.fb.whisper "Skip creating build dir"
+            do_it null
+
 
     seq = (m.adaptor.harvest for m in sorted_modules_list)
     seq2 = (m.adaptor.last_modified for m in sorted_modules_list)
@@ -168,7 +174,7 @@ build_bundle = ({realm, bundle_name, bundle_opts, force_compile, force_bundle,
                         cb CB_SUCCESS, [realm, bundle_name, not_changed]
 
             if force_bundle
-                write_bundle (results), (write_cb false)
+                write_bundle (flatten results), (write_cb false)
             else
                 done_seq2 = (err, result) ->
                     if err
@@ -186,10 +192,10 @@ build_bundle = ({realm, bundle_name, bundle_opts, force_compile, force_bundle,
                             0
 
                         unless max_src_mtime < target_mtime
-                            write_bundle results, (write_cb false)
+                            write_bundle (flatten results), (write_cb false)
                         else
                             ctx.fb.shout "Bundle #{realm}/#{bundle_name} still hot"
-                            write_bundle results, (write_cb true)
+                            write_bundle (flatten results), (write_cb true)
 
                 # maybe bundle check
                 async.map seq2, seq2_harvester, done_seq2

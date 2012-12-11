@@ -106,13 +106,9 @@
   };
 
   get_ctx_recipe = function(ctx, ctx_is_valid, cb) {
-    var recipe, recipe_path, tmp_build_dir, _ref6;
+    var recipe, recipe_path, _ref6;
     if (!ctx_is_valid) {
       return cb('bad_ctx');
-    }
-    tmp_build_dir = get_tmp_build_dir(ctx.own_args.app_root);
-    if (!is_dir(tmp_build_dir)) {
-      fs.mkdirSync(tmp_build_dir);
     }
     recipe_path = path.resolve(ctx.own_args.app_root, ctx.own_args.formula || RECIPE);
     recipe = get_recipe(recipe_path);
@@ -331,7 +327,7 @@
           ctx.fb.shout("" + BUILD_DEPS_FN + " still hot");
           return cb(CB_SUCCESS);
         } else {
-          if (ctx.own_args.just_files) {
+          if (ctx.own_args.just_compile) {
             return cb(CB_SUCCESS);
           } else {
             fn = path.resolve(get_tmp_build_dir(ctx.own_args.build_root), BUILD_DEPS_FN);

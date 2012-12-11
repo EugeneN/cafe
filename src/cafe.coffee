@@ -88,7 +88,7 @@ module.exports = (emitter) ->
             fb: fb
 
         bundles = []
-        Emitter.on EVENT_BUNDLE_CREATED, (bundle_path) -> bundles.push bundle_path
+        Emitter.on EVENT_BUNDLE_CREATED, (bundle_source) -> bundles.push bundle_source
 
         # the one and only exit point
         Emitter.on EVENT_CAFE_DONE, (status) ->

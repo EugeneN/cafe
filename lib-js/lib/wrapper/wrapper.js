@@ -8,13 +8,17 @@
 
   bootstrapper_file = path.join(__dirname, './bootstrapper.js');
 
-  wrap_bundle = function(source) {
+  wrap_bundle = function(source, pre_header) {
+    if (pre_header == null) {
+      pre_header = null;
+    }
     "@source: source code of bundle.";
-    return [(fs.readFileSync(bootstrapper_file)).toString(), source].join('\n');
+
+    return [pre_header || '', (fs.readFileSync(bootstrapper_file)).toString(), source].join('\n');
   };
 
   wrap_modules = function(modules) {
-    "@moduels: list of dict with values {sources, ns}";
+    "@moduels: list of dict with values {sources, ns}\n        [\n            {ns:'namespace', sources: {filename: source}}\n            .\n            .\n            .\n        ]";
 
     var m;
     return ((function() {
@@ -32,25 +36,41 @@
     "@sources: dict of key values filenames and source codes {filename, source}";
 
     var s;
-    return [
-      "require.define('" + ns + "', {", sources.length ? ((function() {
-        var _i, _len, _results;
-        _results = [];
-        for (_i = 0, _len = sources.length; _i < _len; _i++) {
-          s = sources[_i];
-          _results.push(wrap_file(s.source, s.filename, s.type));
-        }
-        return _results;
-      })()).join(',\n') : wrap_file(sources.source, sources.filename, sources.type), "});\n\n"
-    ].join('\n');
+    if (sources.length) {
+      return [
+        ((function() {
+          var _i, _len, _results;
+          _results = [];
+          for (_i = 0, _len = sources.length; _i < _len; _i++) {
+            s = sources[_i];
+            if (s.type === "plainjs") {
+              _results.push(s.source);
+            }
+          }
+          return _results;
+        })()).join('\n'), "require.define('" + ns + "', {", ((function() {
+          var _i, _len, _results;
+          _results = [];
+          for (_i = 0, _len = sources.length; _i < _len; _i++) {
+            s = sources[_i];
+            if (s.type === 'commonjs') {
+              _results.push(wrap_file(s.source, s.filename, s.type, ns));
+            }
+          }
+          return _results;
+        })()).join(',\n'), "});\n"
+      ].join('\n');
+    } else {
+      if (sources.type === 'commonjs') {
+        return wrap_module([sources], ns);
+      } else {
+        return sources.source;
+      }
+    }
   };
 
-  wrap_file = function(source, filename, type) {
-    if (type === 'plainjs') {
-      return source;
-    } else {
-      return ["'" + filename + "': function(exports, require, module) {(function() {", source, "}).call(this);}"].join('\n');
-    }
+  wrap_file = function(source, filename, type, ns) {
+    return ["/*ZB:  " + ns + "/" + filename + " */", "'" + filename + "': function(exports, require, module) {(function() {", source, "}).call(this);}"].join('\n');
   };
 
   module.exports = {

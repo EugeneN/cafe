@@ -65,28 +65,28 @@
     return function(cb) {
       var do_compile, new_cb;
       do_compile = function(do_tests, cb) {
-        var coffee, compiler, eco, modules, paths, sources, _ref3;
+        var coffee, compiler, eco, sources, _ref3;
         slug = ctx.cafelib.utils.read_slug(mod_src, ctx.cafelib.utils.slug);
         slug.paths = slug.paths.map(function(p) {
           return path.resolve(path.join(mod_src, p));
         });
-        slug.libs = slug.libs.map(function(p) {
-          return path.resolve(path.join(mod_src, p));
-        });
-        paths = ctx.cafelib.utils.get_all_relative_files(slug.paths[0], null, /^[^\.].+\.coffee$|^[^\.].+\.js$|^[^\.].+\.eco$/i);
         _ref3 = require('./compilers'), coffee = _ref3.coffee, eco = _ref3.eco;
         compiler = ctx.cafelib.make_compiler([coffee, eco]);
-        modules = compiler.compile(paths);
-        sources = modules.map(function(_arg) {
-          var p, source;
-          p = _arg.path, source = _arg.source;
-          return {
-            filename: fn_without_ext(path.basename(p)),
-            source: source
-          };
+        sources = slug.paths.map(function(slug_path) {
+          var paths;
+          paths = ctx.cafelib.utils.get_all_relative_files(slug_path, null, /^[^\.].+\.coffee$|^[^\.].+\.js$|^[^\.].+\.eco$/i);
+          return (compiler.compile(paths)).map(function(_arg) {
+            var p, source;
+            p = _arg.path, source = _arg.source;
+            return {
+              filename: fn_without_ext(path.relative(slug_path, p)),
+              source: source,
+              type: "commonjs"
+            };
+          });
         });
         return cb(null, {
-          sources: sources,
+          sources: ctx.cafelib.utils.flatten(sources),
           ns: path.basename(mod_src)
         });
       };

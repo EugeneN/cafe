@@ -49,7 +49,8 @@ module.exports = do ->
             {target_fn} = get_paths ctx
 
             if is_file target_fn
-                cb CB_SUCCESS, target_fn, "COMPILE_MAYBE_SKIPPED"
+                source = fs.readFileSync target_fn
+                cb CB_SUCCESS, {sources: {filename: target_fn, source:source, type:"plainjs"}}, "COMPILE_MAYBE_SKIPPED"
             else
                 cb CB_SUCCESS, undefined
 

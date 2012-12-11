@@ -64,8 +64,8 @@
         fb: fb
       };
       bundles = [];
-      Emitter.on(EVENT_BUNDLE_CREATED, function(bundle_path) {
-        return bundles.push(bundle_path);
+      Emitter.on(EVENT_BUNDLE_CREATED, function(bundle_source) {
+        return bundles.push(bundle_source);
       });
       Emitter.on(EVENT_CAFE_DONE, function(status) {
         say("Coffee " + ID + " brewed in <" + ((new Date - START_TIME) / 1000) + " seconds> at " + (new Date));
