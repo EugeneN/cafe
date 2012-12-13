@@ -23,7 +23,6 @@ unless this.require
         if ns? and !(modules[path] || modules[(expand(path, './index'))]) # TODO: handle when module is not loaded.
             path = "#{ns}/#{expand '', name}"
 
-
         module = cache[path]
 
         if module
