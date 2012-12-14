@@ -20,7 +20,7 @@
   _ref = (require('../lib/logger'))('Compile>'), say = _ref.say, shout = _ref.shout, scream = _ref.scream, whisper = _ref.whisper;
 
   compile = function(ctx, cb) {
-    var app_root, do_it_factory, done, mapper, mod_name;
+    var app_root, do_it_factory, done, harvest_cb, mapper, mod_name;
     if (!((ctx.own_args.app_root && ctx.own_args.mod_name) || ctx.own_args.src)) {
       scream("app_root/mod_name or src arguments missing");
       return cb('ctx_error');
@@ -39,6 +39,10 @@
     mapper = function(adaptor_factory, mapper_cb) {
       return adaptor_factory.match.async(ctx, do_it_factory(adaptor_factory, mapper_cb));
     };
+    harvest_cb = function(err, results) {
+      console.log(results);
+      return cb(err);
+    };
     done = function() {
       var adaptr, results;
       results = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
@@ -46,7 +50,7 @@
         return x !== void 0;
       }))[0];
       if (adaptr) {
-        return adaptr.harvest(cb);
+        return adaptr.harvest(harvest_cb);
       } else {
         ctx.fb.scream("No adaptor found");
         return cb('adaptor_error');

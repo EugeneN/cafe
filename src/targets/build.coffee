@@ -67,6 +67,7 @@ async = require 'async'
 
 
 get_tmp_build_dir = (build_root) -> path.resolve path.join build_root, TMP_BUILD_DIR_SUFFIX
+get_modules_cache_dir = (build_root) -> path.resolve path.join build_root, 'modules_cache'
 
 get_recipe = (recipe_path, level=0) ->
     if level > 3
@@ -233,6 +234,7 @@ build_bundles = (ctx, bundles, recipe, realm, filtered_bundles, build_bundles_cb
             force_bundle: force_bundle
             sorted_modules_list: filtered_bundles[index]
             build_root: get_tmp_build_dir ctx.own_args.build_root
+            cache_root: get_modules_cache_dir ctx.own_args.build_root
             ctx: ctx
             cb: build_bundle_cb
         })

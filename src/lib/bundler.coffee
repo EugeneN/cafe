@@ -4,6 +4,7 @@ async = require 'async'
 mkdirp = require 'mkdirp'
 {map, reduce} = require 'functools'
 {wrap_bundle, wrap_modules} = require '../lib/wrapper/wrapper'
+{get_modules_cache} = require './modules_cache'
 
 
 get_adaptors = require './adaptor'
@@ -101,7 +102,9 @@ toposort = (debug_info, modules) ->
 
 
 build_bundle = ({realm, bundle_name, bundle_opts, force_compile, force_bundle,
-                 sorted_modules_list, build_root, ctx, cb}) ->
+                 sorted_modules_list, build_root, cache_root, ctx, cb}) ->
+
+    modules_cache = get_modules_cache cache_root
 
     get_target_fn = ->
         path.resolve (path.resolve build_root, realm), (bundle_name + BUILD_FILE_EXT)
@@ -116,8 +119,8 @@ build_bundle = ({realm, bundle_name, bundle_opts, force_compile, force_bundle,
                 cb 'target_error', err
             else
                 ctx.fb.say "Bundle #{realm}/#{bundle_name}#{BUILD_FILE_EXT} built."
-
                 cb()
+
 
         do_it = (err) ->
             if err
@@ -143,65 +146,35 @@ build_bundle = ({realm, bundle_name, bundle_opts, force_compile, force_bundle,
             ctx.fb.whisper "Skip creating build dir"
             do_it null
 
+    get_bundle_mtime = () ->
+        newest [
+            (try
+                get_mtime get_target_fn()
+            catch e
+                0)
+            (get_mtime (path.resolve ctx.own_args.app_root,
+                (ctx.own_args.formula or RECIPE)))
+        ]
 
-    seq = (m.adaptor.harvest for m in sorted_modules_list)
-    seq2 = (m.adaptor.last_modified for m in sorted_modules_list)
-
-    opts = if force_compile
-        full_args:
-            compile:
-                f: true
-        own_args:
-            f: true
-    else
-        {}
-
-    seq_harvester = (adaptor_worker, cb) -> adaptor_worker cb, opts
-
-    seq2_harvester = (adaptor_worker, cb) -> adaptor_worker cb
+    module_handler = (module, cb) ->
+        module.adaptor.last_modified (err, module_mtime) ->
+            unless module_mtime < (modules_cache.get_cache_mtime module)
+                ctx.fb.say "Harvesting module #{module.name}"
+                module.adaptor.harvest (err, compiled_results) ->
+                    module.source = compiled_results
+                    ctx.fb.say "Saving #{module.name} to cache."
+                    modules_cache.save module
+                    cb CB_SUCCESS, compiled_results
+            else
+                ctx.fb.shout "Skip harvesting module #{module.name}, taking source from modules cache"
+                cb CB_SUCCESS, modules_cache.get(module.name).source
 
     done = (err, results) ->
-        if err
-            ctx.fb.scream "Level 2 build sequence error: #{err}"
-            cb? 'target_error', err
+        results = results.filter (r) -> r?
+        console.log (flatten results)
+        cb? 'stop'
 
-        else
-            write_cb = (not_changed) ->
-                (err, res) ->
-                    if err
-                        cb err, res
-                    else
-                        cb CB_SUCCESS, [realm, bundle_name, not_changed]
-
-            if force_bundle
-                write_bundle (flatten results), (write_cb false)
-            else
-                done_seq2 = (err, result) ->
-                    if err
-                        ctx.fb.scream "Error getting last_modified: #{err}"
-                        cb? 'target_error', err
-                    else
-                        recipe_mtime = (get_mtime (path.resolve ctx.own_args.app_root,
-                                                                (ctx.own_args.formula or RECIPE)))
-
-                        max_src_mtime = newest [result..., [recipe_mtime]...]
-
-                        target_mtime = try
-                            get_mtime get_target_fn()
-                        catch e
-                            0
-
-                        unless max_src_mtime < target_mtime
-                            write_bundle (flatten results), (write_cb false)
-                        else
-                            ctx.fb.shout "Bundle #{realm}/#{bundle_name} still hot"
-                            write_bundle (flatten results), (write_cb true)
-
-                # maybe bundle check
-                async.map seq2, seq2_harvester, done_seq2
-
-    # Build level 2 entry point
-    async.map seq, seq_harvester, done
+    async.map sorted_modules_list, module_handler, done
 
 
 module.exports = {resolve_deps, toposort, build_bundle}

@@ -57,8 +57,9 @@
   };
 
   get_paths = function(ctx) {
-    var app_root, js_path, mod_src, module_name, recipe, src, target_fn, target_full_fn, tmp_build_root;
+    var app_root, build_root, js_path, mod_src, module_name, recipe, src, target_fn, target_full_fn;
     app_root = path.resolve(ctx.own_args.app_root);
+    build_root = path.resolve(ctx.own_args.build_root);
     module_name = ctx.own_args.mod_name;
     src = ctx.own_args.src;
     js_path = ctx.own_args.js_path;
@@ -66,13 +67,13 @@
     recipe = path.resolve(mod_src, RECIPE);
     target_fn = path.basename(module_name + JS_EXT);
     target_full_fn = get_target_fn(js_path, app_root, target_fn);
-    tmp_build_root = js_path || path.resolve(app_root, TMP_BUILD_DIR_SUFFIX);
+    build_root = js_path || path.resolve(build_root);
     return {
       mod_src: mod_src,
       recipe: recipe,
       target_fn: target_fn,
       target_full_fn: target_full_fn,
-      tmp_build_root: tmp_build_root
+      build_root: build_root
     };
   };
 
@@ -115,11 +116,11 @@
         return cb(CB_SUCCESS, group_deps || []);
       };
       harvest = function(harvest_cb, opts) {
-        var check_maybe_do, do_recipe, done, mod_src, target_fn, target_full_fn, tmp_build_root, _ref3;
+        var build_root, check_maybe_do, do_recipe, done, mod_src, target_fn, target_full_fn, _ref3;
         if (opts == null) {
           opts = {};
         }
-        _ref3 = get_paths(ctx), mod_src = _ref3.mod_src, target_full_fn = _ref3.target_full_fn, target_fn = _ref3.target_fn, tmp_build_root = _ref3.tmp_build_root;
+        _ref3 = get_paths(ctx), mod_src = _ref3.mod_src, target_full_fn = _ref3.target_full_fn, target_fn = _ref3.target_fn, build_root = _ref3.build_root;
         check_maybe_do = function(cb) {
           return maybe_build(mod_src, target_full_fn, function(changed, filename) {
             if (changed || (extend(ctx, opts)).own_args.f) {
@@ -145,7 +146,7 @@
           argv = {
             build: {
               app_root: mod_src,
-              build_root: tmp_build_root,
+              build_root: build_root,
               just_compile: true
             }
           };

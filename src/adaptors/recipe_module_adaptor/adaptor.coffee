@@ -43,6 +43,7 @@ get_target_fn = (js_path, app_root, target_fn) ->
 
 get_paths = (ctx) ->
     app_root = path.resolve ctx.own_args.app_root
+    build_root = path.resolve ctx.own_args.build_root
     module_name = ctx.own_args.mod_name
     src = ctx.own_args.src
     js_path = ctx.own_args.js_path
@@ -50,8 +51,8 @@ get_paths = (ctx) ->
     recipe = path.resolve mod_src, RECIPE
     target_fn = path.basename module_name + JS_EXT
     target_full_fn = get_target_fn js_path, app_root, target_fn
-    tmp_build_root = js_path or path.resolve app_root, TMP_BUILD_DIR_SUFFIX
-    {mod_src, recipe, target_fn, target_full_fn, tmp_build_root}
+    build_root = js_path or path.resolve build_root
+    {mod_src, recipe, target_fn, target_full_fn, build_root}
 
 
 module.exports = do ->
@@ -83,7 +84,7 @@ module.exports = do ->
             cb CB_SUCCESS, (group_deps or [])
 
         harvest = (harvest_cb, opts={}) ->
-            {mod_src, target_full_fn, target_fn, tmp_build_root} = get_paths ctx
+            {mod_src, target_full_fn, target_fn, build_root} = get_paths ctx
 
             check_maybe_do = (cb) ->
               maybe_build mod_src, target_full_fn, (changed, filename) ->
@@ -105,7 +106,7 @@ module.exports = do ->
 
               argv = {build: {
                 app_root: mod_src
-                build_root: tmp_build_root
+                build_root: build_root
                 just_compile: true
                 }
               }
