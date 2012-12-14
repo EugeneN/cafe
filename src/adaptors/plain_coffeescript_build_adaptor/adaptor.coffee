@@ -6,27 +6,26 @@ path = require 'path'
 async = require 'async'
 cs = require 'coffee-script'
 
-{JS_JUST_EXT, CB_SUCCESS} = require '../../defs'
+{COFFEESCRIPT_EXT, CB_SUCCESS} = require '../../defs'
 
 get_paths = (ctx) ->
     app_root = path.resolve ctx.own_args.app_root
     module_name = ctx.own_args.mod_name
 
-    {
     source_fn: path.resolve app_root, module_name
     target_fn: path.resolve app_root, module_name
-    }
+
 
 module.exports = do ->
 
     match = (ctx) ->
         {source_fn} = get_paths ctx
-        (is_file source_fn) and (has_ext source_fn, JS_JUST_EXT)
+        (is_file source_fn) and (has_ext source_fn, COFFEESCRIPT_EXT)
 
     match.async = (ctx, cb) ->
         {source_fn} = get_paths ctx
         async.parallel [((is_file_cb) -> is_file.async source_fn, is_file_cb),
-            ((is_file_cb) -> has_ext.async source_fn, JS_JUST_EXT, is_file_cb)],
+            ((is_file_cb) -> has_ext.async source_fn, COFFEESCRIPT_EXT, is_file_cb)],
         (err, res) ->
             if not err and (and_ res...)
                 cb CB_SUCCESS, true
