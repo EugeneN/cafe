@@ -217,29 +217,44 @@
     };
     module_handler = function(module, cb) {
       return module.adaptor.last_modified(function(err, module_mtime) {
-        var source;
+        var need_to_rebuild_bundle;
         if ([module_mtime > (modules_cache.get_cache_mtime(module)), module.adaptor.type === 'recipe'].reduce(function(a, b) {
           return a || b;
         })) {
           ctx.fb.say("Harvesting module " + module.name);
+          need_to_rebuild_bundle = !(module.adaptor.type === 'recipe');
           return module.adaptor.harvest(function(err, compiled_results) {
             module.source = compiled_results;
             ctx.fb.say("Saving " + module.name + " to cache.");
             modules_cache.save(module);
-            return cb(CB_SUCCESS, compiled_results);
+            return cb(CB_SUCCESS, [compiled_results, need_to_rebuild_bundle]);
           });
         } else {
           ctx.fb.shout("Skip harvesting module " + module.name + ", taking source from modules cache");
-          source = modules_cache.get(module.name).source;
-          return cb(CB_SUCCESS, source);
+          return cb(CB_SUCCESS, [modules_cache.get(module.name).source, false]);
         }
       });
     };
-    done = function(err, results) {
-      results = results.filter(function(r) {
-        return r != null;
+    done = function(err, raw_results) {
+      "@raw_results : [[source, need_to_rebuild_bundle] ... ]";
+
+      var need_to_rebuild_bundle, results;
+      need_to_rebuild_bundle = raw_results.map(function(r) {
+        return r[1];
+      }).reduce(function(a, b) {
+        return a || b;
       });
-      return write_bundle(flatten(results), build_bundle_cb);
+      if (need_to_rebuild_bundle) {
+        results = raw_results.map(function(r) {
+          return r[0];
+        }).filter(function(r) {
+          return r != null;
+        });
+        return write_bundle(flatten(results), build_bundle_cb);
+      } else {
+        ctx.fb.shout("Bundle " + bundle_name + " is still hot, skip build");
+        return build_bundle_cb(CB_SUCCESS, [realm, bundle_name, true]);
+      }
     };
     return async.map(sorted_modules_list, module_handler, done);
   };

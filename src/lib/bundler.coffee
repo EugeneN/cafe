@@ -158,24 +158,34 @@ build_bundle = ({realm, bundle_name, bundle_opts, force_compile, force_bundle,
     module_handler = (module, cb) ->
         module.adaptor.last_modified (err, module_mtime) ->
             if ([(module_mtime > (modules_cache.get_cache_mtime module))
-                 (module.adaptor.type is 'recipe')].reduce((a, b) -> a or b))
-
+                 (module.adaptor.type is 'recipe')].reduce((a, b) -> a or b)) # TODO: remove condition for recipe module.
+                                                                              #  this logic must be out of bundler scope
                 ctx.fb.say "Harvesting module #{module.name}"
+
+                need_to_rebuild_bundle = not (module.adaptor.type is 'recipe')
 
                 module.adaptor.harvest (err, compiled_results) ->
                     module.source = compiled_results
                     ctx.fb.say "Saving #{module.name} to cache."
                     modules_cache.save module
-                    cb CB_SUCCESS, compiled_results
+                    cb CB_SUCCESS, [compiled_results, need_to_rebuild_bundle]
             else
                 ctx.fb.shout "Skip harvesting module #{module.name}, taking source from modules cache"
-                source = modules_cache.get(module.name).source
+                cb CB_SUCCESS, [modules_cache.get(module.name).source, false]
 
-                cb CB_SUCCESS, source
+    done = (err, raw_results) ->
+        """
+        @raw_results : [[source, need_to_rebuild_bundle] ... ]
+        """
 
-    done = (err, results) ->
-        results = results.filter (r) -> r?
-        write_bundle (flatten results), build_bundle_cb
+        need_to_rebuild_bundle = raw_results.map((r) -> r[1]).reduce (a, b) -> a or b
+
+        if need_to_rebuild_bundle
+            results = raw_results.map((r)-> r[0]).filter (r) -> r?
+            write_bundle (flatten results), build_bundle_cb
+        else
+            ctx.fb.shout "Bundle #{bundle_name} is still hot, skip build"
+            build_bundle_cb CB_SUCCESS, [realm, bundle_name, true]
 
     async.map sorted_modules_list, module_handler, done
 
