@@ -4,7 +4,6 @@ mkdirp = require 'mkdirp'
 {get_mtime} = require('./utils')
 
 exports.get_modules_cache = (cache_path) ->
-    console.log '----------cache path -------', cache_path
 
     get_fn = (module_name) ->
         path.join cache_path, module_name + '.cache'
@@ -18,10 +17,10 @@ exports.get_modules_cache = (cache_path) ->
         write_file = (mod) ->
             fs.writeFileSync (get_fn mod.name), (JSON.stringify mod)
 
-        if path.existsSync (get_fn path.dirname(module_name))
+        if path.existsSync (path.dirname module_name)
             write_file module
         else
-            mkdirp path.dirname(module_name), (err) ->
+            mkdirp (path.dirname cmodule_name), (err) ->
                 throw "Can not create cache dirrectory #{err}" if err
                 write_file module
 

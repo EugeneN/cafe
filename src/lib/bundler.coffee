@@ -158,13 +158,17 @@ build_bundle = ({realm, bundle_name, bundle_opts, force_compile, force_bundle,
 
     module_handler = (module, cb) ->
         module.adaptor.last_modified (err, module_mtime) ->
-            unless module_mtime < (modules_cache.get_cache_mtime module)
+            if ([(module_mtime > (modules_cache.get_cache_mtime module))
+                    (module.adaptor.type is 'recipe')].reduce((a, b) -> a or b))
+
                 ctx.fb.say "Harvesting module #{module.name}"
+
                 module.adaptor.harvest (err, compiled_results) ->
                     module.source = compiled_results
                     ctx.fb.say "Saving #{module.name} to cache."
                     modules_cache.save module
                     cb CB_SUCCESS, compiled_results
+
             else
                 ctx.fb.shout "Skip harvesting module #{module.name}, taking source from modules cache"
                 cb CB_SUCCESS, modules_cache.get(module.name).source

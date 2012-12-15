@@ -12,7 +12,6 @@
 
   exports.get_modules_cache = function(cache_path) {
     var get_fn;
-    console.log('----------cache path -------', cache_path);
     get_fn = function(module_name) {
       return path.join(cache_path, module_name + '.cache');
     };
@@ -26,10 +25,10 @@
         write_file = function(mod) {
           return fs.writeFileSync(get_fn(mod.name), JSON.stringify(mod));
         };
-        if (path.existsSync(get_fn(path.dirname(module_name)))) {
+        if (path.existsSync(path.dirname(module_name))) {
           return write_file(module);
         } else {
-          return mkdirp(path.dirname(module_name), function(err) {
+          return mkdirp(path.dirname(cmodule_name), function(err) {
             if (err) {
               throw "Can not create cache dirrectory " + err;
             }

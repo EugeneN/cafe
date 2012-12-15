@@ -217,7 +217,9 @@
     };
     module_handler = function(module, cb) {
       return module.adaptor.last_modified(function(err, module_mtime) {
-        if (!(module_mtime < (modules_cache.get_cache_mtime(module)))) {
+        if ([module_mtime > (modules_cache.get_cache_mtime(module)), module.adaptor.type === 'recipe'].reduce(function(a, b) {
+          return a || b;
+        })) {
           ctx.fb.say("Harvesting module " + module.name);
           return module.adaptor.harvest(function(err, compiled_results) {
             module.source = compiled_results;
