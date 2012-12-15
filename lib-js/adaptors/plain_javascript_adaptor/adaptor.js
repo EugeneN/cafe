@@ -66,7 +66,7 @@
         var source, target_fn;
         target_fn = get_paths(ctx).target_fn;
         if (is_file(target_fn)) {
-          source = fs.readFileSync(target_fn);
+          source = (fs.readFileSync(target_fn)).toString();
           return cb(CB_SUCCESS, {
             sources: {
               filename: target_fn,

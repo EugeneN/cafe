@@ -132,17 +132,7 @@ module.exports = do ->
 
 
         last_modified = (cb) ->
-            {mod_src} = get_paths ctx
-
-            walk mod_src, (err, results) ->
-                if results
-                    max_time = try
-                        newest (results.map (filename) -> get_mtime filename)
-                    catch ex
-                        0
-                    cb CB_SUCCESS, max_time
-                else
-                    cb CB_SUCCESS, 0
+            cb CB_SUCCESS, 0
 
         {type, get_deps, harvest, last_modified}
 

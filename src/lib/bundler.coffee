@@ -102,7 +102,7 @@ toposort = (debug_info, modules) ->
 
 
 build_bundle = ({realm, bundle_name, bundle_opts, force_compile, force_bundle,
-                 sorted_modules_list, build_root, cache_root, ctx, cb}) ->
+                 sorted_modules_list, build_root, cache_root, ctx, build_bundle_cb}) ->
 
     modules_cache = get_modules_cache cache_root
 
@@ -119,8 +119,7 @@ build_bundle = ({realm, bundle_name, bundle_opts, force_compile, force_bundle,
                 cb 'target_error', err
             else
                 ctx.fb.say "Bundle #{realm}/#{bundle_name}#{BUILD_FILE_EXT} built."
-                cb()
-
+                cb CB_SUCCESS, [realm, bundle_name, false]
 
         do_it = (err) ->
             if err
@@ -136,7 +135,7 @@ build_bundle = ({realm, bundle_name, bundle_opts, force_compile, force_bundle,
                 else
                     ctx.fb.whisper "'just_compile mode' is on, so no result bundle was written"
                     ctx.emitter.emit EVENT_BUNDLE_CREATED, results
-                    cb()
+                    done null
 
         unless ctx.own_args.just_compile
             build_dir_path = (path.resolve build_root, realm)
@@ -159,7 +158,7 @@ build_bundle = ({realm, bundle_name, bundle_opts, force_compile, force_bundle,
     module_handler = (module, cb) ->
         module.adaptor.last_modified (err, module_mtime) ->
             if ([(module_mtime > (modules_cache.get_cache_mtime module))
-                    (module.adaptor.type is 'recipe')].reduce((a, b) -> a or b))
+                 (module.adaptor.type is 'recipe')].reduce((a, b) -> a or b))
 
                 ctx.fb.say "Harvesting module #{module.name}"
 
@@ -168,15 +167,15 @@ build_bundle = ({realm, bundle_name, bundle_opts, force_compile, force_bundle,
                     ctx.fb.say "Saving #{module.name} to cache."
                     modules_cache.save module
                     cb CB_SUCCESS, compiled_results
-
             else
                 ctx.fb.shout "Skip harvesting module #{module.name}, taking source from modules cache"
-                cb CB_SUCCESS, modules_cache.get(module.name).source
+                source = modules_cache.get(module.name).source
+
+                cb CB_SUCCESS, source
 
     done = (err, results) ->
         results = results.filter (r) -> r?
-        console.log (flatten results)
-        cb? 'stop'
+        write_bundle (flatten results), build_bundle_cb
 
     async.map sorted_modules_list, module_handler, done
 

@@ -235,8 +235,8 @@ build_bundles = (ctx, bundles, recipe, realm, filtered_bundles, build_bundles_cb
             sorted_modules_list: filtered_bundles[index]
             build_root: get_tmp_build_dir ctx.own_args.build_root
             cache_root: get_modules_cache_dir ctx.own_args.build_root
+            build_bundle_cb: build_bundle_cb
             ctx: ctx
-            cb: build_bundle_cb
         })
 
     build_bundles_done = (err, filtered_bundles_list) ->

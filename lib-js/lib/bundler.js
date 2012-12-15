@@ -165,8 +165,8 @@
   };
 
   build_bundle = function(_arg) {
-    var build_root, bundle_name, bundle_opts, cache_root, cb, ctx, done, force_bundle, force_compile, get_bundle_mtime, get_target_fn, module_handler, modules_cache, realm, sorted_modules_list, write_bundle;
-    realm = _arg.realm, bundle_name = _arg.bundle_name, bundle_opts = _arg.bundle_opts, force_compile = _arg.force_compile, force_bundle = _arg.force_bundle, sorted_modules_list = _arg.sorted_modules_list, build_root = _arg.build_root, cache_root = _arg.cache_root, ctx = _arg.ctx, cb = _arg.cb;
+    var build_bundle_cb, build_root, bundle_name, bundle_opts, cache_root, ctx, done, force_bundle, force_compile, get_bundle_mtime, get_target_fn, module_handler, modules_cache, realm, sorted_modules_list, write_bundle;
+    realm = _arg.realm, bundle_name = _arg.bundle_name, bundle_opts = _arg.bundle_opts, force_compile = _arg.force_compile, force_bundle = _arg.force_bundle, sorted_modules_list = _arg.sorted_modules_list, build_root = _arg.build_root, cache_root = _arg.cache_root, ctx = _arg.ctx, build_bundle_cb = _arg.build_bundle_cb;
     modules_cache = get_modules_cache(cache_root);
     get_target_fn = function() {
       return path.resolve(path.resolve(build_root, realm), bundle_name + BUILD_FILE_EXT);
@@ -179,7 +179,7 @@
           return cb('target_error', err);
         } else {
           ctx.fb.say("Bundle " + realm + "/" + bundle_name + BUILD_FILE_EXT + " built.");
-          return cb();
+          return cb(CB_SUCCESS, [realm, bundle_name, false]);
         }
       };
       do_it = function(err) {
@@ -191,7 +191,7 @@
           } else {
             ctx.fb.whisper("'just_compile mode' is on, so no result bundle was written");
             ctx.emitter.emit(EVENT_BUNDLE_CREATED, results);
-            return cb();
+            return done(null);
           }
         }
       };
@@ -217,6 +217,7 @@
     };
     module_handler = function(module, cb) {
       return module.adaptor.last_modified(function(err, module_mtime) {
+        var source;
         if ([module_mtime > (modules_cache.get_cache_mtime(module)), module.adaptor.type === 'recipe'].reduce(function(a, b) {
           return a || b;
         })) {
@@ -229,7 +230,8 @@
           });
         } else {
           ctx.fb.shout("Skip harvesting module " + module.name + ", taking source from modules cache");
-          return cb(CB_SUCCESS, modules_cache.get(module.name).source);
+          source = modules_cache.get(module.name).source;
+          return cb(CB_SUCCESS, source);
         }
       });
     };
@@ -237,8 +239,7 @@
       results = results.filter(function(r) {
         return r != null;
       });
-      console.log(flatten(results));
-      return typeof cb === "function" ? cb('stop') : void 0;
+      return write_bundle(flatten(results), build_bundle_cb);
     };
     return async.map(sorted_modules_list, module_handler, done);
   };

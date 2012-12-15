@@ -28,7 +28,7 @@
         if (path.existsSync(path.dirname(module_name))) {
           return write_file(module);
         } else {
-          return mkdirp(path.dirname(cmodule_name), function(err) {
+          return mkdirp(path.dirname(module_name), function(err) {
             if (err) {
               throw "Can not create cache dirrectory " + err;
             }

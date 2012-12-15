@@ -265,8 +265,8 @@
         sorted_modules_list: filtered_bundles[index],
         build_root: get_tmp_build_dir(ctx.own_args.build_root),
         cache_root: get_modules_cache_dir(ctx.own_args.build_root),
-        ctx: ctx,
-        cb: build_bundle_cb
+        build_bundle_cb: build_bundle_cb,
+        ctx: ctx
       });
     };
     build_bundles_done = function(err, filtered_bundles_list) {

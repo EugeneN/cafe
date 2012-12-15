@@ -170,25 +170,7 @@
         return async.waterfall([check_maybe_do, do_recipe], done);
       };
       last_modified = function(cb) {
-        var mod_src;
-        mod_src = get_paths(ctx).mod_src;
-        return walk(mod_src, function(err, results) {
-          var max_time;
-          if (results) {
-            max_time = (function() {
-              try {
-                return newest(results.map(function(filename) {
-                  return get_mtime(filename);
-                }));
-              } catch (ex) {
-                return 0;
-              }
-            })();
-            return cb(CB_SUCCESS, max_time);
-          } else {
-            return cb(CB_SUCCESS, 0);
-          }
-        });
+        return cb(CB_SUCCESS, 0);
       };
       return {
         type: type,

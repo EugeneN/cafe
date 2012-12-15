@@ -20,7 +20,7 @@ exports.get_modules_cache = (cache_path) ->
         if path.existsSync (path.dirname module_name)
             write_file module
         else
-            mkdirp (path.dirname cmodule_name), (err) ->
+            mkdirp (path.dirname module_name), (err) ->
                 throw "Can not create cache dirrectory #{err}" if err
                 write_file module
 
