@@ -4,7 +4,7 @@ cs = require 'coffee-script'
 {exec, spawn, fork} = require 'child_process'
 {say, shout, scream, whisper} = (require '../../lib/logger') "Adaptor/Cakefile>"
 {maybe_build, is_dir, is_file, has_ext, and_,
- get_mtime, newer, walk, newest, extend} = require '../../lib/utils'
+ get_mtime, newer, walk, newest, extend, get_cake_bin} = require '../../lib/utils'
 async = require 'async'
 
 _ = require 'underscore'
@@ -65,7 +65,7 @@ module.exports = do ->
                 cwd: mod_src
                 env: process.env
 
-            child = fork CAKE_BIN, [CAKE_TARGET], opts
+            child = fork get_cake_bin(), [CAKE_TARGET], opts
 
             child.on 'message', (modules) ->
                 child.kill()

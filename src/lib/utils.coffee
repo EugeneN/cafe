@@ -340,6 +340,16 @@ get_all_relative_files = (filepath, exclude_pattern=null, include_pattern=null) 
 
     files
 
+get_cake_bin = () ->
+    map_dict = 
+        mac: "/usr/local/bin/cake"
+        linux: "/usr/bin/cake"
+
+    for key, val of map_dict
+        if fs.existsSync val
+            return val
+
+
 module.exports = {
     read_slug
     walk
@@ -369,6 +379,7 @@ module.exports = {
     get_opt
     get_result_filename
     get_all_relative_files
+    get_cake_bin
     and_
     or_
 }
