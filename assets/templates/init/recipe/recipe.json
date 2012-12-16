@@ -1,0 +1,17 @@
+{
+    "abstract": {
+        "api_version": 3
+    },
+
+    "deps": {
+    },
+
+    "realms": {
+        "default": [
+            {
+                "name": "default",
+                "modules": []
+            }
+        ]
+    }
+}

@@ -179,6 +179,11 @@ build_bundle = ({realm, bundle_name, bundle_opts, force_compile, force_bundle,
         @raw_results : [[source, need_to_rebuild_bundle] ... ]
         """
 
+        unless raw_results.len
+            ctx.fb.shot "Bundle #{bundle_name} is empty ..."
+            (build_bundle_cb CB_SUCCESS, [realm, bundle_name, true]) 
+            return
+
         need_to_rebuild_bundle = raw_results.map((r) -> r[1]).reduce (a, b) -> a or b
 
         if need_to_rebuild_bundle

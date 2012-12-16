@@ -16,7 +16,7 @@ make_skelethon = ({
     skelethon_path
     result_path
     values
-    replace_file_names
+    replace_file_names  
     replace_dir_names
     fb
     }) ->
