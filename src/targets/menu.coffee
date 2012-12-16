@@ -142,7 +142,7 @@ waiter = (ctx, cb) ->
         cb? 'stop'
 
     _do_expire_menu = (name) ->
-        ctx.fb.say "Cleaning menu item #{item_to_clean}"
+        ctx.fb.say "Cleaning menu item #{name}"
         clean_menu read_my_menu, write_my_menu, name
         ctx.fb.say "done."
 
