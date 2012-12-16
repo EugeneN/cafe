@@ -158,6 +158,7 @@ build_bundle = ({realm, bundle_name, bundle_opts, force_compile, force_bundle,
     module_handler = (module, cb) ->
         module.adaptor.last_modified (err, module_mtime) ->
             if ([(module_mtime > (modules_cache.get_cache_mtime module))
+                 (ctx.own_args.f is true)
                  (module.adaptor.type is 'recipe')].reduce((a, b) -> a or b)) # TODO: remove condition for recipe module.
                                                                               #  this logic must be out of bundler scope
                 ctx.fb.say "Harvesting module #{module.name}"

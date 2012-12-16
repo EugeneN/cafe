@@ -1,5 +1,5 @@
 unless this.require
-    modules = {}
+    modules = window.modules = {}
     cache = {}
 
 

@@ -218,7 +218,7 @@
     module_handler = function(module, cb) {
       return module.adaptor.last_modified(function(err, module_mtime) {
         var need_to_rebuild_bundle;
-        if ([module_mtime > (modules_cache.get_cache_mtime(module)), module.adaptor.type === 'recipe'].reduce(function(a, b) {
+        if ([module_mtime > (modules_cache.get_cache_mtime(module)), ctx.own_args.f === true, module.adaptor.type === 'recipe'].reduce(function(a, b) {
           return a || b;
         })) {
           ctx.fb.say("Harvesting module " + module.name);

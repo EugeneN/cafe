@@ -108,6 +108,7 @@ module.exports = do ->
                 app_root: mod_src
                 build_root: build_root
                 just_compile: true
+                f: ctx.own_args.f
                 }
               }
 

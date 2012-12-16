@@ -3,7 +3,7 @@
   var cache, diranme, expand, modules, partial, require;
 
   if (!this.require) {
-    modules = {};
+    modules = window.modules = {};
     cache = {};
     partial = function(fn) {
       var partial_args;
