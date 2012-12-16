@@ -3,7 +3,7 @@ path = require 'path'
 async = require 'async'
 mkdirp = require 'mkdirp'
 {map, reduce} = require 'functools'
-{wrap_bundle, wrap_modules} = require '../lib/wrapper/wrapper'
+{wrap_bundle, wrap_modules} = require 'wrapper-commonjs'
 {get_modules_cache} = require './modules_cache'
 
 

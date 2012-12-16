@@ -7,6 +7,7 @@
     "type" : "git",
     "url": "https://github.com/EugeneN/cafe"
   },
+  "scripts": {"preinstall": "cake build"},
   "engine" : [ "node >=0.1.102" ],
   "main" : "./lib/cafe.js",
   "bin": { "cafe": "./bin/cafe", "telnet-cafe": "./bin/telnet-cafe"},
@@ -24,6 +25,7 @@
     "functools": "*",
     "mkdirp": "*",
     "chokidar": "*",
-    "growl": "*"
+    "growl": "*",
+    "wrapper-commonjs":"*"
   }
 }
