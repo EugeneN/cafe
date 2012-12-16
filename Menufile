@@ -30,5 +30,17 @@
             "f": true
         },
         "global": {}
+    },
+    "my": {
+        "build": {},
+        "global": {}
+    },
+    "dna_build": {
+        "bin/cafe": {},
+        "build": {
+            "app_root": "../DNA_Examples/cs",
+            "build_root": "../DNA_Examples/public"
+        },
+        "global": {}
     }
 }

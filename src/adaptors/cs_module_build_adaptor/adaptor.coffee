@@ -3,7 +3,6 @@
 fs = require 'fs'
 path = require 'path'
 async = require 'async'
-Compiler = require './sm_compiler'
 
 {
     maybe_build, toArray, add, read_json_file, get_mtime, and_, or_,
