@@ -41,6 +41,5 @@ minify = (ctx, cb) ->
 
     minifier.minify cb, ctx.own_args.f
 
-
-
+    
 module.exports = make_target "minify", minify, help

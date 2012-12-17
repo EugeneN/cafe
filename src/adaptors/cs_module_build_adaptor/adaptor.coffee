@@ -49,8 +49,8 @@ build_factory = (mod_src, ctx) ->
             slug = ctx.cafelib.utils.read_slug(mod_src, ctx.cafelib.utils.slug)
             slug.paths = slug.paths.map (p) -> path.resolve(path.join mod_src, p)
 
-            {coffee, eco} = require './compilers'
-            compiler = ctx.cafelib.make_compiler [coffee, eco]
+            {coffee, eco, js} = require './compilers'
+            compiler = ctx.cafelib.make_compiler [coffee, eco, js]
 
             sources = slug.paths.map (slug_path) ->
                 paths = ctx.cafelib.utils.get_all_relative_files(
@@ -117,12 +117,20 @@ module.exports = do ->
         get_deps = (recipe_deps, cb) ->
             module_name = ctx.own_args.mod_name
 
-            for group, deps of recipe_deps
-              if group is module_name
-                # making copy here because dependencies changed in toposort
-                group_deps = deps.concat()
+            {slug_path} = get_paths ctx
 
-            cb CB_SUCCESS, (group_deps or [])
+            read_json_file.async slug_path, (err, slug) ->
+                cb err if err
+
+                slug_deps = slug.recipe?.concat() or []
+                for group, deps of recipe_deps
+                    if group is module_name
+                        # making copy here because dependencies are changed in toposort
+                        group_deps = deps.concat()
+
+                slug_deps.concat(group_deps or [])
+
+                cb CB_SUCCESS, slug_deps
 
         harvest = (cb, opts={}) ->
 

@@ -8,7 +8,7 @@ mkdirp = require 'mkdirp'
 
 
 get_adaptors = require './adaptor'
-{read_json_file, extend} = require '../lib/utils'
+{read_json_file, extend, exists} = require '../lib/utils'
 {flatten, is_dir, is_file, extend, newest, get_mtime} = require('./utils')
 {say, shout, scream, whisper} = (require './logger') "lib-bundle>"
 
@@ -133,16 +133,16 @@ build_bundle = ({realm, bundle_name, bundle_opts, force_compile, force_bundle,
                         done
                     )
                 else
-                    ctx.fb.whisper "'just_compile mode' is on, so no result bundle was written"
+                    ctx.fb.whisper "'just_compile -mode' is on, so no result bundle was written"
                     ctx.emitter.emit EVENT_BUNDLE_CREATED, results
                     done null
 
         unless ctx.own_args.just_compile
             build_dir_path = (path.resolve build_root, realm)
-            ctx.fb.whisper "Creating build dir #{build_dir_path}"
+            ctx.fb.say "Creating build dir #{build_dir_path}"
             mkdirp build_dir_path, do_it
         else
-            ctx.fb.whisper "Skip creating build dir"
+            ctx.fb.shout "Skip creating build dir"
             do_it null
 
     get_bundle_mtime = () ->
@@ -167,11 +167,11 @@ build_bundle = ({realm, bundle_name, bundle_opts, force_compile, force_bundle,
 
                 module.adaptor.harvest (err, compiled_results) ->
                     module.source = compiled_results
-                    ctx.fb.say "Saving #{module.name} to cache."
+                    ctx.fb.say " -Saving #{module.name} to cache."
                     modules_cache.save module
                     cb CB_SUCCESS, [compiled_results, need_to_rebuild_bundle]
             else
-                ctx.fb.shout "Skip harvesting module #{module.name}, taking source from modules cache"
+                ctx.fb.shout " -Skip harvesting module #{module.name}, taking source from modules cache"
                 cb CB_SUCCESS, [modules_cache.get(module.name).source, false]
 
     done = (err, raw_results) ->
@@ -179,19 +179,23 @@ build_bundle = ({realm, bundle_name, bundle_opts, force_compile, force_bundle,
         @raw_results : [[source, need_to_rebuild_bundle] ... ]
         """
 
-        unless raw_results.len
-            ctx.fb.shot "Bundle #{bundle_name} is empty ..."
+        unless raw_results.length
+            ctx.fb.shout "Bundle #{realm}/#{bundle_name} is empty ..."
             (build_bundle_cb CB_SUCCESS, [realm, bundle_name, true]) 
             return
 
         need_to_rebuild_bundle = raw_results.map((r) -> r[1]).reduce (a, b) -> a or b
+        results = raw_results.map((r)-> r[0]).filter (r) -> r?
 
         if need_to_rebuild_bundle
-            results = raw_results.map((r)-> r[0]).filter (r) -> r?
             write_bundle (flatten results), build_bundle_cb
         else
-            ctx.fb.shout "Bundle #{bundle_name} is still hot, skip build"
-            build_bundle_cb CB_SUCCESS, [realm, bundle_name, true]
+            unless exists get_target_fn()
+                ctx.fb.shout "Missing bundle file #{realm}/#{bundle_name}, rebuilding from cache"
+                write_bundle (flatten results), build_bundle_cb
+            else
+                ctx.fb.shout "Bundle #{realm}/#{bundle_name} is still hot, skip build"
+                build_bundle_cb CB_SUCCESS, [realm, bundle_name, true]
 
     async.map sorted_modules_list, module_handler, done
 

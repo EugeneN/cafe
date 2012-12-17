@@ -16,3 +16,7 @@ exports.eco =
         else
             eco.compile fs.readFileSync path, 'utf8'
 
+exports.js =
+    ext: 'js'
+    compile: (path) -> (fs.readFileSync path).toString()
+
