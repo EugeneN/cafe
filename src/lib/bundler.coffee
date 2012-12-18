@@ -139,10 +139,10 @@ build_bundle = ({realm, bundle_name, bundle_opts, force_compile, force_bundle,
 
         unless ctx.own_args.just_compile
             build_dir_path = (path.resolve build_root, realm)
-            ctx.fb.say "Creating build dir #{build_dir_path}"
+            # Creating build dir
             mkdirp build_dir_path, do_it
         else
-            ctx.fb.shout "Skip creating build dir"
+            # Skip creating build dir
             do_it null
 
     get_bundle_mtime = () ->
@@ -161,17 +161,23 @@ build_bundle = ({realm, bundle_name, bundle_opts, force_compile, force_bundle,
                  (ctx.own_args.f is true)
                  (module.adaptor.type is 'recipe')].reduce((a, b) -> a or b)) # TODO: remove condition for recipe module.
                                                                               #  this logic must be out of bundler scope
-                ctx.fb.say "Harvesting module #{module.name}"
-
                 need_to_rebuild_bundle = not (module.adaptor.type is 'recipe')
-
-                module.adaptor.harvest (err, compiled_results) ->
-                    ctx.fb.say " -Saving #{module.name} to cache."
-                    modules_cache.save {module:module, source: compiled_results}
-                    cb CB_SUCCESS, [compiled_results, need_to_rebuild_bundle]
+                cb CB_SUCCESS , [module, need_to_rebuild_bundle]
             else
-                ctx.fb.shout " -Skip harvesting module #{module.name}, taking source from modules cache"
-                cb CB_SUCCESS, [modules_cache.get(module.name).source, false]
+
+                cb CB_SUCCESS, [module, false]
+
+
+    module_precompile_handler = ([module, need_to_rebuild], cb) ->
+        if need_to_rebuild
+            ctx.fb.say " Harvesting module #{module.name}"
+            module.adaptor.harvest (err, compiled_results) ->
+                modules_cache.save {module:module, source: compiled_results}
+                cb CB_SUCCESS, compiled_results
+        else
+            ctx.fb.shout " -Skip harvesting module #{module.name}, taking source from modules cache"
+            cb CB_SUCCESS, (modules_cache.get module.name).source
+
 
     done = (err, raw_results) ->
         """
@@ -184,14 +190,20 @@ build_bundle = ({realm, bundle_name, bundle_opts, force_compile, force_bundle,
             return
 
         need_to_rebuild_bundle = raw_results.map((r) -> r[1]).reduce (a, b) -> a or b
-        results = raw_results.map((r)-> r[0]).filter (r) -> r?
+
+        get_harvested_results = (cb) ->
+            ctx.fb.say "**Harvesting bundle #{realm}/#{bundle_name}"
+            async.map raw_results, module_precompile_handler, (err, results) -> cb results
 
         if need_to_rebuild_bundle
-            write_bundle (flatten results), build_bundle_cb
+            get_harvested_results (results) ->
+                write_bundle (flatten results), build_bundle_cb
         else
             unless exists get_target_fn()
                 ctx.fb.shout "Missing bundle file #{realm}/#{bundle_name}, rebuilding from cache"
-                write_bundle (flatten results), build_bundle_cb
+
+                get_harvested_results (results) ->
+                    write_bundle (flatten results), build_bundle_cb
             else
                 ctx.fb.shout "Bundle #{realm}/#{bundle_name} is still hot, skip build"
                 build_bundle_cb CB_SUCCESS, [realm, bundle_name, true]
