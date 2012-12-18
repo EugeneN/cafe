@@ -4,7 +4,7 @@ path = require 'path'
 {spawn} = require 'child_process'
 {say, shout, scream, whisper} = (require './logger') 'Utils>'
 
-{JS_PATTERN, SLUG_FN, FILE_ENCODING, CB_SUCCESS} = require '../defs'
+{CAFE_DIR, JS_PATTERN, SLUG_FN, FILE_ENCODING, CB_SUCCESS} = require '../defs'
 
 read_slug = (p) ->
     slug_fn = path.resolve p, SLUG_FN
@@ -334,10 +334,9 @@ get_all_relative_files = (filepath, exclude_pattern=null, include_pattern=null) 
         for file in fs.readdirSync(dir)
             file = "#{dir}/#{file}"
             files.push file if (is_match file)
-            next(file) if (is_dir file)
+            (next file) if (is_dir file)
 
     next filepath
-
     files
 
 get_cake_bin = () ->
@@ -349,6 +348,16 @@ get_cake_bin = () ->
         if fs.existsSync val
             return val
 
+get_cafe_dir = (app_root) ->
+    dir = path.join app_root, CAFE_DIR
+    unless exists dir
+        fs.mkdirSync dir
+    else
+        dir
+
+fn_without_ext = (filename) ->
+    ext_length = (path.extname filename).length
+    filename.slice 0, -ext_length
 
 module.exports = {
     read_slug
@@ -382,4 +391,6 @@ module.exports = {
     get_cake_bin
     and_
     or_
+    get_cafe_dir
+    fn_without_ext
 }

@@ -1,7 +1,7 @@
 # Plain old javascript file adaptor blah blah
 fs = require 'fs'
 path = require 'path'
-{is_file, has_ext, get_mtime, and_} = require '../../lib/utils'
+{is_file, has_ext, get_mtime, and_, fn_without_ext} = require '../../lib/utils'
 {say, shout, scream, whisper} = (require '../../lib/logger') "Adaptor/javascript>"
 async = require 'async'
 cs = require 'coffee-script'
@@ -50,7 +50,8 @@ module.exports = do ->
 
             if is_file target_fn
                 source = cs.compile(fs.readFileSync target_fn, 'utf8')
-                cb CB_SUCCESS, {sources: {filename: target_fn, source:source, type:"commonjs"}}, "COMPILE_MAYBE_SKIPPED"
+                result_fn = fn_without_ext(path.relative ctx.own_args.app_root, target_fn)
+                cb CB_SUCCESS, {sources: {filename: result_fn, source:source, type:"commonjs"}, ns:''}, "COMPILE_MAYBE_SKIPPED"
             else
                 cb CB_SUCCESS, undefined
 

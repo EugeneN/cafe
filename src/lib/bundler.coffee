@@ -166,9 +166,8 @@ build_bundle = ({realm, bundle_name, bundle_opts, force_compile, force_bundle,
                 need_to_rebuild_bundle = not (module.adaptor.type is 'recipe')
 
                 module.adaptor.harvest (err, compiled_results) ->
-                    module.source = compiled_results
                     ctx.fb.say " -Saving #{module.name} to cache."
-                    modules_cache.save module
+                    modules_cache.save {module:module, source: compiled_results}
                     cb CB_SUCCESS, [compiled_results, need_to_rebuild_bundle]
             else
                 ctx.fb.shout " -Skip harvesting module #{module.name}, taking source from modules cache"

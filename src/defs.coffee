@@ -150,6 +150,7 @@ default_config =
     DEFAULT_CS_BUILD_DIR : 'build'
     SUCCESS_ICO : path.resolve __dirname, '../assets/img/success.jpg'
     FAILURE_ICO : path.resolve __dirname, '../assets/img/failure.jpg'
-    SKELETHON_ASSETS_PATH: SKELETHON_ASSETS_PATH  
+    SKELETHON_ASSETS_PATH: SKELETHON_ASSETS_PATH
+    CAFE_DIR: '.cafe'
 
 module.exports = extend {}, default_config, user_config

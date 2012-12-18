@@ -60,14 +60,14 @@ async = require 'async'
 {resolve_deps, build_bundle, toposort} = require '../lib/bundler'
 {say, shout, scream, whisper} = (require '../lib/logger') "Build>"
 {read_json_file, add, is_dir, is_file,
- has_ext, extend, get_opt} = require '../lib/utils'
+ has_ext, extend, get_opt, get_cafe_dir} = require '../lib/utils'
 
 {TMP_BUILD_DIR_SUFFIX, RECIPE, RECIPE_EXT, BUILD_DEPS_FN, FILE_ENCODING, CB_SUCCESS,
  RECIPE_API_LEVEL} = require '../defs'
 
 
 get_tmp_build_dir = (build_root) -> path.resolve path.join build_root, TMP_BUILD_DIR_SUFFIX
-get_modules_cache_dir = (build_root) -> path.resolve path.join build_root, 'modules_cache'
+get_modules_cache_dir = (app_root) -> path.resolve path.join get_cafe_dir(app_root), 'modules_cache'
 
 get_recipe = (recipe_path, level=0) ->
     if level > 3
@@ -233,8 +233,8 @@ build_bundles = (ctx, bundles, recipe, realm, filtered_bundles, build_bundles_cb
             force_compile: force_compile
             force_bundle: force_bundle
             sorted_modules_list: filtered_bundles[index]
-            build_root: get_tmp_build_dir ctx.own_args.build_root
-            cache_root: get_modules_cache_dir ctx.own_args.build_root
+            build_root: (get_tmp_build_dir ctx.own_args.build_root)
+            cache_root: (get_modules_cache_dir ctx.own_args.app_root)
             build_bundle_cb: build_bundle_cb
             ctx: ctx
         })
