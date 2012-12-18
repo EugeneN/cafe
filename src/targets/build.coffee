@@ -60,7 +60,7 @@ async = require 'async'
 {resolve_deps, build_bundle, toposort} = require '../lib/bundler'
 {say, shout, scream, whisper} = (require '../lib/logger') "Build>"
 {read_json_file, add, is_dir, is_file,
- has_ext, extend, get_opt, get_cafe_dir} = require '../lib/utils'
+ has_ext, extend, get_opt, get_cafe_dir, partial} = require '../lib/utils'
 
 {TMP_BUILD_DIR_SUFFIX, RECIPE, RECIPE_EXT, BUILD_DEPS_FN, FILE_ENCODING, CB_SUCCESS,
  RECIPE_API_LEVEL} = require '../defs'
@@ -299,7 +299,10 @@ process_realms = (ctx, recipe, cb) ->
                     write_build_deps_file ctx, fn, result, cb
 
     # Build level 0 entry point
-    async.map ([k, v] for k, v of recipe.realms), process_realm, done_processing_realms
+    async.series(
+        (([k, v] for k, v of recipe.realms).map (i) -> partial(process_realm, i))
+        done_processing_realms
+    )
 
 
 build = (ctx, build_cb) ->

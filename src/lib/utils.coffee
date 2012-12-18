@@ -1,6 +1,7 @@
 
 fs = require 'fs'
 path = require 'path'
+_ = require 'underscore'
 {spawn} = require 'child_process'
 {say, shout, scream, whisper} = (require './logger') 'Utils>'
 
@@ -359,6 +360,8 @@ fn_without_ext = (filename) ->
     ext_length = (path.extname filename).length
     filename.slice 0, -ext_length
 
+partial = (fn, args...) -> _.bind fn, null, args...
+
 module.exports = {
     read_slug
     walk
@@ -393,4 +396,5 @@ module.exports = {
     or_
     get_cafe_dir
     fn_without_ext
+    partial
 }
