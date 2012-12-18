@@ -175,7 +175,7 @@ build_bundle = ({realm, bundle_name, bundle_opts, force_compile, force_bundle,
                 modules_cache.save {module:module, source: compiled_results}
                 cb CB_SUCCESS, compiled_results
         else
-            ctx.fb.shout " -Skip harvesting module #{module.name}, taking source from modules cache"
+            #ctx.fb.shout " -Skip harvesting module #{module.name}, taking source from modules cache"
             cb CB_SUCCESS, (modules_cache.get module.name).source
 
 
@@ -192,7 +192,7 @@ build_bundle = ({realm, bundle_name, bundle_opts, force_compile, force_bundle,
         need_to_rebuild_bundle = raw_results.map((r) -> r[1]).reduce (a, b) -> a or b
 
         get_harvested_results = (cb) ->
-            ctx.fb.say "**Harvesting bundle #{realm}/#{bundle_name}"
+            #ctx.fb.say "**Harvesting bundle #{realm}/#{bundle_name}"
             async.map raw_results, module_precompile_handler, (err, results) -> cb results
 
         if need_to_rebuild_bundle

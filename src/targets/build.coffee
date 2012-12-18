@@ -299,8 +299,9 @@ process_realms = (ctx, recipe, cb) ->
                     write_build_deps_file ctx, fn, result, cb
 
     # Build level 0 entry point
-    async.series(
-        (([k, v] for k, v of recipe.realms).map (i) -> partial(process_realm, i))
+    async.map(
+        ([k, v] for k, v of recipe.realms)
+        process_realm
         done_processing_realms
     )
 
