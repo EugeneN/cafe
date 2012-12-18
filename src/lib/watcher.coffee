@@ -133,9 +133,7 @@ module.exports =
             ctx.fb.scream module_root
 
             watcher = chokidar.watch module_root, {ignored: /^\./, persistent: true}
-            # TODO: deal with add event. for now if uncomment it will always fire add event on root module folder.
-            # provide unlink and add events.
-            #watcher.on 'add', change_handler
+            watcher.on 'add', change_handler
             watcher.on 'change', change_handler
             watcher.on 'error', (error) -> ctx.fb.scream "watcher encauntered an error #{error}"
 
