@@ -26,10 +26,10 @@ list = (ctx, cb) ->
   cb 'stop'
 
 
-skelethon = (ctx, cb) ->
+skel = (ctx, cb) ->
 
     args = Object.keys(ctx.full_args)\
-           .filter (k) -> k not in ['skelethon', 'global']
+           .filter (k) -> k not in ['skel', 'global']
 
     list(ctx, cb) if 'list' in args
 
@@ -47,7 +47,6 @@ skelethon = (ctx, cb) ->
             skel_values.skelethon_path
         )
         skel_values.fb = ctx.fb
-        console.log skel_values
 
         make_skelethon skel_values
     else
@@ -56,4 +55,4 @@ skelethon = (ctx, cb) ->
     cb? 'stop'
 
 
-module.exports = make_target 'skelethon', skelethon, help, true
+module.exports = make_target 'skel', skel, help, true

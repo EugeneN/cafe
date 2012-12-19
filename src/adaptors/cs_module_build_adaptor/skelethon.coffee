@@ -23,7 +23,7 @@ expandPath = (_path, dir) ->
     path.normalize _path
 
 
-exports.slugmodule = (ctx_args) ->
+exports.module = (ctx_args) ->
     name = ctx_args[1]
     throw "Need module name" unless name
     values = {name: path.basename(name)}
@@ -32,13 +32,9 @@ exports.slugmodule = (ctx_args) ->
 
     fs.mkdirSync _path, 0o0775
 
-    replace_dir_names =
-        'src': path.basename(name)
-
     skelethon_path: SLUG_ASSETS_PATH
     result_path: _path
     values: values
-    replace_dir_names: replace_dir_names
 
 
 exports.spinecontroller = () ->

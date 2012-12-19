@@ -12,28 +12,28 @@ get_paths = (ctx) ->
     module_name = ctx.own_args.mod_name
 
     {
-        source_fn: path.resolve app_root, module_name
-        target_fn: path.resolve app_root, module_name
+    source_fn: path.resolve app_root, module_name
+    target_fn: path.resolve app_root, module_name
     }
 
 module.exports = do ->
 
     match = (ctx) ->
         {source_fn} = get_paths ctx
-        (is_file source_fn) and (has_ext source_fn, JS_JUST_EXT)
+        (is_file source_fn) and (has_ext source_fn, 'eco')
 
     match.async = (ctx, cb) ->
         {source_fn} = get_paths ctx
         async.parallel [((is_file_cb) -> is_file.async source_fn, is_file_cb),
-                        ((is_file_cb) -> has_ext.async source_fn, JS_JUST_EXT, is_file_cb)],
-                        (err, res) ->
-                            if not err and (and_ res...)
-                                cb CB_SUCCESS, true
-                            else
-                                cb CB_SUCCESS, false
+            ((is_file_cb) -> has_ext.async source_fn, 'eco', is_file_cb)],
+        (err, res) ->
+            if not err and (and_ res...)
+                cb CB_SUCCESS, true
+            else
+                cb CB_SUCCESS, false
 
     make_adaptor = (ctx) ->
-        type = 'plain_javascript_file'
+        type = 'eco_file'
 
         get_deps = (recipe_deps, cb) ->
             module_name = ctx.own_args.mod_name

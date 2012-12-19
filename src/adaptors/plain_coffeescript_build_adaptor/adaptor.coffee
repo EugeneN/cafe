@@ -49,9 +49,14 @@ module.exports = do ->
             {target_fn} = get_paths ctx
 
             if is_file target_fn
-                source = cs.compile(fs.readFileSync target_fn, 'utf8')
-                result_fn = fn_without_ext(path.relative ctx.own_args.app_root, target_fn)
-                cb CB_SUCCESS, {sources: {filename: result_fn, source:source, type:"commonjs"}, ns:''}, "COMPILE_MAYBE_SKIPPED"
+
+                {coffee, eco, js} = require '../../lib/compiler/compilers'
+                compiler = ctx.cafelib.make_compiler [coffee, eco, js]
+                sources  = (compiler.compile [target_fn]).map ({path: p, source: source}) ->
+                    result_fn = fn_without_ext(path.relative ctx.own_args.app_root, p)
+                    {filename: result_fn, source: source, type: "commonjs"}
+
+                cb CB_SUCCESS, {sources: sources, ns:''}, "COMPILE_MAYBE_SKIPPED"
             else
                 cb CB_SUCCESS, undefined
 

@@ -353,6 +353,7 @@ get_cafe_dir = (app_root) ->
     dir = path.join app_root, CAFE_DIR
     unless exists dir
         fs.mkdirSync dir
+        dir
     else
         dir
 

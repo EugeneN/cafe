@@ -49,7 +49,7 @@ build_factory = (mod_src, ctx) ->
             slug = ctx.cafelib.utils.read_slug(mod_src, ctx.cafelib.utils.slug)
             slug.paths = slug.paths.map (p) -> path.resolve(path.join mod_src, p)
 
-            {coffee, eco, js} = require './compilers'
+            {coffee, eco, js} = require '../../lib/compiler/compilers'
             compiler = ctx.cafelib.make_compiler [coffee, eco, js]
 
             sources = slug.paths.map (slug_path) ->

@@ -225,6 +225,8 @@ build_bundles = (ctx, bundles, recipe, realm, filtered_bundles, build_bundles_cb
                     run_target 'minify', args, ctx, post_build_bundle_cb
                 else
                     post_build_bundle_cb()
+                    
+        console.log (get_modules_cache_dir ctx.own_args.app_root)
 
         build_bundle({
             realm: realm
