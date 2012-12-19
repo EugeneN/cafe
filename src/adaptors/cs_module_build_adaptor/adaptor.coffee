@@ -64,7 +64,7 @@ build_factory = (mod_src, ctx) ->
                     source: source
                     type: "commonjs"
 
-            cb null, {sources: (ctx.cafelib.utils.flatten sources), ns: path.basename mod_src}
+            cb null, {sources: (ctx.cafelib.utils.flatten sources), ns: (path.basename mod_src), mod_src: mod_src}
 
         new_cb = (ev, cb, err, result) ->
             emitter.emit ev

@@ -8,8 +8,8 @@ mkdirp = require 'mkdirp'
 
 
 get_adaptors = require './adaptor'
-{read_json_file, extend, exists} = require '../lib/utils'
-{flatten, is_dir, is_file, extend, newest, get_mtime} = require('./utils')
+{read_json_file, extend, exists, is_array} = require '../lib/utils'
+{flatten, is_dir, is_file, extend, newest, get_mtime, fn_without_ext} = require('./utils')
 {say, shout, scream, whisper} = (require './logger') "lib-bundle>"
 
 {SLUG_FN, FILE_ENCODING, BUILD_FILE_EXT, RECIPE, VERSION, EOL, CB_SUCCESS,
@@ -102,7 +102,7 @@ toposort = (debug_info, modules) ->
 
 
 build_bundle = ({realm, bundle_name, bundle_opts, force_compile, force_bundle,
-                 sorted_modules_list, build_root, cache_root, ctx, build_bundle_cb}) ->
+                 sorted_modules_list, build_root, cache_root, ctx, recipe, build_bundle_cb}) ->
 
     modules_cache = get_modules_cache cache_root
 
@@ -126,6 +126,16 @@ build_bundle = ({realm, bundle_name, bundle_opts, force_compile, force_bundle,
                 cb 'fs_error', err
             else
                 unless ctx.own_args.just_compile
+
+                    if recipe.plainjs
+                        plain_js_files = recipe.plainjs.map (f) -> fn_without_ext f
+                        for res in results
+                            if fn_without_ext(path.relative(ctx.own_args.app_root, res.mod_src)) in plain_js_files
+                                if is_array res.sources
+                                    for s in res.sources
+                                        s.type = "plainjs"
+                                else
+                                    res.sources.type = "plainjs"
                     fs.writeFile(
                         get_target_fn()
                         wrap_bundle((wrap_modules results), BUNDLE_HDR)

@@ -236,6 +236,7 @@ build_bundles = (ctx, bundles, recipe, realm, filtered_bundles, build_bundles_cb
             build_root: (get_tmp_build_dir ctx.own_args.build_root)
             cache_root: (get_modules_cache_dir ctx.own_args.app_root)
             build_bundle_cb: build_bundle_cb
+            recipe
             ctx: ctx
         })
 

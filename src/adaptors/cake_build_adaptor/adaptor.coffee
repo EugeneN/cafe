@@ -79,7 +79,7 @@ module.exports = do ->
             child.on 'exit', (status_code) ->
                 if sources
                     ctx.fb.say "Cake module #{mod_src} was brewed"
-                    harvest_cb CB_SUCCESS, {sources:sources, ns: path.basename(mod_src)}
+                    harvest_cb CB_SUCCESS, {sources:sources, ns: path.basename(mod_src), mod_src: mod_src}
                 else
                     ctx.fb.scream "Error during compilation of Cake module #{mod_src}"
                     harvest_cb 'fork_error', status_code

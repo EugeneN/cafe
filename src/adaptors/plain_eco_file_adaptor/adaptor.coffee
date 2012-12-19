@@ -55,7 +55,7 @@ module.exports = do ->
                     result_fn = fn_without_ext(path.relative ctx.own_args.app_root, p)
                     {filename: result_fn, source: source, type: "commonjs"}
 
-                cb CB_SUCCESS, {sources: sources, ns:''}, "COMPILE_MAYBE_SKIPPED"
+                cb CB_SUCCESS, {sources: sources, ns:'', mod_src: target_fn}, "COMPILE_MAYBE_SKIPPED"
             else
                 cb CB_SUCCESS, undefined
 
