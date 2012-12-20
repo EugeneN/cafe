@@ -4,33 +4,33 @@ path = require 'path'
 {is_file, has_ext, get_mtime, and_, fn_without_ext} = require '../../lib/utils'
 {say, shout, scream, whisper} = (require '../../lib/logger') "Adaptor/javascript>"
 async = require 'async'
+cs = require 'coffee-script'
 
-{JS_JUST_EXT, CB_SUCCESS} = require '../../defs'
+{COFFEESCRIPT_EXT, CB_SUCCESS} = require '../../defs'
 
 get_paths = (ctx) ->
     app_root = path.resolve ctx.own_args.app_root
     module_name = ctx.own_args.mod_name
 
-    {
-        source_fn: path.resolve app_root, module_name
-        target_fn: path.resolve app_root, module_name
-    }
+    source_fn: path.resolve app_root, module_name
+    target_fn: path.resolve app_root, module_name
+
 
 module.exports = do ->
 
     match = (ctx) ->
         {source_fn} = get_paths ctx
-        (is_file source_fn) and (has_ext source_fn, JS_JUST_EXT)
+        (is_file source_fn) and ((path.extname source_fn) in ['.coffee', '.js', '.eco'])
 
     match.async = (ctx, cb) ->
         {source_fn} = get_paths ctx
         async.parallel [((is_file_cb) -> is_file.async source_fn, is_file_cb),
-                        ((is_file_cb) -> has_ext.async source_fn, JS_JUST_EXT, is_file_cb)],
-                        (err, res) ->
-                            if not err and (and_ res...)
-                                cb CB_SUCCESS, true
-                            else
-                                cb CB_SUCCESS, false
+            ((is_file_cb) -> is_file_cb CB_SUCCESS, (path.extname source_fn) in ['.coffee', '.js', '.eco'])],
+        (err, res) ->
+            if not err and (and_ res...)
+                cb CB_SUCCESS, true
+            else
+                cb CB_SUCCESS, false
 
     make_adaptor = (ctx) ->
         type = 'plain_javascript_file'
@@ -49,6 +49,7 @@ module.exports = do ->
             {target_fn} = get_paths ctx
 
             if is_file target_fn
+
                 {coffee, eco, js} = require '../../lib/compiler/compilers'
                 compiler = ctx.cafelib.make_compiler [coffee, eco, js]
                 sources  = (compiler.compile [target_fn]).map ({path: p, source: source}) ->
@@ -66,4 +67,3 @@ module.exports = do ->
         {type, get_deps, harvest, last_modified}
 
     {match, make_adaptor}
-
