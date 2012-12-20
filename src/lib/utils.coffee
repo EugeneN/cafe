@@ -164,8 +164,8 @@ read_json_file = (filename) ->
         try
             Object.freeze(JSON.parse(fs.readFileSync(filename, FILE_ENCODING)))
         catch e
-            scream "Error reading #{filename}: #{e}"
-            whisper "#{e.stack}"
+            console.log "Error reading #{filename}: #{e}"
+            console.log "#{e.stack}"
             undefined
     else
         undefined
@@ -363,6 +363,9 @@ fn_without_ext = (filename) ->
 
 partial = (fn, args...) -> _.bind fn, null, args...
 
+get_legacy_cafe_bin_path = (version) ->
+    path.resolve __dirname,"../../legacy/api_version_#{version}/cafe/bin/cafe"
+
 module.exports = {
     read_slug
     walk
@@ -398,4 +401,5 @@ module.exports = {
     get_cafe_dir
     fn_without_ext
     partial
+    get_legacy_cafe_bin_path
 }

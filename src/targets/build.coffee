@@ -55,12 +55,15 @@ fs = require 'fs'
 path = require 'path'
 async = require 'async'
 {compose, map, partial} = require 'functools'
+{spawn} = require 'child_process'
 
 {make_target, run_target} = require '../lib/target'
 {resolve_deps, build_bundle, toposort} = require '../lib/bundler'
 {say, shout, scream, whisper} = (require '../lib/logger') "Build>"
+
 {read_json_file, add, is_dir, is_file,
- has_ext, extend, get_opt, get_cafe_dir, partial} = require '../lib/utils'
+ has_ext, extend, get_opt, get_cafe_dir, partial,
+ get_legacy_cafe_bin_path, filter_dict } = require '../lib/utils'
 
 {TMP_BUILD_DIR_SUFFIX, RECIPE, RECIPE_EXT, BUILD_DEPS_FN, FILE_ENCODING, CB_SUCCESS,
  RECIPE_API_LEVEL} = require '../defs'
@@ -74,9 +77,9 @@ get_recipe = (recipe_path, level=0) ->
         scream "Recipe inheritance chain to long"
         undefined
 
+
     else if is_file recipe_path
         recipe = read_json_file recipe_path
-
         if recipe?.abstract?.extends
             base_recipe_path = (path.resolve (path.dirname recipe_path),
                                              recipe.abstract.extends)
@@ -85,10 +88,8 @@ get_recipe = (recipe_path, level=0) ->
                 if (base_recipe = get_recipe base_recipe_path, level + 1)
                     extend base_recipe, recipe
                 else
-                    scream "Can't read base recipe #{base_recipe_path}"
                     undefined
             else
-                scream "Cyclic dependency found in recipe inheritance chain"
                 undefined
         else
             recipe
@@ -130,12 +131,35 @@ get_ctx_recipe = (ctx, ctx_is_valid, cb) ->
     unless recipe
         cb 'bad_ctx' , "Bad recipe #{recipe_path}"
 
-    else unless recipe.abstract?.api_version is RECIPE_API_LEVEL
-        cb 'bad_recipe', "Current Cafe version is not compatible with the "\
-                        +"recipe.json version. Please update Cafe and try again."
-
-    else
+    if recipe.abstract.api_version is RECIPE_API_LEVEL # if we got the latest version
         cb CB_SUCCESS, recipe
+    else
+        arg1 = (arg) -> "-#{arg}"
+        arg2 = (arg, val) -> "--#{arg}#{if val is undefined then '' else '=' + val}"
+        format_arg = (arg, val) -> if val is true then arg1(arg) else arg2(arg, val)
+
+        ctx.fb.shout "Found old apiversion in recipe #{recipe.abstract.api_version}"
+
+        if (legacy_cafe_bin = get_legacy_cafe_bin_path recipe.abstract.api_version)
+            cmd_args = ['--nologo', '--noupdate', '--nogrowl']
+
+            cmd_args.push(format_arg(arg, val)) for arg, val of ctx.global
+
+            # adding commands and their arguments
+            for command, args of filter_dict(ctx.full_args, (k, v) -> k not in ['global'])
+                cmd_args.push "#{command}"
+                cmd_args.push(format_arg(arg, val)) for arg, val of args
+
+            run = spawn legacy_cafe_bin, cmd_args
+
+            run.stdout.on 'data', (data) -> ctx.fb.say "#{data}".replace /\n$/, ''
+            run.stderr.on 'data', (data) -> ctx.fb.scream "#{data}".replace /\n$/, ''
+            run.on 'exit', (code) ->
+                cb 'stop'
+        else
+            cb 'bad_recipe', "Current Cafe version is not compatible with the "\
+                +"recipe.json version. Please update Cafe and try again."
+
 
 map_sort_bundles = (ctx, bundles, recipe, realm, map_sort_bundles_cb) ->
     resolve_sub_deps = (found_modules, resolve_sub_deps_cb) ->
