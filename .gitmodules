@@ -1,0 +1,3 @@
+[submodule "legacy/api_version_3/cafe"]
+	path = legacy/api_version_3/cafe
+	url = git@github.com:EugeneN/cafe.git
