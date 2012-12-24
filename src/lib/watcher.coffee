@@ -132,7 +132,7 @@ module.exports =
 
             ctx.fb.scream module_root
 
-            watcher = chokidar.watch module_root, {ignored: /^\./, persistent: true}
+            watcher = chokidar.watch module_root, {ignored: /^\./, persistent: true, ignoreInitial: true}
             watcher.on 'add', change_handler
             watcher.on 'change', change_handler
             watcher.on 'error', (error) -> ctx.fb.scream "watcher encauntered an error #{error}"
