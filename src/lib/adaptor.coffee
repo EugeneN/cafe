@@ -1,9 +1,7 @@
 path = require 'path'
 fs = require 'fs'
-{is_file, is_dir, get_plugins} = require './utils'
-{say, shout, scream, whisper} = (require './logger') "libadaptor>"
-
-{ADAPTORS_PATH, ADAPTOR_FN, ADAPTORS_LIB, JS_EXT} = require '../defs'
+{is_dir} = require './utils'
+{ADAPTORS_PATH, ADAPTOR_FN, JS_EXT} = require '../defs'
 
 module.exports = ->
     fn_pattern = "#{ADAPTOR_FN}#{JS_EXT}" 

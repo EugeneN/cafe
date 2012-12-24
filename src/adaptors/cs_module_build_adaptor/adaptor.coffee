@@ -127,8 +127,8 @@ module.exports = do ->
                     if group is module_name
                         # making copy here because dependencies are changed in toposort
                         group_deps = deps.concat()
-
-                slug_deps.concat(group_deps or [])
+                
+                slug_deps = slug_deps.concat(group_deps or [])
 
                 cb CB_SUCCESS, slug_deps
 

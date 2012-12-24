@@ -179,7 +179,7 @@ build_bundle = ({realm, bundle_name, bundle_opts, force_compile, force_bundle,
 
 
     module_precompile_handler = ([module, need_to_rebuild], cb) ->
-        if need_to_rebuild
+        if (need_to_rebuild or module.adaptor.type is 'recipe')
             ctx.fb.say " Harvesting module #{module.name}"
             module.adaptor.harvest (err, compiled_results) ->
                 modules_cache.save {module:module, source: compiled_results}
