@@ -106,7 +106,7 @@ module.exports =
 
                 builder module_root
 
-            do_build()
+            #do_build()
 
             skip = if ctx.orig_ctx.own_args.skip
                 if is_array ctx.orig_ctx.own_args.skip
@@ -130,11 +130,9 @@ module.exports =
                                 say "Coffee #{file} is cold. Preparing new..."
                                 do_build()
 
-            ctx.fb.scream module_root
-
             watcher = chokidar.watch module_root, {ignored: /^\./, persistent: true, ignoreInitial: true}
             watcher.on 'add', change_handler
             watcher.on 'change', change_handler
             watcher.on 'error', (error) -> ctx.fb.scream "watcher encauntered an error #{error}"
 
-        ctx.fb.say "Started growing Coffee on the plantation '#{ctx.watch_root}'"
+        ctx.fb.say "Watching application changes ...'#{ctx.watch_root}'\n Press `Ctrl-c` to stop watching."

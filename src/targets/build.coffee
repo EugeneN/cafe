@@ -301,7 +301,7 @@ process_realms = (ctx, recipe, build_deps, cb) ->
     show_realms ctx, recipe
 
     process_realm = ([realm, bundles], process_realm_cb) ->
-        show_bundles ctx, realm, bundles
+        #show_bundles ctx, realm, bundles
 
         map_sort_bundles ctx, bundles, recipe, realm, (err, bundles_sorted_list) ->
             filtered_bundles = filter_duplicates bundles_sorted_list
@@ -321,7 +321,7 @@ process_realms = (ctx, recipe, build_deps, cb) ->
                             not_changed).reduce (a, b) -> a and b
 
             if no_changes
-                ctx.fb.shout "#{BUILD_DEPS_FN} still hot"
+                #ctx.fb.shout "#{BUILD_DEPS_FN} still hot"
                 cb CB_SUCCESS
 
             else

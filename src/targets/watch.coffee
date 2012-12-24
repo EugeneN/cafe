@@ -62,9 +62,6 @@ watch = (ctx, cb) ->
 
     watcher.watch Object.freeze watcher_ctx
 
-    ctx.fb.say "Watching how coffee is growing"
-    ctx.fb.say "Press `Ctrl-c` to stop watching."
-
     # cb?() - no callback here or main process will exit
 
 
