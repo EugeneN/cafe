@@ -205,7 +205,7 @@ build_bundle = ({realm, bundle_name, bundle_opts, force_compile, force_bundle,
             #ctx.fb.say "**Harvesting bundle #{realm}/#{bundle_name}"
             async.map raw_results, module_precompile_handler, (err, results) -> cb results
 
-        if need_to_rebuild_bundle
+        if need_to_rebuild_bundle or force_compile
             get_harvested_results (results) ->
                 write_bundle (flatten results), build_bundle_cb
         else

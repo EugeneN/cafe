@@ -77,7 +77,6 @@ get_recipe = (recipe_path, level=0) ->
         scream "Recipe inheritance chain to long"
         undefined
 
-
     else if is_file recipe_path
         recipe = read_json_file recipe_path
         if recipe?.abstract?.extends
@@ -211,8 +210,9 @@ filter_duplicates = (bundles_sorted_list) ->
 
     filtered_bundles
 
-build_bundles = (ctx, bundles, recipe, realm, filtered_bundles, build_bundles_cb) ->
+build_bundles = (ctx, bundles, recipe, build_deps, realm, filtered_bundles, build_bundles_cb) ->
     # Build bundles and return list of bundles for exporting to result json file
+
     build_bundle_wrapper = (index, build_bundle_wrapper_cb) ->
         maybe_minify = get_opt 'minify', bundles[index].opts, recipe.opts
         force_compile = get_opt 'force_compile', bundles[index].opts, recipe.opts
@@ -250,11 +250,19 @@ build_bundles = (ctx, bundles, recipe, realm, filtered_bundles, build_bundles_cb
                 else
                     post_build_bundle_cb()
 
+        if build_deps
+            build_deps_modules_names = (m.name for m in build_deps[realm][bundles[index].name])
+            filtered_modules_names = (m.name for m in filtered_bundles[index])
+            is_recipe_bundle_changed = not (build_deps_modules_names.map((m) -> m in filtered_modules_names).reduce (a, b) -> a and b)
+            is_bundle_recipe_changed = not (filtered_modules_names.map((m) -> m in build_deps_modules_names).reduce (a, b) -> a and b)
+        else
+            force_compile = true
+
         build_bundle({
             realm: realm
             bundle_name: bundles[index].name
             bundle_opts: bundles[index].opts
-            force_compile: force_compile
+            force_compile: force_compile or (is_recipe_bundle_changed or is_bundle_recipe_changed)
             force_bundle: force_bundle
             sorted_modules_list: filtered_bundles[index]
             build_root: (get_tmp_build_dir ctx.own_args.build_root)
@@ -289,7 +297,7 @@ build_bundles = (ctx, bundles, recipe, realm, filtered_bundles, build_bundles_cb
     # Build level 1 entry point
     async.map [0...filtered_bundles.length], build_bundle_wrapper, build_bundles_done
 
-process_realms = (ctx, recipe, cb) ->
+process_realms = (ctx, recipe, build_deps, cb) ->
     show_realms ctx, recipe
 
     process_realm = ([realm, bundles], process_realm_cb) ->
@@ -297,7 +305,7 @@ process_realms = (ctx, recipe, cb) ->
 
         map_sort_bundles ctx, bundles, recipe, realm, (err, bundles_sorted_list) ->
             filtered_bundles = filter_duplicates bundles_sorted_list
-            build_bundles ctx, bundles, recipe, realm, filtered_bundles, (err, sorted_realms) ->
+            build_bundles ctx, bundles, recipe, build_deps, realm, filtered_bundles, (err, sorted_realms) ->
                 process_realm_cb err, sorted_realms
 
     done_processing_realms = (err, sorted_realms) ->
@@ -334,8 +342,13 @@ process_realms = (ctx, recipe, cb) ->
 build = (ctx, build_cb) ->
     # build entry point
     # XXX why partial application fails here?
+    try
+        build_deps = JSON.parse fs.readFileSync(path.resolve (get_tmp_build_dir ctx.own_args.build_root), BUILD_DEPS_FN)
+    catch e
+        ctx.fb.shout "Build deps json is not found - forcing compile"
+
     a = do (ctx) -> (val, cb) -> get_ctx_recipe ctx, val, cb
-    b = do (ctx) -> (val, cb) -> process_realms ctx, val, cb
+    b = do (ctx) -> (val, cb) -> process_realms ctx, val, build_deps, cb
 
     (compose.async check_ctx, a, b) ctx, build_cb
 
