@@ -250,11 +250,14 @@ build_bundles = (ctx, bundles, recipe, build_deps, realm, filtered_bundles, buil
                 else
                     post_build_bundle_cb()
 
-        if build_deps
+        if build_deps and build_deps[realm][bundles[index].name]?
             build_deps_modules_names = (m.name for m in build_deps[realm][bundles[index].name])
             filtered_modules_names = (m.name for m in filtered_bundles[index])
-            is_recipe_bundle_changed = not (build_deps_modules_names.map((m) -> m in filtered_modules_names).reduce (a, b) -> a and b)
-            is_bundle_recipe_changed = not (filtered_modules_names.map((m) -> m in build_deps_modules_names).reduce (a, b) -> a and b)
+            try
+                is_recipe_bundle_changed = not (build_deps_modules_names.map((m) -> m in filtered_modules_names).reduce (a, b) -> a and b)
+                is_bundle_recipe_changed = not (filtered_modules_names.map((m) -> m in build_deps_modules_names).reduce (a, b) -> a and b)
+            catch e
+                force_compile = true
         else
             force_compile = true
 

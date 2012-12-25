@@ -121,7 +121,6 @@ module.exports = do ->
 
             read_json_file.async slug_path, (err, slug) ->
                 cb err if err
-
                 slug_deps = slug.recipe?.concat() or []
                 for group, deps of recipe_deps
                     if group is module_name

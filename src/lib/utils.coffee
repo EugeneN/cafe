@@ -179,8 +179,7 @@ read_json_file.async = (filename, cb) ->
             try
                 cb CB_SUCCESS, (Object.freeze (JSON.parse res))
             catch e
-                scream "Error parsing json file #{filename}: #{e}"
-                whisper "#{e.stack}"
+                console.log "Error parsing json file #{filename}: #{e}"
                 cb e
 
 
