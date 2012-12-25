@@ -277,7 +277,6 @@ build_bundles = (ctx, bundles, recipe, build_deps, realm, filtered_bundles, buil
 
     build_bundles_done = (err, filtered_bundles_list) ->
         if err
-            ctx.fb.scream "Level 1 build error: #{err}"
             build_bundles_cb err
 
         else
@@ -313,7 +312,6 @@ process_realms = (ctx, recipe, build_deps, cb) ->
 
     done_processing_realms = (err, sorted_realms) ->
         if err
-            ctx.fb.scream "Level 0 build error: #{err}"
             cb err, sorted_realms
 
         else

@@ -110,6 +110,7 @@ build_bundle = ({realm, bundle_name, bundle_opts, force_compile, force_bundle,
         path.resolve (path.resolve build_root, realm), (bundle_name + BUILD_FILE_EXT)
 
     write_bundle = (results, cb) ->
+        results = results.filter (r) -> r?
         done = (err) ->
             if err
                 ctx.fb.scream """Failed to write bundle #{realm}/#{bundle_name}#{BUILD_FILE_EXT}:
@@ -182,8 +183,11 @@ build_bundle = ({realm, bundle_name, bundle_opts, force_compile, force_bundle,
         if (need_to_rebuild or module.adaptor.type is 'recipe')
             ctx.fb.say " Harvesting module #{module.name}"
             module.adaptor.harvest (err, compiled_results) ->
-                modules_cache.save {module:module, source: compiled_results}
-                cb CB_SUCCESS, compiled_results
+                unless err
+                    modules_cache.save {module:module, source: compiled_results}
+                    cb CB_SUCCESS, compiled_results
+                else
+                    cb 'harvest_error'
         else
             #ctx.fb.shout " -Skip harvesting module #{module.name}, taking source from modules cache"
             cb CB_SUCCESS, (modules_cache.get module.name).source
@@ -203,7 +207,11 @@ build_bundle = ({realm, bundle_name, bundle_opts, force_compile, force_bundle,
 
         get_harvested_results = (cb) ->
             #ctx.fb.say "**Harvesting bundle #{realm}/#{bundle_name}"
-            async.map raw_results, module_precompile_handler, (err, results) -> cb results
+            async.map raw_results, module_precompile_handler, (err, results) ->
+                unless err
+                    cb results
+                else
+                    build_bundle_cb 'bundle_error'
 
         if need_to_rebuild_bundle or force_compile
             get_harvested_results (results) ->

@@ -171,10 +171,7 @@ module.exports = (emitter) ->
                     EXIT_STATUS = EXIT_OTHER_ERROR
 
                 else
-                    scream "Error encountered: #{error}"
-                    whisper "#{error.stack}"
                     fb.scream "Error encountered: #{error}"
-                    fb.whisper "#{error.stack}"
 
                     EXIT_STATUS = EXIT_OTHER_ERROR
 
