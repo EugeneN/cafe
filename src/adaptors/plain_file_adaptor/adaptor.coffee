@@ -52,9 +52,14 @@ module.exports = do ->
 
                 {coffee, eco, js} = require '../../lib/compiler/compilers'
                 compiler = ctx.cafelib.make_compiler [coffee, eco, js]
-                sources  = (compiler.compile [target_fn]).map ({path: p, source: source}) ->
-                    result_fn = fn_without_ext(path.relative ctx.own_args.app_root, p)
-                    {filename: result_fn, source: source, type: "commonjs"}
+
+                try
+                    sources  = (compiler.compile [target_fn]).map ({path: p, source: source}) ->
+                        result_fn = fn_without_ext(path.relative ctx.own_args.app_root, p)
+                        {filename: result_fn, source: source, type: "commonjs"}
+                catch e
+                    ctx.fb.scream "File compilation error. File - #{target_fn}. Error - #{e}"
+                    cb "compilation_error"
 
                 cb CB_SUCCESS, {sources: sources, ns:'', mod_src: target_fn}, "COMPILE_MAYBE_SKIPPED"
             else

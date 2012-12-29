@@ -59,10 +59,14 @@ build_factory = (mod_src, ctx) ->
                     /^[^\.].+\.coffee$|^[^\.].+\.js$|^[^\.].+\.eco$/i
                 )
 
-                (compiler.compile paths).map ({path: p, source: source}) ->
-                    filename: fn_without_ext (path.relative slug_path, p)
-                    source: source
-                    type: "commonjs"
+                try
+                    (compiler.compile paths).map ({path: p, source: source}) ->
+                        filename: fn_without_ext (path.relative slug_path, p)
+                        source: source
+                        type: "commonjs"
+                catch e
+                    ctx.fb.scream "Module compilation error. Module - #{mod_src}. Error - #{e}"
+                    cb 'compile_error'
 
             cb null, {sources: (ctx.cafelib.utils.flatten sources), ns: (path.basename mod_src), mod_src: mod_src}
 

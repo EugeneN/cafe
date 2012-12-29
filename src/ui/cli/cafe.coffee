@@ -71,6 +71,9 @@ subscribe = (emitter) ->
                 growl("Cafe target error <#{error}>", {image: FAILURE_ICO})
             when EXIT_SUCCESS
                 growl("Cafe success :)", {image: SUCCESS_ICO})
+            else
+                growl("Cafe error <#{error}>", {image: FAILURE_ICO})
+
 
 module.exports = ->
     argv = pessimist process.argv
