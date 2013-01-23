@@ -191,7 +191,7 @@ map_sort_bundles = (ctx, bundles, recipe, realm, map_sort_bundles_cb) ->
             ctx: ctx
 
         resolve_all_deps args, (err, modules) ->
-            sorted_modules = toposort {realm, bundle}, modules
+            sorted_modules = toposort {realm, bundle}, modules, ctx
             sort_bundles_cb CB_SUCCESS, sorted_modules
 
     # map.async sort_bundles, bundles, map_sort_bundles_cb

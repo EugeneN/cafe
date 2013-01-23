@@ -70,7 +70,7 @@ resolve_deps = ({modules, app_root, recipe_deps, ctx}, resolve_deps_cb) ->
     else
         resolve_deps_cb CB_SUCCESS, [] # ???
 
-toposort = (debug_info, modules) ->
+toposort = (debug_info, modules, ctx) ->
     modules_list = (m for name, m of modules)
 
     have_no_dependencies = (m for m in modules_list when m.deps.length is 0)
@@ -95,8 +95,22 @@ toposort = (debug_info, modules) ->
                     have_no_dependencies.push m
 
     unless ordered_modules.length is modules_list.length
-        throw "Cyclic dependency or unknown module found in #{debug_info.realm}/#{debug_info.bundle.name}: " \
-            + "#{(m.name for m in modules_list when m not in (i.name for i in ordered_modules)).join(', ')}"
+        modules_names = modules_list.map (i) -> i.name
+        ordered_modules_names = ordered_modules.map (i) -> i.name
+
+        if modules_names.length > ordered_modules_names.length # we'v got trouble with dependencies
+            message = "Failed to load dependencies or cyclic imports" \
+                + "[#{(modules_names.filter (m)-> m not in ordered_modules_names).join(',')}]"
+            ctx.fb.scream message
+
+        else
+            reduce_func = (a, b) ->
+                a[b] = unless b of a then 1 else a[b]+1
+                a
+
+            ctx.fb.scream "Cyclic dependences found #{(k for k,v of (ordered_modules_names.reduce reduce_func, {}) if v > 1)}"
+
+        throw "Toposort failed #{debug_info.realm}/#{debug_info.bundle.name}:"
 
     ordered_modules
 
