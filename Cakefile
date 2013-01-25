@@ -1,7 +1,6 @@
 {print} = require 'util'
 {spawn} = require 'child_process'
 {exec} = require 'child_process'
-{reporters} = require 'nodeunit'
 fs = require 'fs'
 uuid = require 'node-uuid'
 
@@ -58,9 +57,7 @@ deps = ->
             else
                 console.log err, stdout, stderr
     )
-run_tests = (cb) ->
-        reporters.default.run ['test'], null, (e)->
-            cb?() unless e
+
 
 task 'deps', 'Grep deps for require', -> deps()
 
@@ -77,9 +74,5 @@ task 'install', 'Install built package globally', -> install()
 
 task 'buildall', 'Build and package everything', ->
     build ->
-        run_tests ->
-            gzip ->
-                console.log 'Voilà'
-
-task 'test', 'Run unittests', ->
-        run_tests()
+        gzip ->
+            console.log 'Voilà'
