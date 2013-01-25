@@ -2,5 +2,5 @@
   "dependencies": [],
   "libs": [],
   "paths": ["./app"],
-  "jsPath": "{{name}}.js",
+  "jsPath": "{{name}}.js"
 }
