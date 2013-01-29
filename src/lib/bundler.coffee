@@ -9,7 +9,7 @@ mkdirp = require 'mkdirp'
 
 get_adaptors = require './adaptor'
 {read_json_file, extend, exists, is_array} = require '../lib/utils'
-{flatten, is_dir, is_file, extend, newest, get_mtime, fn_without_ext} = require('./utils')
+{flatten, is_dir, is_file, extend, newest, get_mtime, fn_without_ext, or_} = require('./utils')
 {say, shout, scream, whisper} = (require './logger') "lib-bundle>"
 
 {SLUG_FN, FILE_ENCODING, BUILD_FILE_EXT, RECIPE, VERSION, EOL, CB_SUCCESS,
@@ -153,7 +153,7 @@ build_bundle = ({realm, bundle_name, bundle_opts, force_compile, force_bundle,
                                     res.sources.type = "plainjs"
                     fs.writeFile(
                         get_target_fn()
-                        wrap_bundle((wrap_modules results), BUNDLE_HDR)
+                        wrap_bundle (wrap_modules results), BUNDLE_HDR
                         FILE_ENCODING
                         done
                     )
@@ -182,20 +182,16 @@ build_bundle = ({realm, bundle_name, bundle_opts, force_compile, force_bundle,
 
     module_handler = (module, cb) ->
         module.adaptor.last_modified (err, module_mtime) ->
-            if ([(module_mtime > (modules_cache.get_cache_mtime module))
-                 (ctx.own_args.f is true)
-                 (module.adaptor.type is 'recipe')].reduce((a, b) -> a or b)) # TODO: remove condition for recipe module.
-                                                                              #  this logic must be out of bundler scope
-                need_to_rebuild_bundle = not (module.adaptor.type is 'recipe')
-                cb CB_SUCCESS , [module, need_to_rebuild_bundle]
+            if (or_ (module_mtime > (modules_cache.get_cache_mtime module))
+                    ,(ctx.own_args.f is true))
+                cb CB_SUCCESS, [module, true]
             else
-
                 cb CB_SUCCESS, [module, false]
 
 
-    module_precompile_handler = ([module, need_to_rebuild], cb) ->
-        if (need_to_rebuild or module.adaptor.type is 'recipe')
-            ctx.fb.say " Harvesting module #{module.name}"
+    module_precompile_handler = ([module, should_rebuild], cb) ->
+        if (should_rebuild or module.adaptor.type is 'recipe')
+            ctx.fb.say "Harvesting module #{module.name}"
             module.adaptor.harvest (err, compiled_results) ->
                 unless err
                     modules_cache.save {module:module, source: compiled_results}
@@ -209,7 +205,7 @@ build_bundle = ({realm, bundle_name, bundle_opts, force_compile, force_bundle,
 
     done = (err, raw_results) ->
         """
-        @raw_results : [[source, need_to_rebuild_bundle] ... ]
+        @raw_results : [[source, should_rebuild_bundle] ... ]
         """
 
         unless raw_results.length
@@ -217,7 +213,7 @@ build_bundle = ({realm, bundle_name, bundle_opts, force_compile, force_bundle,
             (build_bundle_cb CB_SUCCESS, [realm, bundle_name, true]) 
             return
 
-        need_to_rebuild_bundle = raw_results.map((r) -> r[1]).reduce (a, b) -> a or b
+        should_rebuild_bundle = raw_results.reduce (a, b) -> a[1] or b[1]
 
         get_harvested_results = (cb) ->
             #ctx.fb.say "**Harvesting bundle #{realm}/#{bundle_name}"
@@ -227,7 +223,7 @@ build_bundle = ({realm, bundle_name, bundle_opts, force_compile, force_bundle,
                 else
                     build_bundle_cb 'bundle_error'
 
-        if need_to_rebuild_bundle or force_compile
+        if should_rebuild_bundle or force_compile
             get_harvested_results (results) ->
                 write_bundle (flatten results), build_bundle_cb
         else

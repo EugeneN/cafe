@@ -75,6 +75,7 @@ maybe_build = (build_root, built_file, cb) ->
     dst_max_mtime = try
         get_mtime built_file
     catch e
+#        throw e
         -1
 
     walk build_root, (err, results) ->
@@ -337,6 +338,7 @@ get_all_relative_files = (filepath, exclude_pattern=null, include_pattern=null) 
             (next file) if (is_dir file)
 
     next filepath
+
     files
 
 get_cake_bin = () ->

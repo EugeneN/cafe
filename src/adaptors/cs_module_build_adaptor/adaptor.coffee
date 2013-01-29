@@ -10,7 +10,7 @@ async = require 'async'
 } = require '../../lib/utils'
 
 {SLUG_FN, TMP_BUILD_DIR_SUFFIX, CS_ADAPTOR_PATH_SUFFIX, 
- CB_SUCCESS, CS_RUN_CONCURRENT} = require '../../defs'
+ CB_SUCCESS, CS_RUN_CONCURRENT, CAFE_DIR} = require '../../defs'
 
 fn_without_ext = (filename) ->
     ext_length = (path.extname filename).length
@@ -37,11 +37,15 @@ build_cs_mod = (ctx, cb) ->
 
 
 build_factory = (mod_src, ctx) ->
-    {slug_path, js_path} = get_paths ctx
+    {get_modules_cache} = require '../../lib/modules_cache'
+    cache = get_modules_cache (path.resolve ctx.own_args.app_root, CAFE_DIR)
+
+    {slug_path} = get_paths ctx
     compiler_args = ctx.own_args
     emitter = ctx.emitter
     slug = read_json_file slug_path
-    target_file = path.resolve js_path, slug.jsPath
+
+    target_file = cache.get_cached_file_path mod_src
 
     (cb) ->
         do_compile = (do_tests, cb) ->
@@ -78,8 +82,8 @@ build_factory = (mod_src, ctx) ->
             do_compile compiler_args.t, (err, result) ->
                 new_cb "COMPILE_MAYBE_FORCED", cb, err, result
         else
-            maybe_build mod_src, target_file, (state, filename) ->
-                if state
+            maybe_build mod_src, target_file, (should_recompile, filename) ->
+                if should_recompile
                     do_compile compiler_args.t, (err, result) ->
                         new_cb "COMPILE_MAYBE_COMPILED", cb, err, result
                 else
@@ -93,7 +97,7 @@ get_paths = (ctx) ->
     mod_src = if ctx.own_args.src
         path.resolve ctx.own_args.src
     else
-      path.resolve app_root, module_name
+        path.resolve app_root, module_name
 
     slug_path = path.resolve mod_src, SLUG_FN
 
