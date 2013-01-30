@@ -8,7 +8,7 @@ uuid = require 'node-uuid'
 {VERSION_FILE_PATH} = require './src/defs'
 
 inc_version = ->
-    fs.writeFileSync VERSION_FILE_PATH, uuid.v4()
+    fs.writeFileSync VERSION_FILE_PATH, (JSON.parse (fs.readFileSync './package.json')).version
 
 build = (callback) ->
     coffee = spawn 'coffee', ['-c', '-o', 'lib-js', 'src']

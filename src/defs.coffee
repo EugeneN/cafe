@@ -15,7 +15,6 @@ read_json_file = (filename) ->
 
 user_config = read_json_file CONFIG_FILE
 
-REPO_URL = 'http://kyle.uaprom/coffeescript/'
 VERSION_FILE = 'VERSION'
 CAFE_TARBALL = 'cafe.tar.gz'
 
@@ -80,8 +79,8 @@ default_config =
 
     MENU_FILENAME: './Menufile'
 
-    VERSION_CHECK_URL: "#{REPO_URL}cafe/#{VERSION_FILE}"
-    UPDATE_CMD: "sudo npm install -g #{REPO_URL}#{CAFE_TARBALL}"
+    CLEANUP_CMD: 'sudo npm remove -g cafe'
+    UPDATE_CMD: 'sudo npm update -g cafe4'
 
     EVENT_CAFE_DONE: 'CAFE_DONE'
     EVENT_BUNDLE_CREATED: 'CAFE.BUNDLE.CREATED'

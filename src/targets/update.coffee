@@ -20,7 +20,8 @@ request = require 'request'
 {say, shout, scream, whisper} = (require '../lib/logger') 'Update>'
 
 
-{SUB_CAFE, VERSION, EVENT_CAFE_DONE, EXIT_SUCCESS, VERSION_CHECK_URL, UPDATE_CMD} = require '../defs'
+{SUB_CAFE, VERSION, EVENT_CAFE_DONE, EXIT_SUCCESS,
+ CLEANUP_CMD, UPDATE_CMD, CB_SUCCESS} = require '../defs'
 
 
 build_update_reenter_cmd = (ctx) ->
@@ -58,43 +59,27 @@ maybe_update = (ctx, cb) ->
     if ctx.full_args.global?.hasOwnProperty 'noupdate'
         return cb()
 
-    local_ver = VERSION
+    run = (ctx, cmd, run_cb) ->
+        [cmd, args...] = cmd.split ' '
 
-    reenter_cb = =>
+        child = spawn cmd, args
+
+        child.stdout.on 'data', (data) -> ctx.fb.say "#{data}".replace /\n$/, ''
+        child.stderr.on 'data', (data) -> ctx.fb.shout "#{data}".replace /\n$/, ''
+        child.on 'exit', (rc) ->
+            run_cb CB_SUCCESS, rc
+
+    reenter_cb = ->
         ctx.emitter.emit EVENT_CAFE_DONE, EXIT_SUCCESS
 
-    unless local_ver
-        ctx.fb.shout "Can't read local Cafe version: #{e}"
-        return cb()
-
-    request VERSION_CHECK_URL, (err, resp, body) ->
-        if not err and resp.statusCode is 200
-            remote_version = trim body
-
-            if remote_version isnt local_ver
-                ctx.fb.say "***New Cafe version available, updating\n" +
-                    "(local '#{local_ver}' remote '#{remote_version}')"
-
-                [cmd, args...] = UPDATE_CMD.split ' '
-
-                run = spawn cmd, args
-
-                run.stdout.on 'data', (data) -> ctx.fb.say "#{data}".replace /\n$/, ''
-                run.stderr.on 'data', (data) -> ctx.fb.shout "#{data}".replace /\n$/, ''
-                run.on 'exit', (code) ->
-                    if code is 0
-                        ctx.fb.say "Cafe update succeeded"
-                        reenter ctx, reenter_cb
-                    else
-                        ctx.fb.shout "Cafe update failed: #{code}"
-                        cb()
+    run ctx, CLEANUP_CMD, (err, rc) ->
+        run ctx, UPDATE_CMD, (err, rc) ->
+            if rc is 0
+                ctx.fb.say "Cafe update succeeded"
+                reenter ctx, reenter_cb
             else
-                ctx.fb.say "No new Cafe available"
-                # no newer version available
+                ctx.fb.shout "Cafe update failed: #{code}"
                 cb()
-        else
-            ctx.fb.shout "Error getting remote Cafe version: #{err or resp.statusCode}"
-            cb()
 
 
 module.exports = make_target "update", maybe_update, help
