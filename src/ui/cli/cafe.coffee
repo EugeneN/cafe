@@ -65,14 +65,17 @@ exit_cb = (status_code) ->
 subscribe = (emitter) ->
     emitter.on EVENT_CAFE_DONE, (status, error) ->
         switch status
-            when EXIT_OTHER_ERROR
-                growl("Cafe error <#{error}>", {image: FAILURE_ICO})
-            when EXIT_TARGET_ERROR
-                growl("Cafe target error <#{error}>", {image: FAILURE_ICO})
+            when EXIT_HELP
+                undefined
+
             when EXIT_SUCCESS
-                growl("Cafe success :)", {image: SUCCESS_ICO})
+                growl "Cafe success :)", {image: SUCCESS_ICO}
+
+            when EXIT_TARGET_ERROR
+                growl "Cafe target error: <#{error}>", {image: FAILURE_ICO}
+
             else
-                growl("Cafe error <#{error}>", {image: FAILURE_ICO})
+                growl "Cafe error: <#{error}>", {image: FAILURE_ICO}
 
 
 module.exports = ->

@@ -22,7 +22,7 @@ head = [
 
         -- version   - returns the current Cafe's version;
 
-        --nogrowl    - disables growl notifications.
+        -- nogrowl   - disables growl notifications.
 
         -- help      - this help.
 
