@@ -51,24 +51,41 @@ build_cmd = (full_args, build_path) ->
 
     cmdline
 
+
 build = (ctx, build_cmd_gen, build_root) ->
-    cmd_args = build_cmd_gen build_root
+    cmd_args = ctx.orig_ctx.own_args.comand.split(' ') or (build_cmd_gen build_root)
+
     opts =
         env: process.env
         cwd: process.env.PWD
 
-    child = spawn SUB_CAFE, cmd_args, opts
+    unless ctx.orig_ctx.own_args.comand
+        child = spawn SUB_CAFE, cmd_args, opts
+    else
+        child = spawn cmd_args[0], cmd_args[1...], opts
 
     child.on 'message', (m) -> ctx.fb.murmur m
 
+    was_err = false
     # when forking child std* is assosiated with parent's ones
-    child.stdout.on 'data', (data) -> ctx.fb.say "#{data}".replace /\n$/, ''
-    child.stderr.on 'data', (data) -> ctx.fb.scream "#{data}".replace /\n$/, ''
+    child.stdout.on 'data', (data) ->
+        ctx.fb.say "#{data}".replace /\n$/, ''
+
+    child.stderr.on 'data', (data) ->
+        was_err = true
+        ctx.fb.scream "#{data}".replace /\n$/, ''
     child.on 'exit', (code) ->
         if code is 0
             ctx.fb.say "=== Watch cycle sequence succeeded ==========================="
         else
             ctx.fb.scream "=== Watch cycle sequence failed with code #{code} ==========="
+
+        if was_err is false
+            (ctx.orig_ctx.emitter.emit 'NOTIFY_SUCCESS') if ctx.orig_ctx.own_args.comand
+        else
+            (ctx.orig_ctx.emitter.emit 'NOTIFY_FAILURE') if ctx.orig_ctx.own_args.comand
+
+
 
 
 _get_build_dir = (watch_root, file) ->

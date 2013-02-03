@@ -29,28 +29,14 @@ watcher = require '../lib/watcher'
 {filter_dict, is_dir, is_debug_context} = require '../lib/utils'
 {say, shout, scream, whisper} = (require '../lib/logger') "Watcher>"
 
-
 {COFFEE_PATTERN} = require '../defs'
 
-
-good_watch_seq = (ctx) ->
-    seq = Object.keys(ctx.full_args).filter (k) -> k not in ['watch', 'global']
-
-    if seq.length is 0
-        false
-    else
-        true
 
 watch = (ctx, cb) ->
     watch_src = ctx.own_args.src or ctx.full_args.src
 
     unless is_dir watch_src
         ctx.fb.scream "Missing '--src' parameter for the watch: '#{watch_src}'"
-        ctx.fb.scream "Eat help instead:\n"
-        ctx.print_help()
-
-    unless good_watch_seq ctx
-        ctx.fb.scream "Looks like the command sequence for the watch cycle is bad"
         ctx.fb.scream "Eat help instead:\n"
         ctx.print_help()
 
