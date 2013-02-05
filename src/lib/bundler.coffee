@@ -10,7 +10,6 @@ mkdirp = require 'mkdirp'
 get_adaptors = require './adaptor'
 {read_json_file, extend, exists, is_array} = require '../lib/utils'
 {flatten, is_dir, is_file, extend, newest, get_mtime, fn_without_ext, or_} = require('./utils')
-{say, shout, scream, whisper} = (require './logger') "lib-bundle>"
 
 {SLUG_FN, FILE_ENCODING, BUILD_FILE_EXT, RECIPE, VERSION, EOL, CB_SUCCESS,
  BUNDLE_HDR, BUNDLE_ITEM_HDR, BUNDLE_ITEM_FTR, EVENT_BUNDLE_CREATED, FILE_TYPE_COMMONJS,

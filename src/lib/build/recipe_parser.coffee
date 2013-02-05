@@ -1,7 +1,8 @@
 path = require 'path'
-{read_json_file, extend, is_file} = require '../../lib/utils'
+{read_json_file, flatten, extend, is_file} = require '../../lib/utils'
 {domonad, error_monad} = require '../../lib/libmonad'
 RECIPE = 'recipe.json'
+
 
 read_recipe = (recipe_path, level=0) ->
     chain_check = (recipe_path) ->
@@ -34,9 +35,20 @@ read_recipe = (recipe_path, level=0) ->
     _get_recipe recipe_path
 
 
+get_raw_modules = (recipe) ->
+    """ Parse all modules from recipe."""
+    modules = flatten((v for k,v of recipe.realms)).map((b) -> b.modules).reduce((a, b) -> a.concat b)
+    if recipe.modules? (modules.concat recipe.modules) else modules
+
+
+construct_modules = (modules) ->
+remove_modules_duplicates = (modules) ->
+fill_modules_meta = (modules) ->
+
 get_modules = (recipe) ->
-    # get modules from bundles
-    recipe.modules
 
 
-module.exports = {get_modules, read_recipe}
+module.exports = {
+    get_raw_modules
+    read_recipe
+}

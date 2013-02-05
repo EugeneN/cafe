@@ -59,7 +59,7 @@ async = require 'async'
 
 {make_target, run_target} = require '../lib/target'
 {resolve_deps, build_bundle, toposort} = require '../lib/bundler'
-{read_recipe} = require '../lib/build/recipe_reader'
+{read_recipe} = require '../lib/build/recipe_parser'
 
 {read_json_file, add, is_dir, is_file,
  has_ext, extend, get_opt, get_cafe_dir, partial,
@@ -332,4 +332,3 @@ build = (ctx, build_cb) ->
 
 
 module.exports = make_target "build", build, help
-
