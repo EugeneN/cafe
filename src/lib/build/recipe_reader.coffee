@@ -28,37 +28,14 @@ read_recipe = (recipe_path, level=0) ->
                 error = "Recipe #{recipe_path} can not inherit from itself"
         [error, recipe]
 
-    _get_recipe = domonad(
-                    error_monad [chain_check, read_if_is_file, check_for_inheritance])
+    _get_recipe = domonad(error_monad
+                          [chain_check, read_if_is_file, check_for_inheritance])
 
     _get_recipe recipe_path
 
-"""
-read_recipe = (recipe_path, level=0) ->
-    if level > 3
-        scream "Recipe inheritance chain to long"
-        undefined
 
-    else if is_file recipe_path
-        recipe = read_json_file recipe_path
-        if recipe?.abstract?.extends
-            base_recipe_path = (path.resolve (path.dirname recipe_path),
-                                             recipe.abstract.extends)
-
-            unless base_recipe_path is recipe_path
-                if (base_recipe = read_recipe base_recipe_path, level + 1)
-                    extend base_recipe, recipe
-                else
-                    undefined
-            else
-                undefined
-        else
-            recipe
-    else
-        undefined
-
-"""
 get_modules = (recipe) ->
+    # get modules from bundles
     recipe.modules
 
 

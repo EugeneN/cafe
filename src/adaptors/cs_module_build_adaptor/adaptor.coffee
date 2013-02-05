@@ -37,18 +37,11 @@ build_cs_mod = (ctx, cb) ->
 
 
 build_factory = (mod_src, ctx) ->
-    {get_modules_cache} = require '../../lib/modules_cache'
-    cache = get_modules_cache (path.resolve ctx.own_args.app_root, CAFE_DIR)
-
     {slug_path} = get_paths ctx
-    compiler_args = ctx.own_args
-    emitter = ctx.emitter
     slug = read_json_file slug_path
 
-    target_file = cache.get_cached_file_path mod_src
-
     (cb) ->
-        do_compile = (do_tests, cb) ->
+        do_compile = (cb) ->
             # Read slug
             slug = ctx.cafelib.utils.read_slug(mod_src, ctx.cafelib.utils.slug)
             slug.paths = slug.paths.map (p) -> path.resolve(path.join mod_src, p)
@@ -74,22 +67,9 @@ build_factory = (mod_src, ctx) ->
 
             cb null, {sources: (ctx.cafelib.utils.flatten sources), ns: (path.basename mod_src), mod_src: mod_src}
 
-        new_cb = (ev, cb, err, result) ->
-            emitter.emit ev
-            cb? err, result
+        do_compile (err, result) -> cb? err, result
 
-        if compiler_args.f
-            do_compile compiler_args.t, (err, result) ->
-                new_cb "COMPILE_MAYBE_FORCED", cb, err, result
-        else
-            maybe_build mod_src, target_file, (should_recompile, filename) ->
-                if should_recompile
-                    do_compile compiler_args.t, (err, result) ->
-                        new_cb "COMPILE_MAYBE_COMPILED", cb, err, result
-                else
-                    ctx.fb.shout "#{mod_src} still hot"
-                    emitter.emit "COMPILE_MAYBE_SKIPPED"
-                    cb? CB_SUCCESS, filename, "COMPILE_MAYBE_SKIPPED"
+
 
 get_paths = (ctx) ->
     app_root = path.resolve ctx.own_args.app_root

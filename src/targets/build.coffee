@@ -59,7 +59,7 @@ async = require 'async'
 
 {make_target, run_target} = require '../lib/target'
 {resolve_deps, build_bundle, toposort} = require '../lib/bundler'
-{say, shout, scream, whisper} = (require '../lib/logger') "Build>"
+{read_recipe} = require '../lib/build/recipe_reader'
 
 {read_json_file, add, is_dir, is_file,
  has_ext, extend, get_opt, get_cafe_dir, partial,
@@ -71,29 +71,6 @@ async = require 'async'
 
 get_tmp_build_dir = (build_root) -> path.resolve path.join build_root, TMP_BUILD_DIR_SUFFIX
 get_modules_cache_dir = (app_root) -> path.resolve path.join get_cafe_dir(app_root), 'modules_cache'
-
-get_recipe = (recipe_path, level=0) ->
-    if level > 3
-        scream "Recipe inheritance chain to long"
-        undefined
-
-    else if is_file recipe_path
-        recipe = read_json_file recipe_path
-        if recipe?.abstract?.extends
-            base_recipe_path = (path.resolve (path.dirname recipe_path),
-                                             recipe.abstract.extends)
-
-            unless base_recipe_path is recipe_path
-                if (base_recipe = get_recipe base_recipe_path, level + 1)
-                    extend base_recipe, recipe
-                else
-                    undefined
-            else
-                undefined
-        else
-            recipe
-    else
-        undefined
 
 show_realms = (ctx, recipe) ->
     ctx.fb.say "Realms found: #{(realm for realm of recipe.realms).join ', '}"
@@ -125,10 +102,10 @@ get_ctx_recipe = (ctx, ctx_is_valid, cb) ->
         return cb 'bad_ctx'
 
     recipe_path = path.resolve ctx.own_args.app_root, (ctx.own_args.formula or RECIPE)
-    recipe = get_recipe recipe_path
+    [error, recipe] = read_recipe recipe_path
 
     unless recipe
-        cb 'bad_ctx' , "Bad recipe #{recipe_path}"
+        cb 'bad_ctx' , "Bad recipe #{error}"
 
     if recipe.abstract.api_version is RECIPE_API_LEVEL # if we got the latest version
         cb CB_SUCCESS, recipe
