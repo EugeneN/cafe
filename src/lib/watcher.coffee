@@ -53,7 +53,10 @@ build_cmd = (full_args, build_path) ->
 
 
 build = (ctx, build_cmd_gen, build_root) ->
-    cmd_args = ctx.orig_ctx.own_args.comand.split(' ') or (build_cmd_gen build_root)
+    cmd_args = if ctx.orig_ctx.own_args.comand
+        ctx.orig_ctx.own_args.comand.split(' ')
+    else
+        (build_cmd_gen build_root)
 
     opts =
         env: process.env

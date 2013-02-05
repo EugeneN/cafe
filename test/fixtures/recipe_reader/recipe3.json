@@ -1,0 +1,11 @@
+{
+    "abstract": {
+        "api_version": 4,
+        "extends": "recipe3.json"
+    },
+
+    "opts": {
+        "minify": true
+    }
+
+}
