@@ -1,6 +1,7 @@
 path = require 'path'
-{read_json_file, flatten, extend, is_file} = require '../../lib/utils'
+{read_json_file, flatten, extend, is_file, toArray} = require '../../lib/utils'
 {domonad, error_monad} = require '../../lib/libmonad'
+{construct_module} = require '../../lib/modules'
 RECIPE = 'recipe.json'
 
 
@@ -13,6 +14,7 @@ read_recipe = (recipe_path, level=0) ->
 
     read_if_is_file = (recipe_path) ->
         if is_file recipe_path
+            # TODO: hadle recipe validation error
             [undefined, (read_json_file recipe_path)]
         else
             ["Recipe file #{recipe_path} is not found", undefined]
@@ -38,12 +40,35 @@ read_recipe = (recipe_path, level=0) ->
 get_raw_modules = (recipe) ->
     """ Parse all modules from recipe."""
     modules = flatten((v for k,v of recipe.realms)).map((b) -> b.modules).reduce((a, b) -> a.concat b)
-    if recipe.modules? (modules.concat recipe.modules) else modules
+
+    if recipe.modules?
+        (modules.concat recipe.modules)
+    else
+        modules
 
 
 construct_modules = (modules) ->
+    modules.map (m) -> construct_module m
+
+
 remove_modules_duplicates = (modules) ->
-fill_modules_meta = (modules) ->
+    modules.reduce (a, b) ->
+        a = toArray a
+        the_same = a.filter (m) -> (m.name is b.name) or (m.path is b.path)
+        a.push b unless the_same.length
+        a
+
+
+fill_modules_deps = (modules, recipe) ->
+    if recipe.deps?
+        for m_name, prop_val of recipe.deps
+            modules = modules.map (m) ->
+                if m.name is m_name
+                    m.deps = toArray m.deps
+                    m.deps.push p for p in prop_val
+                m
+    modules
+
 
 get_modules = (recipe) ->
 
@@ -51,4 +76,7 @@ get_modules = (recipe) ->
 module.exports = {
     get_raw_modules
     read_recipe
+    remove_modules_duplicates
+    construct_modules
+    fill_modules_deps
 }
