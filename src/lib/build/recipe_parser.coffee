@@ -1,7 +1,10 @@
 path = require 'path'
-{read_json_file, flatten, extend, is_file, toArray} = require '../../lib/utils'
+
+{read_json_file, flatten, extend, is_file, toArray, partial} = require '../../lib/utils'
 {domonad, error_monad} = require '../../lib/libmonad'
 {construct_module} = require '../../lib/modules'
+{waterfall_lift} = require '../../lib/async_tools'
+
 RECIPE = 'recipe.json'
 
 
@@ -40,7 +43,6 @@ read_recipe = (recipe_path, level=0) ->
 get_raw_modules = (recipe) ->
     """ Parse all modules from recipe."""
     modules = flatten((v for k,v of recipe.realms)).map((b) -> b.modules).reduce((a, b) -> a.concat b)
-
     if recipe.modules?
         (modules.concat recipe.modules)
     else
@@ -59,7 +61,7 @@ remove_modules_duplicates = (modules) ->
         a
 
 
-fill_modules_deps = (modules, recipe) ->
+fill_modules_deps = (recipe, modules) ->
     if recipe.deps?
         for m_name, prop_val of recipe.deps
             modules = modules.map (m) ->
@@ -70,7 +72,15 @@ fill_modules_deps = (modules, recipe) ->
     modules
 
 
-get_modules = (recipe) ->
+get_modules = (recipe, ret_cb) ->
+    seq = [
+        get_raw_modules
+        construct_modules
+        remove_modules_duplicates
+        partial(fill_modules_deps, recipe)
+    ]
+
+    waterfall_lift seq, recipe, ret_cb
 
 
 module.exports = {
@@ -79,4 +89,5 @@ module.exports = {
     remove_modules_duplicates
     construct_modules
     fill_modules_deps
+    get_modules
 }

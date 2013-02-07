@@ -1,6 +1,7 @@
 path = require 'path'
 {read_recipe
 get_raw_modules
+get_modules
 remove_modules_duplicates
 construct_modules
 fill_modules_deps} = require '../src/lib/build/recipe_parser'
@@ -31,7 +32,7 @@ exports.test_recipe_inheritance = (test) ->
     test.done()
 
 
-exports.test_recipe_modules_read = (test) ->
+test_recipe_modules_read = (test) ->
     # TODO add test when recipe format is invalid.
     [error, recipe] = read_recipe recipe1_path
     modules = get_raw_modules recipe
@@ -47,11 +48,10 @@ exports.test_recipe_modules_read = (test) ->
 
 exports.test_recipe_modules_metadata_parse = (test) ->
     [error, recipe] = read_recipe recipe_modules_parse_path
-    raw_modules = get_raw_modules recipe
-    result_modules = (remove_modules_duplicates (construct_modules raw_modules))
-    modules = fill_modules_deps result_modules, recipe
-    module1 = (modules.filter (m) -> m.name is "module1")[0]
-    test.ok "module5" in module1.deps
-    test.done()
+    get_modules recipe, (err, modules) ->
+        module1 = (modules.filter (m) -> m.name is "module1")[0]
+        test.ok "module5" in module1.deps, "module5 must be in module1 deps"
+        test.ok modules.length is 6, "Expected 6 modules - #{modules.length} recieved"
+        test.done()
 
 
