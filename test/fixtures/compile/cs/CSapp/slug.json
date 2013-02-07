@@ -1,7 +1,0 @@
-{
-  "dependencies": [],
-  "libs": [],
-  "paths": ["./app"],
-  "public": "../../public",
-  "jsPath": "CSapp.js"
-}
