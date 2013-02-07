@@ -212,7 +212,7 @@ build_bundle = ({realm, bundle_name, bundle_opts, force_compile, force_bundle,
             (build_bundle_cb CB_SUCCESS, [realm, bundle_name, true]) 
             return
 
-        should_rebuild_bundle = raw_results.reduce (a, b) -> a[1] or b[1]
+        should_rebuild_bundle = raw_results.reduce ((a, b) -> a or b[1]), false
 
         get_harvested_results = (cb) ->
             #ctx.fb.say "**Harvesting bundle #{realm}/#{bundle_name}"
