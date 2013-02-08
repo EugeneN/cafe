@@ -9,6 +9,9 @@ get_module = (
     {name, path, deps, type, location}
 
 
+modules_equals = (m1, m2) -> m1.name is m2.name
+
+
 construct_module = (meta) ->
     if (typeof meta) is "string"
         get_module(alias=meta, path=meta)
@@ -28,4 +31,4 @@ construct_module = (meta) ->
         get_module(name=name, path=path, deps=deps, type=type, location=location)
 
 
-module.exports = {construct_module, get_module}
+module.exports = {construct_module, get_module, modules_equals}

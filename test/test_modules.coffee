@@ -1,4 +1,4 @@
-{construct_module} = require '../src/lib/modules'
+{construct_module} = require '../src/lib/build/modules'
 
 exports.test_modules_creation_from_string = (test) ->
     module = construct_module 'module1'

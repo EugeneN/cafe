@@ -1,13 +1,18 @@
 path = require 'path'
+u = require 'underscore'
 
 {read_json_file, flatten, extend, is_file, toArray, partial} = require '../../lib/utils'
 {domonad, error_monad} = require '../../lib/libmonad'
-{construct_module} = require '../../lib/modules'
+{construct_module, modules_equals} = require './modules'
 {waterfall_lift} = require '../../lib/async_tools'
+{construct_realm_bundle} = require './bundles'
 
 RECIPE = 'recipe.json'
 
 
+#-----------------------------------
+# Recipe parsing sequence functions
+#-----------------------------------
 read_recipe = (recipe_path, level=0) ->
     chain_check = (recipe_path) ->
         if level > 3
@@ -40,6 +45,9 @@ read_recipe = (recipe_path, level=0) ->
     _get_recipe recipe_path
 
 
+#-----------------------------------
+# Modules parsing sequence functions
+#-----------------------------------
 get_raw_modules = (recipe) ->
     """ Parse all modules from recipe."""
     modules = flatten((v for k,v of recipe.realms)).map((b) -> b.modules).reduce((a, b) -> a.concat b)
@@ -54,11 +62,11 @@ construct_modules = (modules) ->
 
 
 remove_modules_duplicates = (modules) ->
-    modules.reduce (a, b) ->
-        a = toArray a
-        the_same = a.filter (m) -> (m.name is b.name) or (m.path is b.path)
-        a.push b unless the_same.length
+    reduce_func =(a, b) ->
+        a.push b unless (u.any a, (m) -> modules_equals m, b)
         a
+
+    modules.reduce reduce_func, []
 
 
 fill_modules_deps = (recipe, modules) ->
@@ -72,7 +80,7 @@ fill_modules_deps = (recipe, modules) ->
     modules
 
 
-get_modules = (recipe, ret_cb) ->
+get_modules_async = (recipe, ret_cb) ->
     seq = [
         get_raw_modules
         construct_modules
@@ -83,11 +91,19 @@ get_modules = (recipe, ret_cb) ->
     waterfall_lift seq, recipe, ret_cb
 
 
+#-----------------------------------
+# Bundles parsing sequence functions
+#-----------------------------------
+get_bundles = (recipe) ->
+    flatten ((construct_realm_bundle realm, data) for realm, data of recipe.realms)
+
+
 module.exports = {
     get_raw_modules
     read_recipe
     remove_modules_duplicates
     construct_modules
     fill_modules_deps
-    get_modules
+    get_modules_async
+    get_bundles
 }
