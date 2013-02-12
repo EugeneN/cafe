@@ -33,3 +33,11 @@ exports.get_modules_cache = (cache_path) ->
         catch e
             0
 
+    get_cache_mtime_async: (module, cb) -> get_mtime.async (get_fn module), cb
+
+
+
+
+
+
+
