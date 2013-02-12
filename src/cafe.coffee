@@ -38,8 +38,7 @@ uuid = require 'node-uuid'
 
 {run_target} = require './lib/target'
 {trim, is_debug_context, get_plugins} = require './lib/utils'
-{say, shout, scream, whisper,
- murmur, shutup, panic_mode, nocolor} = (require './lib/logger')()
+
 {
     VERSION
     TARGET_PATH
@@ -92,8 +91,6 @@ module.exports = (emitter) ->
 
         # the one and only exit point
         Emitter.on EVENT_CAFE_DONE, (status) ->
-            say "Coffee #{ID} brewed in <#{(new Date - START_TIME) / 1000} seconds> at #{new Date}"
-            fb.say "Coffee #{ID} brewed in <#{(new Date - START_TIME) / 1000} seconds> at #{new Date}"
             exit_cb (if status is undefined then EXIT_NO_STATUS_CODE else status), bundles
 
         # global entry point
@@ -128,32 +125,25 @@ module.exports = (emitter) ->
                     EXIT_STATUS = EXIT_SUCCESS
 
                 when 'stop'
-                    #whisper 'Stop from task'
-                    #fb.whisper 'Stop from task'
                     EXIT_STATUS = EXIT_SUCCESS
 
                 when 'sigint'
-                    whisper 'Sigint from outer world'
                     fb.whisper 'Sigint from outer world'
                     EXIT_STATUS = EXIT_SIGINT
 
                 when 'target_error'
-                    whisper 'Error from task'
                     fb.whisper 'Error from task'
                     EXIT_STATUS = EXIT_TARGET_ERROR
 
                 when 'sub_cafe_error'
-                    whisper "Error from sub-cafe: #{results}"
                     fb.whisper "Error from sub-cafe: #{results}"
                     EXIT_STATUS = results
 
                 when 'partial_success'
-                    whisper "Finished with errors: #{results}"
                     fb.whisper "Finished with errors: #{results}"
                     EXIT_STATUS = EXIT_PARTIAL_SUCCESS
 
                 when 'version_mismatch'
-                    whisper "No further processing will be taken"
                     fb.whisper "No further processing will be taken"
                     EXIT_STATUS = EXIT_VERSION_MISMATCH
 
@@ -161,18 +151,15 @@ module.exports = (emitter) ->
                     EXIT_STATUS = EXIT_HELP
 
                 when 'bad_recipe'
-                    scream "#{results}"
                     fb.scream "#{results}"
                     EXIT_STATUS = EXIT_OTHER_ERROR
 
                 when 'bad_ctx'
-                    scream "#{results}"
                     fb.scream "#{results}"
                     EXIT_STATUS = EXIT_OTHER_ERROR
 
                 else
                     fb.scream "Error encountered: #{error}"
-
                     EXIT_STATUS = EXIT_OTHER_ERROR
 
             Emitter.emit EVENT_CAFE_DONE, EXIT_STATUS, error
