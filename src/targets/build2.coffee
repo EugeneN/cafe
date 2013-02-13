@@ -8,6 +8,7 @@ help = [
 {make_target} = require '../lib/target'
 {run_build_sequence} = require '../lib/build/build_sequence'
 {is_dir} = require '../lib/utils'
+{CB_SUCCESS} = require '../defs'
 
 check_ctx = (ctx, cb) ->
     unless ctx.own_args.app_root and ctx.own_args.build_root
