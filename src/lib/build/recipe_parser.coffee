@@ -2,13 +2,28 @@ path = require 'path'
 u = require 'underscore'
 
 {read_json_file, flatten, extend, is_file, toArray, partial} = require '../../lib/utils'
-{domonad, error_monad} = require '../../lib/libmonad'
 {construct_module, modules_equals} = require './modules'
-{waterfall_lift} = require '../../lib/async_tools'
 {construct_realm_bundle} = require './bundles'
+
+{
+    cont_t, cont_m,
+    maybe_t, maybe_m,
+    logger_t, logger_m,
+    domonad, is_null,
+    lift_sync, lift_async
+} = require 'libmonad'
+
 
 RECIPE = 'recipe.json'
 
+OK = undefined
+error_m = ->
+    is_error = ([err, val]) -> err isnt OK
+
+    result: (v) -> [OK, v]
+
+    bind: (mv, f) ->
+        if (is_error mv) then mv else (f mv[1])
 
 #-----------------------------------
 # Recipe parsing sequence functions
@@ -18,12 +33,12 @@ read_recipe = (recipe_path, level=0) ->
         if level > 3
             ["Recipe inheritance chain to long", undefined]
         else
-            [undefined, recipe_path]
+            [OK, recipe_path]
 
     read_if_is_file = (recipe_path) ->
         if is_file recipe_path
             # TODO: hadle recipe validation error
-            [undefined, (read_json_file recipe_path)]
+            [OK, (read_json_file recipe_path)]
         else
             ["Recipe file #{recipe_path} is not found", undefined]
 
@@ -39,10 +54,10 @@ read_recipe = (recipe_path, level=0) ->
                 error = "Recipe #{recipe_path} can not inherit from itself"
         [error, recipe]
 
-    _get_recipe = domonad(error_monad
-                          [chain_check, read_if_is_file, check_for_inheritance])
+    work_monad = logger_t error_m(), ->
+    lifted_handlers_chain = [chain_check, read_if_is_file, check_for_inheritance]
 
-    _get_recipe recipe_path
+    domonad work_monad, lifted_handlers_chain, recipe_path
 
 
 #-----------------------------------
@@ -88,7 +103,13 @@ get_modules_async = (recipe, ret_cb) ->
         partial(fill_modules_deps, recipe)
     ]
 
-    waterfall_lift seq, recipe, ret_cb
+    debug = ->
+
+    work_monad = cont_t (logger_t (maybe_m {is_error: is_null}), debug)
+    lifted_handlers_chain = seq.map (partial lift_sync, 1)
+    init_val = recipe
+
+    (domonad work_monad, lifted_handlers_chain, init_val) ret_cb
 
 
 #-----------------------------------

@@ -51,7 +51,7 @@ test_recipe_modules_read = (test) ->
 
 exports.test_recipe_modules_metadata_parse = (test) ->
     [error, recipe] = read_recipe recipe_modules_parse_path
-    get_modules_async recipe, (err, modules) ->
+    get_modules_async recipe, (modules) ->
         module1 = (modules.filter (m) -> m.name is "module1")[0]
         test.ok "module5" in module1.deps, "module5 must be in module1 deps"
         test.ok modules.length is 6, "Expected 6 modules - #{modules.length} recieved"

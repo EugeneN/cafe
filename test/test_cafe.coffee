@@ -50,22 +50,6 @@ module.exports = {
         go = get_cafe setup
         go {args: pessimist [null, null]}
 
-    test07: 'fb say works': (test) ->
-        setup =
-            emitter: new events.EventEmitter
-            exit_cb: ->
-            fb:
-                shout: ->
-                scream: ->
-                murmur: ->
-                whisper: ->
-                say: ->
-                    test.ok true, 'fb.say has been called'
-                    test.done()
-                    
-        go = get_cafe setup
-        go {args: pessimist [null, null]}
-
 
     
 }
