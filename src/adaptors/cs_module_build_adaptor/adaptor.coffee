@@ -65,7 +65,7 @@ build_factory = (mod_src, ctx) ->
                     ctx.fb.scream "Module compilation error. Module - #{mod_src}. Error - #{e}"
                     cb 'compile_error'
 
-            cb null, {sources: (ctx.cafelib.utils.flatten sources), ns: (path.basename mod_src), mod_src: mod_src}
+            cb null, {sources: (ctx.cafelib.utils.flatten sources), ns: (path.basename mod_src)}
 
         do_compile (err, result) -> cb? err, result
 
