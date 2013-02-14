@@ -36,8 +36,7 @@ build_cs_mod = (ctx, cb) ->
                             cb 'target_error'
 
 
-build_factory = (module, ctx) ->
-    mod_src = module.path
+build_factory = (mod_src, ctx) ->
     {slug_path} = get_paths ctx
     slug = read_json_file slug_path
 

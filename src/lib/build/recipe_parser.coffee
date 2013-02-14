@@ -35,7 +35,7 @@ read_recipe = (recipe_path, level=0) ->
         else
             [OK, recipe_path]
 
-    read_if_is_file = (recipe_path) ->
+    read_if_is_file = (recipe_path) -> # make async
         if is_file recipe_path
             # TODO: hadle recipe validation error
             [OK, (read_json_file recipe_path)]
@@ -56,7 +56,6 @@ read_recipe = (recipe_path, level=0) ->
 
     work_monad = logger_t error_m(), ->
     lifted_handlers_chain = [chain_check, read_if_is_file, check_for_inheritance]
-
     domonad work_monad, lifted_handlers_chain, recipe_path
 
 
@@ -95,7 +94,7 @@ fill_modules_deps = (recipe, modules) ->
     modules
 
 
-get_modules_async = (recipe, ret_cb) ->
+get_modules = (recipe) ->
     seq = [
         get_raw_modules
         construct_modules
@@ -103,13 +102,8 @@ get_modules_async = (recipe, ret_cb) ->
         partial(fill_modules_deps, recipe)
     ]
 
-    debug = ->
-
-    work_monad = cont_t (logger_t (maybe_m {is_error: is_null}), debug)
-    lifted_handlers_chain = seq.map (partial lift_sync, 1)
-    init_val = recipe
-
-    (domonad work_monad, lifted_handlers_chain, init_val) ret_cb
+    work_monad = maybe_m {is_error: is_null}
+    (domonad work_monad, seq, recipe)
 
 
 #-----------------------------------
@@ -125,6 +119,6 @@ module.exports = {
     remove_modules_duplicates
     construct_modules
     fill_modules_deps
-    get_modules_async
+    get_modules
     get_bundles
 }

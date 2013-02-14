@@ -26,7 +26,6 @@ build2 = (ctx, cb) ->
         if err
             cb err
         else
-            ctx.fb.say "Starting build sequence ..."
             run_build_sequence ctx, cb
 
 

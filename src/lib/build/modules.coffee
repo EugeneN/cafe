@@ -8,6 +8,7 @@ get_module = (
 
     _sources = ""
     set_sources = (sources) -> _sources = sources
+    has_sources = () -> _sources isnt ""
     get_sources = -> _sources
 
     {name, path, deps, type, location, set_sources, get_sources}

@@ -64,9 +64,9 @@ get_mtime = (filename) ->
 get_mtime.async = (filename, cb) ->
     fs.stat filename, (err, stat) ->
         if err
-            cb err
+            cb err, null
         else
-            cb mtime_to_unixtime stat.mtime
+            cb null, (mtime_to_unixtime stat.mtime)
 
 newest = (l) -> Math.max.apply Math, l
 
