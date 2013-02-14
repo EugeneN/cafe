@@ -5,7 +5,7 @@ fs = require 'fs'
 
 module.exports = ->
     fn_pattern = "#{ADAPTOR_FN}#{JS_EXT}"
-    
+
     (fs.readdirSync ADAPTORS_PATH)\
        .map((p) -> path.join(ADAPTORS_PATH, p))\
        .filter((fn) -> (is_dir fn) and fn_pattern in fs.readdirSync fn)

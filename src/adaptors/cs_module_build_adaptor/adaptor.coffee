@@ -73,14 +73,13 @@ build_factory = (mod_src, ctx) ->
 
 get_paths = (ctx) ->
     app_root = path.resolve ctx.own_args.app_root
-    module_name = ctx.own_args.mod_name
+    module_name = ctx.module.path
     mod_src = if ctx.own_args.src
         path.resolve ctx.own_args.src
     else
         path.resolve app_root, module_name
 
     slug_path = path.resolve mod_src, SLUG_FN
-
     {mod_src, slug_path}
 
 module.exports = do ->

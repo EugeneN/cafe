@@ -44,10 +44,11 @@ resolve_deps = ({modules, app_root, recipe_deps, ctx}, resolve_deps_cb) ->
                             find_adaptor_cb err, undefined
 
                         else
-                            spec =
+                            spec = {
                                 name: module_name
                                 deps: module_deps
                                 adaptor: adaptor
+                            }
 
                             find_adaptor_cb CB_SUCCESS, spec
                 else

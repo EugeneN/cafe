@@ -26,6 +26,7 @@
     "mkdirp": "*",
     "chokidar": "*",
     "growl": "*",
-    "wrapper-commonjs":"*"
+    "wrapper-commonjs":"*",
+    "libmonad": "*"
   }
 }
