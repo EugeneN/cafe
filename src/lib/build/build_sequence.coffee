@@ -8,12 +8,14 @@ get_adaptors = require '../adaptor'
 
 get_modules_cache_dir = (app_root) -> path.resolve path.join get_cafe_dir(app_root), 'modules_cache'
 
-harvest_module = (adapter, module, ctx, message, cb) ->
+harvest_module = (adapter, module, ctx, message, cache, cb) ->
     message or= "Harvesting module #{module.path}"
     ctx.fb.say message
     adapter.harvest (err, sources) ->
+        # TODO check if err
         module.set_sources sources.sources # TODO: check that sources are present
-        cb CB_SUCCESS, module
+        cache.save_async module, ->
+            cb CB_SUCCESS, module
 
 
 process_module = (adapters, cache, ctx, module, module_cb) ->
@@ -33,12 +35,12 @@ process_module = (adapters, cache, ctx, module, module_cb) ->
                 adapter.last_modified (err, adapter_mtime) -> # if need to recompile module
                     if adapter_mtime >= cache_mtime
                         message = "Module #{module.name} was changed, harvesting ..."
-                        harvest_module adapter, module, ctx, message, module_cb
+                        harvest_module adapter, module, ctx, message, cache, module_cb
                     else
                         module_cb CB_SUCCESS, module
             else
                 message = "Forced harvesting #{module.name} ..."
-                harvest_module adapter, module, ctx, message, module_cb
+                harvest_module adapter, module, ctx, message, cache, module_cb
 
 
 run_build_sequence = (ctx, sequence_cb) ->
@@ -47,18 +49,18 @@ run_build_sequence = (ctx, sequence_cb) ->
     [error, recipe] = read_recipe recipe_path
     (sequence_cb error) if error
     adapters = get_adaptors() # TODO: Write test
-    cache = get_modules_cache get_modules_cache_dir ctx.own_args.app_root
     modules = get_modules recipe
     sequence_cb "No modules found in recipe #{recipe_path}" unless modules?
     # --------------------------------------------------------------------------------
 
     #----------------------- Process sequence ----------------------------------------
-    async.map modules, partial(process_module, adapters, cache, ctx), (err, result) ->
-        #async.map (get_bundles recipe), partial(process_bundle, result), (err, result) ->
-        #    sequence_cb err, result
-        console.log ">>> result >>>", result
-        for r in result
-            console.log "s->", r.get_sources()
-        sequence_cb err
+    get_modules_cache (get_modules_cache_dir ctx.own_args.app_root), (cache) ->
+        async.map modules, partial(process_module, adapters, cache, ctx), (err, result) ->
+            #async.map (get_bundles recipe), partial(process_bundle, result), (err, result) ->
+            #    sequence_cb err, result
+            console.log ">>> result >>>", result
+            for r in result
+                console.log "s->", r.get_sources()
+            sequence_cb err
 
 module.exports = {run_build_sequence}

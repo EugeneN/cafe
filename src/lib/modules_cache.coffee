@@ -3,37 +3,32 @@ path = require 'path'
 mkdirp = require 'mkdirp'
 {get_mtime} = require('./utils')
 
-exports.get_modules_cache = (cache_path) ->
-
+exports.get_modules_cache = (cache_path, cache_cb) ->
     get_fn = (module_name) ->
         path.join cache_path, module_name + '.cache'
 
-    get: (module_name) ->
-        JSON.parse fs.readFileSync (get_fn module_name)
+    result =
+        get: (module_name) -> # Deprecated
+            JSON.parse fs.readFileSync (get_fn module_name)
 
-    save: (cache) ->
-        module_name = get_fn cache.module.name
+        save_async: (module, cb) ->
+            fs.writeFile (get_fn module.name), (JSON.stringify module.serrialize()), cb
 
-        write_file = (cached_mod) ->
-            fs.writeFileSync (get_fn cached_mod.module.name), (JSON.stringify cached_mod)
+        get_cached_file_path: (module_name) -> get_fn module_name
 
-        if path.existsSync (path.dirname module_name)
-            write_file cache
+        get_cache_mtime_async: (module, cb) -> get_mtime.async (get_fn module.name), cb
+
+    fs.exists cache_path, (exists) ->
+        unless exists
+            mkdirp cache_path, (err) ->
+                if err
+                    throw "Cannot create cache dirrectory #{err}"
+                else
+                    cache_cb result
         else
-            mkdirp (path.dirname module_name), (err) ->
-                throw "Can not create cache dirrectory #{err}" if err
-                write_file cache
+            cache_cb result
 
-    get_cached_file_path: (module_name) ->
-        get_fn module_name
 
-    get_cache_mtime: (module) ->
-        try
-            get_mtime (get_fn module.name).toString()
-        catch e
-            0
-
-    get_cache_mtime_async: (module, cb) -> get_mtime.async (get_fn module), cb
 
 
 
