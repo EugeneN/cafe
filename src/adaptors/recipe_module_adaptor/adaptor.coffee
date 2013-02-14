@@ -16,21 +16,7 @@ _ = require 'underscore'
 {FILE_ENCODING, TMP_BUILD_DIR_SUFFIX, JS_EXT,
   NODE_PATH, CB_SUCCESS, RECIPE} = require '../../defs'
 
-apply2 = (type, color) ->
-  (a) ->
-    prefix = if color then [color LOG_PREFIX] else []
-    msg = prefix.concat (if (is_array a) then a else [a])
-    console[type].apply console, msg
-
-fb =
-  say: apply2 'log', green
-  shout: apply2 'info', yellow
-  scream: apply2 'error', red
-  whisper: apply2 'error', red
-  murmur: apply2 'log'
-
 partial = (fn, args...) -> _.bind fn, null, args...
-
 
 get_target_fn = (js_path, app_root, target_fn) ->
     if js_path
