@@ -4,8 +4,12 @@ get_bundle = (
     name="",
     modules_names=[]
     ) ->
+    _modules = null
+    set_modules = (modules) -> _modules = modules
+    get_modules = () -> _modules
+    has_modules = () -> _modules?
 
-    {name, modules_names}
+    {name, modules_names, set_modules, get_modules, has_modules}
 
 
 construct_realm_bundle = (realm_name, data) ->

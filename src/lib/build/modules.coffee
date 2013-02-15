@@ -24,6 +24,7 @@ get_module = (
     set_sources
     get_sources
     serrialize
+    has_sources
     }
 
 

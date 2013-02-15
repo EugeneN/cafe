@@ -110,6 +110,7 @@ get_modules = (recipe) ->
 # Bundles parsing sequence functions
 #-----------------------------------
 get_bundles = (recipe) ->
+    # FIXME: returns invalid bundle names if called twice.
     flatten ((construct_realm_bundle realm, data) for realm, data of recipe.realms)
 
 

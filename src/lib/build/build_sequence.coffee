@@ -1,25 +1,44 @@
 async = require 'async'
+u = require 'underscore'
 path = require 'path'
-{read_recipe, get_modules} = require './recipe_parser'
+{read_recipe, get_modules, get_bundles} = require './recipe_parser'
 get_adaptors = require '../adaptor'
 {extend, partial, get_cafe_dir} = require '../utils'
 {CB_SUCCESS, RECIPE} = require '../../defs'
 {get_modules_cache} = require '../modules_cache'
 {wrap_bundle, wrap_modules, wrap_module} = require 'wrapper-commonjs'
 
-# ======================== BUNDLES PROCESSING ======================================================
-process_bundle = (modules, bundles, bundle_cb) ->
-    # Check what bundles wasn't been changed
-    was_modified = (_modules, _bundle) ->
+get_modules_cache_dir = (app_root) -> path.resolve path.join get_cafe_dir(app_root), 'modules_cache'
 
-    check_unchanged = (_modules, _bundles, cb) ->
-        async.filter _bundles, partial(was_modified, _modules), (err, result) ->
-            # Handle when no module in bundle was changed ...
+# ======================== BUNDLES PROCESSING ======================================================
+process_bundle = (modules, bundle, bundle_cb) ->
+    # select modules for bundle
+    modules = modules.filter (m) -> m.name in bundle.modules_names
+
+    # Check what bundles wasn been recompiled.
+    was_compiled = (_modules, _bundle) ->
+        # TODO: compare with build_deps
+        u.some _bundle.modules_names, (m_name) ->
+            m = u.find _modules, (mod) -> mod.name is m_name
+            m.has_sources()? # if atleast one module was compiled
+
+    # check if some modules metadata was changed.
+    meta_changed = () -> false
+
+    fill_sources = (m, cb) -> cb null, m.get_sources() # temporary mock.
+
+    if was_compiled(modules, bundle) or meta_changed(modules, bundle)
+        # TODO: make modules TOPOSORT
+        async.map modules, fill_sources, (err, bundle_sources) ->
+            # Post processing
+            bundle_sources = wrap_bundle bundle_sources.join '\n'
+            # Post processing ... minify e.t.c.
+            bundle_cb CB_SUCCESS, [bundle, bundle_sources]
+    else
+        bundle_cb CB_SUCCESS, null
 
 
 # ======================== MODULES PROCESSING ======================================================
-get_modules_cache_dir = (app_root) -> path.resolve path.join get_cafe_dir(app_root), 'modules_cache'
-
 harvest_module = (adapter, module, ctx, message, cb) ->
     message or= "Harvesting module #{module.path}"
     ctx.fb.say message
@@ -65,12 +84,13 @@ run_build_sequence = (ctx, sequence_cb) ->
     # --------------------------------------------------------------------------------
 
     #----------------------- Process sequence ----------------------------------------
-    async.map modules, partial(process_module, adapters, ctx), (err, result) ->
-        #async.map (get_bundles recipe), partial(process_bundle, result), (err, result) ->
-        #    sequence_cb err, result
-        #console.log ">>> result >>>", result
-        #for r in result
-        #    console.log "s->", r.get_sources()
-        sequence_cb err
+    async.map modules, partial(process_module, adapters, ctx), (err, processed_modules) ->
+        async.map (get_bundles recipe), partial(process_bundle, processed_modules), (err, result) ->
+            compiled_bundle_names = result.filter(([bundle, sources]) -> sources?).map ([bundle, sources]) -> bundle.name
+            if compiled_bundle_names.length
+                ctx.fb.say "Bundles [#{compiled_bundle_names}] was build successfully"
+            else
+                ctx.fb.shout "No changes, skip rebuild"
+            sequence_cb err, result
 
 module.exports = {run_build_sequence}
