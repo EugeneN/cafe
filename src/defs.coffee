@@ -26,7 +26,8 @@ VERSION = do ->
     catch e
         undefined
 
-TMP_BUILD_DIR_SUFFIX = 'build'
+TMP_BUILD_DIR_SUFFIX = 'build' # remove this
+BUILD_DIR = 'build'
 
 TARGET_PATH = path.resolve __dirname, './targets/'
 ADAPTORS_PATH = path.resolve __dirname, "./adaptors"
@@ -69,6 +70,7 @@ default_config =
     ADAPTOR_FN: ADAPTOR_FN
     SKELETHON_FN: SKELETHON_FN
     ADAPTORS_LIB: ADAPTORS_LIB
+    BUILD_DIR: BUILD_DIR
 
     WATCH_FN_PATTERN: /^[^\.].+\.coffee$|^[^\.].+\.json$|^[^\.].+\.eco|^[^\.].+\.js$|^[^\.].+\.cljs$/i
 

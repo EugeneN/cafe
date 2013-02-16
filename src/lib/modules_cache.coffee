@@ -4,8 +4,7 @@ mkdirp = require 'mkdirp'
 {get_mtime} = require('./utils')
 
 exports.get_modules_cache = (cache_path, cache_cb) ->
-    get_fn = (module_name) ->
-        path.join cache_path, module_name + '.cache'
+    get_fn = (module_name) -> path.join cache_path, module_name + '.cache'
 
     result =
         get: (module_name) -> # Deprecated
@@ -18,13 +17,9 @@ exports.get_modules_cache = (cache_path, cache_cb) ->
 
         get_cache_mtime_async: (module, cb) -> get_mtime.async (get_fn module.name), cb
 
-    fs.exists cache_path, (exists) ->
-        unless exists
-            mkdirp cache_path, (err) ->
-                if err
-                    throw "Cannot create cache dirrectory #{err}"
-                else
-                    cache_cb result
+    mkdirp cache_path, (err) ->
+        if err
+            throw "Cannot create cache dirrectory #{err}"
         else
             cache_cb result
 
