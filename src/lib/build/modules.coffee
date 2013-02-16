@@ -10,10 +10,9 @@ get_module = (
     set_sources = (sources) -> _sources = sources
     has_sources = () -> _sources isnt ""
     get_sources = -> _sources
-    serrialize = -> {name: name, path: path, sources: get_sources()}
-
-    deserialize = (serrialized_module) ->
-        set_sources(serrialized_module.sources)
+    serrialize_sources = -> {name:name, sources: get_sources()}
+    deserialize_sources = (serrialized_module) ->
+    serrialize_meta = -> {name, path, type, location, deps}
 
     {
     name
@@ -22,9 +21,10 @@ get_module = (
     type
     location
     set_sources
-    get_sources
-    serrialize
     has_sources
+    get_sources
+    serrialize_sources
+    serrialize_meta
     }
 
 

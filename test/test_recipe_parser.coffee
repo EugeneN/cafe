@@ -22,6 +22,12 @@ exports.test_recipe_read_basic_validation = (test) ->
     test.ok (error), "Error does'nt occured while file is not exists"
     [error, recipe] = read_recipe recipe1_path
     test.ok recipe, "Returned empty recipe while read existent file"
+    read_recipe.async recipe1_path, 0, ([error, recipe]) ->
+        test.ok error is undefined, "Valid recipe returned an error #{error}"
+        test.ok recipe?, "Recipe object was not returned"
+    read_recipe.async 'recipe23232.json', 0, ([error, recipe]) ->
+        test.ok error is undefined, "Valid recipe returned an error #{error}"
+        test.ok recipe?, "Recipe object was not returned"
     test.done()
 
 

@@ -10,8 +10,10 @@ exports.get_modules_cache = (cache_path, cache_cb) ->
         get: (module_name) -> # Deprecated
             JSON.parse fs.readFileSync (get_fn module_name)
 
-        save_async: (module, cb) ->
-            fs.writeFile (get_fn module.name), (JSON.stringify module.serrialize()), cb
+        save_modules_async: (modules, filename, cb) ->
+            fs.writeFile(get_fn filename
+                         JSON.stringify (modules.map (m) -> m.serrialize_sources())
+                         cb)
 
         get_cached_file_path: (module_name) -> get_fn module_name
 
@@ -19,9 +21,9 @@ exports.get_modules_cache = (cache_path, cache_cb) ->
 
     mkdirp cache_path, (err) ->
         if err
-            throw "Cannot create cache dirrectory #{err}"
+            cache_cb "Cannot create cache dirrectory #{err}", null
         else
-            cache_cb result
+            cache_cb null, result
 
 
 

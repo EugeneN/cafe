@@ -13,11 +13,10 @@ u = require 'underscore'
     lift_sync, lift_async
 } = require 'libmonad'
 
-
 RECIPE = 'recipe.json'
 
 OK = undefined
-error_m = ->
+error_m = -> # TODO: move this to libmonad
     is_error = ([err, val]) -> err isnt OK
 
     result: (v) -> [OK, v]
@@ -28,35 +27,80 @@ error_m = ->
 #-----------------------------------
 # Recipe parsing sequence functions
 #-----------------------------------
-read_recipe = (recipe_path, level=0) ->
-    chain_check = (recipe_path) ->
-        if level > 3
-            ["Recipe inheritance chain to long", undefined]
+chain_check = (level, recipe_path) ->
+    if level > 3
+        ["Recipe inheritance chain to long", undefined]
+    else
+        [OK, recipe_path]
+
+read_if_is_file = (recipe_path) -> # # TOTEST
+    if is_file recipe_path
+        # TODO: hadle recipe validation error
+        [OK, (read_json_file recipe_path)]
+    else
+        ["Recipe file #{recipe_path} is not found", undefined]
+
+
+read_if_is_file.async = (recipe_path, cb) -> # TOTEST
+    is_file.async recipe_path, (err, result) ->
+        (return cb [err, undefined]) if err
+        if result is true
+            read_json_file.async recipe_path, (err, result) ->
+                (return cb [err, undefined]) if err
+                cb [OK, result]
         else
-            [OK, recipe_path]
+            cb ["Recipe file #{recipe_path} is not found", undefined]
 
-    read_if_is_file = (recipe_path) -> # make async
-        if is_file recipe_path
-            # TODO: hadle recipe validation error
-            [OK, (read_json_file recipe_path)]
+
+check_for_inheritance = (level, recipe_path, read_recipe_fn, recipe) ->
+    if recipe?.abstract?.extends
+        base_recipe_path = (path.resolve (path.dirname recipe_path),
+                                         recipe.abstract.extends)
+
+        unless base_recipe_path is recipe_path
+            [error, base_recipe] = (read_recipe_fn base_recipe_path, level+1)
+            recipe = (extend base_recipe, recipe)
         else
-            ["Recipe file #{recipe_path} is not found", undefined]
+            error = "Recipe #{recipe_path} can not inherit from itself"
+    [error, recipe]
 
-    check_for_inheritance = (recipe) ->
-        if recipe?.abstract?.extends
-            base_recipe_path = (path.resolve (path.dirname recipe_path),
-                                             recipe.abstract.extends)
 
-            unless base_recipe_path is recipe_path
-                [error, base_recipe] = (read_recipe base_recipe_path, level+1)
+check_for_inheritance.async = (level, recipe_path, read_recipe_fn, recipe, cb) ->
+    if recipe?.abstract?.extends
+        base_recipe_path = (path.resolve (path.dirname recipe_path),
+                                         recipe.abstract.extends)
+
+        unless base_recipe_path is recipe_path
+            recursive_cb = ([error, base_recipe]) ->
                 recipe = (extend base_recipe, recipe)
-            else
-                error = "Recipe #{recipe_path} can not inherit from itself"
-        [error, recipe]
+                cb [error, recipe]
+            (read_recipe_fn base_recipe_path, level+1, recursive_cb)
 
-    work_monad = logger_t error_m(), ->
-    lifted_handlers_chain = [chain_check, read_if_is_file, check_for_inheritance]
-    domonad work_monad, lifted_handlers_chain, recipe_path
+        else
+            error = "Recipe #{recipe_path} can not inherit from itself"
+    cb [error, recipe]
+
+
+read_recipe = (recipe_path, level=0) ->
+    lifted_handlers_chain = [
+        partial(chain_check, level)
+        read_if_is_file
+        partial(check_for_inheritance, level, recipe_path, read_recipe)
+    ]
+
+    domonad error_m(), lifted_handlers_chain, recipe_path
+
+
+read_recipe.async = (recipe_path, level=0, cb) ->
+    worker_monad = cont_t error_m()
+
+    lifted_handlers_chain = [
+        lift_sync(2, partial(chain_check, level))
+        lift_async(2, read_if_is_file.async)
+        lift_async(5, partial(check_for_inheritance.async, level, recipe_path, read_recipe))
+    ]
+
+    (domonad worker_monad, lifted_handlers_chain, recipe_path) cb
 
 
 #-----------------------------------
@@ -122,4 +166,5 @@ module.exports = {
     fill_modules_deps
     get_modules
     get_bundles
+    read_if_is_file
 }

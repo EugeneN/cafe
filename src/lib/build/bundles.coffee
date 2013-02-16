@@ -4,12 +4,21 @@ get_bundle = (
     name="",
     modules_names=[]
     ) ->
+
     _modules = null
-    set_modules = (modules) -> _modules = modules
+    set_modules = (modules) -> _modules = modules.map (m) -> m.serrialize_meta()
     get_modules = () -> _modules
     has_modules = () -> _modules?
+    serrialize = () -> {name:name, modules:get_modules()}
 
-    {name, modules_names, set_modules, get_modules, has_modules}
+    {
+    name
+    modules_names
+    set_modules
+    get_modules
+    has_modules
+    serrialize
+    }
 
 
 construct_realm_bundle = (realm_name, data) ->
