@@ -47,9 +47,6 @@ process_bundle = (modules, cached_sources, ctx, bundle, bundle_cb) ->
             m = u.find _modules, (mod) -> mod.name is m_name
             m.has_sources()? # if atleast one module was compiled
 
-    # check if some modules metadata was changed.
-    meta_changed = () -> false
-
     fill_sources = (m, cb) ->
         m.copy_sources(cached_sources[m.name].sources) unless m.has_sources()
         cb null, m # temporary mock.
