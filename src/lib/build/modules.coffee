@@ -1,3 +1,6 @@
+{or_} = require '../utils'
+u = require 'underscore'
+
 get_module = (
     path=""
     name=""
@@ -7,11 +10,32 @@ get_module = (
     ) ->
 
     _sources = ""
-    set_sources = (sources) -> _sources = sources
-    has_sources = () -> _sources isnt ""
+    _mtime = 0
+
+    set_sources = (sources) ->
+        _mtime = Date.now()
+        _sources = sources
+
+    copy_sources = (sources) ->
+        _sources = sources
+
+    has_sources = -> _sources isnt ""
     get_sources = -> _sources
-    serrialize_sources = -> {name:name, sources: get_sources()}
-    deserialize_sources = (serrialized_module) ->
+    get_mtime = -> _mtime
+
+    need_to_recompile = (cached_module, compared_mtime) ->
+        or_(
+            cached_module.type isnt type
+            cached_module.mtime < compared_mtime
+            cached_module.path isnt path
+        )
+
+    need_to_reorder = (module) ->
+        (u.difference module.deps, deps) > 0
+
+    serrialize_sources = ->
+        {name:name, sources: get_sources(), mtime: get_mtime(), type:type, path:path}
+
     serrialize_meta = -> {name, path, type, location, deps}
 
     {
@@ -25,6 +49,9 @@ get_module = (
     get_sources
     serrialize_sources
     serrialize_meta
+    need_to_recompile
+    need_to_reorder
+    copy_sources
     }
 
 

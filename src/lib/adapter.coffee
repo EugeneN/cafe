@@ -56,7 +56,6 @@ get_adapters = ->
 get_adapters.async = (adapters_dir, fn_pattern, adapters_cb) ->
     adapters_dir or= ADAPTERS_PATH
     fn_pattern or= "#{ADAPTER_FN}#{JS_EXT}"
-
     sequence = [
         lift_async(2, read_adapters_dir)
         lift_async(3, partial(define_folders, adapters_dir))

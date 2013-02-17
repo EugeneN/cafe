@@ -11,11 +11,13 @@ mkdirp = require 'mkdirp'
 {wrap_bundle, wrap_modules, wrap_module} = require 'wrapper-commonjs'
 CACHE_FN = 'modules'
 
+
 get_modules_cache_dir = (app_root) -> path.resolve path.join get_cafe_dir(app_root), 'modules_cache' #move to defs
 get_build_dir = (build_root) -> path.resolve path.join build_root, BUILD_DIR
 
+
 # ======================== SAVING RESULTS ==========================================================
-save_results = (modules, bundles, cache, ctx, save_cb) ->
+save_results = (modules, bundles, cache, cached_sources, ctx, save_cb) ->
     build_dir = get_build_dir ctx.own_args.build_root
 
     save_build_deps = (modules, cb) ->
@@ -26,13 +28,14 @@ save_results = (modules, bundles, cache, ctx, save_cb) ->
     async.parallel(
         [
             partial(save_build_deps, modules)
-            partial(cache.save_modules_async, modules, CACHE_FN)
+            partial(cache.save_modules_async, modules, cached_sources, CACHE_FN)
         ]
         save_cb
     )
 
+
 # ======================== BUNDLES PROCESSING ======================================================
-process_bundle = (modules, cache, ctx, bundle, bundle_cb) ->
+process_bundle = (modules, cached_sources, ctx, bundle, bundle_cb) ->
     # select modules for bundle
     modules = modules.filter (m) -> m.name in bundle.modules_names
     build_dir = get_build_dir ctx.own_args.build_root
@@ -46,7 +49,10 @@ process_bundle = (modules, cache, ctx, bundle, bundle_cb) ->
 
     # check if some modules metadata was changed.
     meta_changed = () -> false
-    fill_sources = (m, cb) -> cb null, m # temporary mock.
+
+    fill_sources = (m, cb) ->
+        m.copy_sources(cached_sources[m.name].sources) unless m.has_sources()
+        cb null, m # temporary mock.
 
     if was_compiled(modules, bundle) or meta_changed(modules, bundle)
 
@@ -58,12 +64,11 @@ process_bundle = (modules, cache, ctx, bundle, bundle_cb) ->
             async.map modules, fill_sources, (err, modules_with_sources) ->
                 bundle.set_modules modules_with_sources
                 sources = (modules_with_sources.map (m) -> m.get_sources())
-
                 bundle_sources = wrap_bundle sources.join '\n'
                 # Post processing ... minify e.t.c.
 
                 fs.writeFile bundle_file_path, bundle_sources, (err) ->
-                    bundle_cb err, [bundle, modules_with_sources]
+                    bundle_cb err, bundle
     else
         bundle_cb CB_SUCCESS, null
 
@@ -75,11 +80,12 @@ harvest_module = (adapter, module, ctx, message, cb) ->
     adapter.harvest (err, sources) ->
         return(cb err) if err
         # post compile module processing sequence
-        module.set_sources wrap_module(sources.sources, sources.ns, sources.type)# TODO: check that sources are present
+        # TODO: check that sources are present
+        module.set_sources wrap_module(sources.sources, sources.ns, module.type)
         cb err, module
 
 
-process_module = (adapters, ctx, module, module_cb) ->
+process_module = (adapters, cached_sources, build_deps, ctx, module, module_cb) ->
     _adapter_ctx = extend ctx, {module}
 
     _adapter_match = (adapter, cb) ->
@@ -89,14 +95,19 @@ process_module = (adapters, ctx, module, module_cb) ->
         module_cb "No adapter found for #{module.name} module" unless adapter?
         adapter = adapter.make_adaptor _adapter_ctx # TODO: ugly....
 
-        cache_mtime = 0 # TODO: get cache_mtime later
         unless ctx.own_args.f
-            adapter.last_modified (err, adapter_mtime) -> # if need to recompile module
-                if adapter_mtime >= cache_mtime
-                    message = "Module #{module.name} was changed, harvesting ..."
-                    harvest_module adapter, module, ctx, message, module_cb
-                else
-                    module_cb CB_SUCCESS, module
+            cached_module = cached_sources[module.name] if cached_sources?
+            if cached_module?
+                cached_module.mtime or=0
+                adapter.last_modified (err, adapter_mtime) -> # if need to recompile module
+                    if module.need_to_recompile cached_module, adapter_mtime
+                        message = "Module #{module.name} was changed, harvesting ..."
+                        harvest_module adapter, module, ctx, message, module_cb
+                    else
+                        module_cb CB_SUCCESS, module
+            else
+                message = "Harvesting module #{module.name} ..."
+                harvest_module adapter, module, ctx, message, module_cb
         else
             message = "Forced harvesting #{module.name} ..."
             harvest_module adapter, module, ctx, message, module_cb
@@ -104,8 +115,10 @@ process_module = (adapters, ctx, module, module_cb) ->
 
 # ====================================================================================
 init_build_sequence = (ctx, adapters_path, adapters_fn, init_cb) ->
-    adapters_fn or= ADAPTER_FN
-    adapters_path or= ADAPTERS_PATH
+    """
+    returns:
+        {cache, cached_sources, build_deps, recipe, adapters} in init_cb.
+    """
 
     recipe_path = path.resolve ctx.own_args.app_root, (ctx.own_args.formula or RECIPE)
 
@@ -119,13 +132,13 @@ init_build_sequence = (ctx, adapters_path, adapters_fn, init_cb) ->
 
     _get_cache_modules_async = (cache, cb) ->
         cache.get_modules_async CACHE_FN, (err, cached_sources) ->
-            cb err, {cached_sources, cache}
+            cb err, {cached_sources: cached_sources, cache: cache}
 
     _get_build_deps_async = (cb) ->
         _build_deps_fn = path.join (get_build_dir ctx.own_args.build_root), BUILD_DEPS_FN
         fs.readFile _build_deps_fn, (err, build_deps) ->
-            build_deps = JSON.parse build_deps
-            cb err, {build_deps}
+            build_deps = if err then null else JSON.parse build_deps
+            cb undefined, {build_deps}
 
     get_modules_cache get_modules_cache_dir(ctx.own_args.app_root), (err, cache) ->
         (return init_cb err) if err
@@ -138,44 +151,47 @@ init_build_sequence = (ctx, adapters_path, adapters_fn, init_cb) ->
                 _get_build_deps_async
             ]
             (err, results) ->
-                (results = results.reduce (a, b) -> extend a, b) unless err
+                unless err
+                    (results = results.reduce (a, b) -> extend a, b)
+                    results.modules = get_modules results.recipe
+                    (err = "No modules found in recipe") unless results.modules.length
+
                 init_cb err, results
         )
 
 
 run_build_sequence = (ctx, sequence_cb) ->
-    # ----------------------------Initialization--------------------------------------
-    recipe_path = path.resolve ctx.own_args.app_root, (ctx.own_args.formula or RECIPE)
-    [error, recipe] = read_recipe recipe_path
-    return(sequence_cb error) if error
-    adapters = get_adapters() # TODO: Write test
-
-    # read build_deps
-    # read modules cache
-
-    modules = get_modules recipe
-
-    sequence_cb "No modules found in recipe #{recipe_path}" unless modules?
-    # --------------------------------------------------------------------------------
-
-    #----------------------- Process sequence ----------------------------------------
-    get_modules_cache get_modules_cache_dir(ctx.own_args.app_root), (err, cache) ->
+    init_build_sequence ctx, null, null, (err, results) ->
         (return sequence_cb err) if err
+        # TODO: add modules existance check to tests
+        {cache, cached_sources, build_deps, recipe, adapters, modules} = results
 
-        async.map modules, partial(process_module, adapters, ctx), (err, processed_modules) ->
-            async.map (get_bundles recipe), partial(process_bundle, processed_modules, cache, ctx), (err, result) ->
+        _modules_iterator = partial(process_module,
+                                    adapters, cached_sources, build_deps, ctx)
+
+        async.map modules, _modules_iterator, (err, processed_modules) ->
+            (return sequence_cb err) if err
+
+            changed_modules = processed_modules.filter (m) -> m.has_sources()
+
+            unless changed_modules.length
+                ctx.fb.shout "No module was changed, skip build ..."
+                return (sequence_cb CB_SUCCESS)
+
+            _bundles_iterator = partial(process_bundle, processed_modules, cached_sources, ctx)
+
+            async.map (get_bundles recipe), _bundles_iterator, (err, proc_bundles) ->
                 (return sequence_cb err) if err
 
-                compiled_bundle_names = result.filter(([bundle, modules]) -> modules?)\
-                                              .map ([bundle, modules]) -> bundle.name
+                bundles = proc_bundles.filter (b) -> b?
 
-                bundles = result.map ([bundle, modules]) -> bundle
-
-                if compiled_bundle_names.length
-                    ctx.fb.say "Bundles [#{compiled_bundle_names}] was build successfully"
-                    save_results modules, bundles, cache, ctx, sequence_cb
+                if bundles.length
+                    bundle_names = bundles.map (b) -> b.name
+                    ctx.fb.say "Bundles [#{bundle_names}] was build successfully"
+                    save_results changed_modules, bundles, cache, cached_sources, ctx, sequence_cb
                 else
                     ctx.fb.shout "No changes, skip rebuild"
                     sequence_cb err, result
+
 
 module.exports = {run_build_sequence, init_build_sequence}

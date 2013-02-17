@@ -10,7 +10,7 @@ cs = require 'coffee-script'
 
 get_paths = (ctx) ->
     app_root = path.resolve ctx.own_args.app_root
-    module_name = ctx.own_args.mod_name
+    module_name = ctx.module.path
 
     source_fn: path.resolve app_root, module_name
     target_fn: path.resolve app_root, module_name
@@ -56,12 +56,12 @@ module.exports = do ->
                 try
                     sources  = (compiler.compile [target_fn]).map ({path: p, source: source}) ->
                         result_fn = fn_without_ext(path.relative ctx.own_args.app_root, p)
-                        {filename: result_fn, source: source, type: "commonjs"}
+                        {filename: result_fn, source: source}
                 catch e
                     ctx.fb.scream "File compilation error. File - #{target_fn}. Error - #{e}"
                     cb "compilation_error"
 
-                cb CB_SUCCESS, {sources: sources, ns:'', mod_src: target_fn}, "COMPILE_MAYBE_SKIPPED"
+                cb CB_SUCCESS, {sources: sources, ns:''}
             else
                 cb CB_SUCCESS, undefined
 

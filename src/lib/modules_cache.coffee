@@ -1,7 +1,7 @@
 fs = require 'fs'
 path = require 'path'
 mkdirp = require 'mkdirp'
-{get_mtime} = require('./utils')
+{get_mtime, extend} = require('./utils')
 
 exports.get_modules_cache = (cache_path, cache_cb) ->
     get_fn = (module_name) -> path.join cache_path, module_name + '.cache'
@@ -10,15 +10,32 @@ exports.get_modules_cache = (cache_path, cache_cb) ->
         get: (module_name) -> # Deprecated
             JSON.parse fs.readFileSync (get_fn module_name)
 
-        save_modules_async: (modules, filename, cb) ->
-            fs.writeFile(get_fn filename
-                         JSON.stringify (modules.map (m) -> m.serrialize_sources())
-                         cb)
+        save_modules_async: (modules, cached_sources, filename, cb) ->
+            reducer = (a, b) ->
+                new_key = {}
+                new_key[b.name] = b
+                extend a, new_key
+
+            if cached_sources
+                for m in modules
+                    cached_sources[m.name] = m.serrialize_sources()
+                to_save = cached_sources
+            else
+                to_save = ((modules.map (m) -> m.serrialize_sources()).reduce reducer, {})
+
+            fs.writeFile (get_fn filename), JSON.stringify(to_save), cb
 
         get_modules_async: (filename, cb) ->
             fs.readFile (get_fn filename), (err, data) ->
-                return(cb err) if err
-                cb undefined, JSON.parse data
+                data = if err
+                    null
+                else
+                    try
+                        JSON.parse data
+                    catch er
+                        parse_error = "Error while reading cache file #{get_fn filename} #{er}"
+
+                cb parse_error, data
 
         get_cached_file_path: (module_name) -> get_fn module_name
 

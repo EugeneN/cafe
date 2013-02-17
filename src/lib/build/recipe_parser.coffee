@@ -43,7 +43,7 @@ read_if_is_file = (recipe_path) -> # # TOTEST
 
 read_if_is_file.async = (recipe_path, cb) -> # TOTEST
     is_file.async recipe_path, (err, result) ->
-        (return cb [err, undefined]) if err
+        (return cb ["Failed to read recipe file #{err}", undefined]) if err
         if result is true
             read_json_file.async recipe_path, (err, result) ->
                 (return cb [err, undefined]) if err
