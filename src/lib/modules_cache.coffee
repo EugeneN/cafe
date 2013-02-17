@@ -15,6 +15,11 @@ exports.get_modules_cache = (cache_path, cache_cb) ->
                          JSON.stringify (modules.map (m) -> m.serrialize_sources())
                          cb)
 
+        get_modules_async: (filename, cb) ->
+            fs.readFile (get_fn filename), (err, data) ->
+                return(cb err) if err
+                cb undefined, JSON.parse data
+
         get_cached_file_path: (module_name) -> get_fn module_name
 
         get_cache_mtime_async: (module, cb) -> get_mtime.async (get_fn module.name), cb

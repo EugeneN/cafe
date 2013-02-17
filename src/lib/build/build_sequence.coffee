@@ -4,12 +4,12 @@ u = require 'underscore'
 path = require 'path'
 mkdirp = require 'mkdirp'
 {read_recipe, get_modules, get_bundles} = require './recipe_parser'
-{get_adaptors} = require '../adapter'
+{get_adapters} = require '../adapter'
 {extend, partial, get_cafe_dir} = require '../utils'
-{CB_SUCCESS, RECIPE, BUILD_DIR, BUILD_DEPS_FN} = require '../../defs'
+{CB_SUCCESS, RECIPE, BUILD_DIR, BUILD_DEPS_FN, ADAPTERS_PATH, ADAPTER_FN} = require '../../defs'
 {get_modules_cache} = require '../modules_cache'
 {wrap_bundle, wrap_modules, wrap_module} = require 'wrapper-commonjs'
-CACHE_FN = 'modules.cache'
+CACHE_FN = 'modules'
 
 get_modules_cache_dir = (app_root) -> path.resolve path.join get_cafe_dir(app_root), 'modules_cache' #move to defs
 get_build_dir = (build_root) -> path.resolve path.join build_root, BUILD_DIR
@@ -103,31 +103,44 @@ process_module = (adapters, ctx, module, module_cb) ->
 
 
 # ====================================================================================
-init_build_sequence = (ctx, init_cb) ->
+init_build_sequence = (ctx, adapters_path, adapters_fn, init_cb) ->
+    adapters_fn or= ADAPTER_FN
+    adapters_path or= ADAPTERS_PATH
+
     recipe_path = path.resolve ctx.own_args.app_root, (ctx.own_args.formula or RECIPE)
 
     _read_recipe_async = (cb) ->
-        read_recipe.async recipe_path, ([err, recipe]) ->
-        cb err, {recipe}
+        read_recipe.async recipe_path, 0, ([err, recipe]) -> # make recipe to return not monadic value
+            cb err, {recipe}
 
-    _get_adapters_async = (cb) ->
-        get_adapters_async (err, adapters) ->
+    _get_adapters_async = (adapters_path, adapters_fn, cb) ->
+        get_adapters.async adapters_path, adapters_fn, (err, adapters) ->
             cb err, {adapters}
 
-    _get_cache_modules_async = (cb) ->
+    _get_cache_modules_async = (cache, cb) ->
+        cache.get_modules_async CACHE_FN, (err, cached_sources) ->
+            cb err, {cached_sources, cache}
 
     _get_build_deps_async = (cb) ->
+        _build_deps_fn = path.join (get_build_dir ctx.own_args.build_root), BUILD_DEPS_FN
+        fs.readFile _build_deps_fn, (err, build_deps) ->
+            build_deps = JSON.parse build_deps
+            cb err, {build_deps}
 
-    async.parallel(
-        [
-            _read_recipe_async
-            _get_adapters_async
-            _get_cache_modules_async
-            _get_build_deps_async
-        ]
-        init_cb
-    )
+    get_modules_cache get_modules_cache_dir(ctx.own_args.app_root), (err, cache) ->
+        (return init_cb err) if err
 
+        async.parallel(
+            [
+                _read_recipe_async
+                partial(_get_adapters_async, adapters_path, adapters_fn)
+                partial(_get_cache_modules_async, cache)
+                _get_build_deps_async
+            ]
+            (err, results) ->
+                (results = results.reduce (a, b) -> extend a, b) unless err
+                init_cb err, results
+        )
 
 
 run_build_sequence = (ctx, sequence_cb) ->
@@ -135,7 +148,7 @@ run_build_sequence = (ctx, sequence_cb) ->
     recipe_path = path.resolve ctx.own_args.app_root, (ctx.own_args.formula or RECIPE)
     [error, recipe] = read_recipe recipe_path
     return(sequence_cb error) if error
-    adapters = get_adaptors() # TODO: Write test
+    adapters = get_adapters() # TODO: Write test
 
     # read build_deps
     # read modules cache
@@ -165,4 +178,4 @@ run_build_sequence = (ctx, sequence_cb) ->
                     ctx.fb.shout "No changes, skip rebuild"
                     sequence_cb err, result
 
-module.exports = {run_build_sequence}
+module.exports = {run_build_sequence, init_build_sequence}

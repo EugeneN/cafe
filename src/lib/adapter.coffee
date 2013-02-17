@@ -21,7 +21,7 @@ read_adapters_dir = (adapters_path, cb) ->
     fs.readdir adapters_path, (err, files) ->
         cb [err, files]
 
-define_folders = (adapters_path, files, adapter_folders_cb) ->
+define_folders = (adapters_path, files, adapter_folders_cb) -> # TOTEST
     is_dir_iterator = (file, cb) ->
         is_dir.async file, (err, result) ->
             if err
@@ -34,7 +34,7 @@ define_folders = (adapters_path, files, adapter_folders_cb) ->
     async.filter files, is_dir_iterator, (dirs) ->
         adapter_folders_cb [OK, dirs]
 
-define_adapters = (fn_pattern, dirs, cb) ->
+define_adapters = (fn_pattern, dirs, cb) -> # TOTEST
     has_adapter_file_iterator = (dir, cb) ->
         fs.exists (path.join dir, fn_pattern), cb
 
@@ -68,8 +68,6 @@ get_adapters.async = (adapters_dir, fn_pattern, adapters_cb) ->
     (domonad worker_monad, sequence, adapters_dir) ([err, results]) ->
         adapters_cb err, results
 
-module.exports = {
-get_adapters
-}
+module.exports = {get_adapters}
 
 
