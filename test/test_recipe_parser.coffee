@@ -26,8 +26,8 @@ exports.test_recipe_read_basic_validation = (test) ->
         test.ok error is undefined, "Valid recipe returned an error #{error}"
         test.ok recipe?, "Recipe object was not returned"
     read_recipe.async 'recipe23232.json', 0, ([error, recipe]) ->
-        test.ok error is undefined, "Valid recipe returned an error #{error}"
-        test.ok recipe?, "Recipe object was not returned"
+        test.ok error?, "Invalid recipe returned success #{error}"
+        test.ok !recipe?, "Invalid recipe returned recipe object"
     test.done()
 
 

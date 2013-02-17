@@ -4,7 +4,7 @@ u = require 'underscore'
 path = require 'path'
 mkdirp = require 'mkdirp'
 {read_recipe, get_modules, get_bundles} = require './recipe_parser'
-get_adaptors = require '../adaptor'
+{get_adaptors} = require '../adapter'
 {extend, partial, get_cafe_dir} = require '../utils'
 {CB_SUCCESS, RECIPE, BUILD_DIR, BUILD_DEPS_FN} = require '../../defs'
 {get_modules_cache} = require '../modules_cache'
@@ -104,10 +104,11 @@ process_module = (adapters, ctx, module, module_cb) ->
 
 # ====================================================================================
 init_build_sequence = (ctx, init_cb) ->
+    recipe_path = path.resolve ctx.own_args.app_root, (ctx.own_args.formula or RECIPE)
+
     _read_recipe_async = (cb) ->
-        recipe_path = path.resolve ctx.own_args.app_root, (ctx.own_args.formula or RECIPE)
-        [error, recipe] = read_recipe recipe_path
-        cb error, {recipe}
+        read_recipe.async recipe_path, ([err, recipe]) ->
+        cb err, {recipe}
 
     _get_adapters_async = (cb) ->
         get_adapters_async (err, adapters) ->

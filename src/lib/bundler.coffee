@@ -7,7 +7,7 @@ mkdirp = require 'mkdirp'
 {get_modules_cache} = require './modules_cache'
 
 
-get_adaptors = require './adaptor'
+{get_adaptors} = require './adapter'
 {read_json_file, extend, exists, is_array} = require '../lib/utils'
 {flatten, is_dir, is_file, extend, newest, get_mtime, fn_without_ext, or_} = require('./utils')
 
