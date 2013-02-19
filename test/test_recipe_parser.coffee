@@ -42,17 +42,11 @@ exports.test_recipe_inheritance = (test) ->
     test.done()
 
 
-test_recipe_modules_read = (test) ->
+exports.test_recipe_modules_read = (test) ->
     # TODO add test when recipe format is invalid.
     [error, recipe] = read_recipe recipe1_path
     modules = get_raw_modules recipe
-    test.ok modules.length is 8, "Expected 8 modules found #{modules.length}"
-    [error, recipe] = read_recipe recipe_modules_parse_path
-    raw_modules = get_raw_modules recipe
-    parsed_modules = construct_modules raw_modules
-    result_modules = remove_modules_duplicates parsed_modules
-    test.ok(result_modules.length is 6,
-        "Expected 6 unique module - recieved #{result_modules.length}")
+    test.ok modules.length is 3, "Expected 3 modules found #{modules.length}"
     test.done()
 
 
@@ -77,7 +71,6 @@ exports.test_recipe_bundles_parse = (test) ->
 
 exports.test_recipe_yaml_reader = (test) ->
     read_recipe.async recipe_yaml_path, 0, ([error, recipe]) ->
-        console.log recipe
         test.ok recipe.abstract, "Recipe object was not parsed"
         test.ok !(error?), "Some error occured while reading valid yaml file #{error}"
         test.done()

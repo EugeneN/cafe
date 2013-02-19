@@ -59,22 +59,27 @@ modules_equals = (m1, m2) -> m1.name is m2.name
 
 
 construct_module = (meta) ->
+    console.log '>>>>', meta
     if (typeof meta) is "string"
-        get_module(alias=meta, path=meta)
+        # TODO: check for file extension
+        get_module(name=meta, path=meta)
 
-    else if Array.isArray(meta)
-        [path, type, location, deps, location, name] = meta
-        throw "at least name or path must be set" unless (name? or path?)
-        name or=path
-        path or=name
-        get_module(name=name, path=path, deps=deps, type=type, location=location)
+    else if meta instanceof Object
+        keys = Object.keys meta
+        throw "Module object must have only one key(it's name)" if keys.length != 1
+        module_name = keys[0]
+        _module_meta = meta[module_name]
+        console.log module_name, _module_meta
 
-    else
-        {name, path, deps, type, location} = meta
-        throw "at least name or path must be set" unless (name? or path?)
-        name or=path
-        path or=name
-        get_module(name=name, path=path, deps=deps, type=type, location=location)
+        if Array.isArray _module_meta
+            [path, type, location, deps, location] = meta[module_name]
+            path or=name
+            get_module(name=module_name, path=path, deps=deps, type=type, location=location)
+
+        else if _module_meta instanceof Object
+            {path, deps, type, location} = _module_meta
+            path or=name
+            get_module(name=module_name, path=path, deps=deps, type=type, location=location)
 
 
 module.exports = {construct_module, get_module, modules_equals}

@@ -1,0 +1,33 @@
+[
+    {
+        "name": "default/default",
+        "modules": [
+            {
+                "name": "test1",
+                "path": "test1",
+                "type": "commonjs",
+                "location": "fs",
+                "deps": []
+            },
+            {
+                "name": "test2",
+                "path": "test2",
+                "type": "commonjs",
+                "location": "fs",
+                "deps": []
+            }
+        ]
+    },
+    {
+        "name": "common/default",
+        "modules": [
+            {
+                "name": "test1",
+                "path": "test1",
+                "type": "commonjs",
+                "location": "fs",
+                "deps": []
+            }
+        ]
+    }
+]

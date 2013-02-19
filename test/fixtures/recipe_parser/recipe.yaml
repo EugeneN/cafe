@@ -1,0 +1,24 @@
+abstract: {api_version: 5}
+
+modules:
+    - module1
+    - module2: [cs/module2, plainjs]
+    - module3:
+        path: cs/module3.coffee
+        type: commonjs
+
+bundles:
+    bundle1:
+        modules:
+            - module1
+            - module3
+
+    bundle2:
+        modules:
+            - module1
+            - module2
+
+    plain_bundle:
+        modules:
+            - module2
+            - module3

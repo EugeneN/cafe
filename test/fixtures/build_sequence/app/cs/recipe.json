@@ -1,0 +1,28 @@
+{
+    "abstract": {
+        "api_version": 4
+    },
+
+    "deps": {
+    },
+
+    "realms": {
+        "default": [
+            {
+                "name": "default",
+                "modules": [
+                "test1",
+                "test2"
+                ]
+            }
+        ],
+        "common": [
+            {
+                "name": "default",
+                "modules": [
+                "test1"
+                ]
+            }
+        ]
+    }
+}

@@ -10,7 +10,7 @@ exports.test_modules_creation_from_string = (test) ->
 
 
 exports.test_module_creation_from_object = (test) ->
-    module = construct_module {path:'module1', type:'plainjs'}
+    module = construct_module {module1: {path:'module1', type:'plainjs'}}
     test.ok module.name is 'module1'
     test.ok module.path is 'module1'
     test.ok module.type is 'plainjs'
@@ -19,7 +19,7 @@ exports.test_module_creation_from_object = (test) ->
 
 
 exports.test_module_creation_from_list = (test) ->
-    module = construct_module ['module1', 'plainjs']
+    module = construct_module {module1: ['module1', 'plainjs']}
     test.ok module.name is 'module1'
     test.ok module.path is 'module1'
     test.ok module.type is 'plainjs'

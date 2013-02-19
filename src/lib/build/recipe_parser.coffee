@@ -12,7 +12,7 @@ read_yaml_file} = require '../../lib/utils'
     cont_t, cont_m,
     maybe_t, maybe_m,
     logger_t, logger_m,
-    domonad, is_null,
+    domonad, is_null
     lift_sync, lift_async
 } = require 'libmonad'
 
@@ -126,11 +126,7 @@ read_recipe.async = (recipe_path, level=0, cb) ->
 #-----------------------------------
 get_raw_modules = (recipe) ->
     """ Parse all modules from recipe."""
-    modules = flatten((v for k,v of recipe.realms)).map((b) -> b.modules).reduce((a, b) -> a.concat b)
-    if recipe.modules?
-        (modules.concat recipe.modules)
-    else
-        modules
+    recipe.modules
 
 
 construct_modules = (modules) ->
@@ -160,7 +156,7 @@ get_modules = (recipe) ->
     seq = [
         get_raw_modules
         construct_modules
-        remove_modules_duplicates
+        # remove_modules_duplicates
         partial(fill_modules_deps, recipe)
     ]
 

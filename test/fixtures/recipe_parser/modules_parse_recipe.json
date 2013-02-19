@@ -4,14 +4,16 @@
     },
 
     "deps": {
-        "module1": [
-            "module5"
+        "module2": [
+            "module6"
         ]
     },
 
     "modules": [
+        {"module1": {"deps":["module5"]}},
        "module5",
-        {"path": "module6", "type": "plainjs"}
+        {"module6": {"path": "module6", "type": "plainjs"}},
+        "module2"
     ],
 
     "realms": {

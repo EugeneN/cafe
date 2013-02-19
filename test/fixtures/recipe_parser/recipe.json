@@ -1,10 +1,13 @@
 {
     "abstract": {
-        "api_version": 4
+        "api_version": 5
     },
 
-    "deps": {
-    },
+    "modules":[
+        "module1",
+        {"module2":["module2", "plainjs"]},
+        "module3"
+    ],
 
     "realms": {
         "realm1": [
