@@ -15,6 +15,7 @@ recipe2_path = path.join fixtures_path, 'recipe2.json'
 recipe3_path = path.join fixtures_path, 'recipe3.json'
 recipe_modules_parse_path = path.join fixtures_path, 'modules_parse_recipe.json'
 recipe_bundles_parse_path = path.join fixtures_path, 'bundles_parse_recipe.json'
+recipe_yaml_path = path.join fixtures_path, "recipe.yaml"
 
 
 exports.test_recipe_read_basic_validation = (test) ->
@@ -72,6 +73,15 @@ exports.test_recipe_bundles_parse = (test) ->
         test.ok((b in bundles_names), "#{b} must be in result #{bundles_names}")
 
     test.done()
+
+
+exports.test_recipe_yaml_reader = (test) ->
+    read_recipe.async recipe_yaml_path, 0, ([error, recipe]) ->
+        console.log recipe
+        test.ok recipe.abstract, "Recipe object was not parsed"
+        test.ok !(error?), "Some error occured while reading valid yaml file #{error}"
+        test.done()
+
 
 
 

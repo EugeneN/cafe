@@ -6,8 +6,6 @@ head = [
     Cafe is the build system for client side applications (and more).
     It is written in Coffescript in functional and asyncronous way.
 
-    This is a CLI UI for Cafe v.1
-
     Parameters:
         -- debug     - include stack traces and other debug info
                        into output

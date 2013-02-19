@@ -1,6 +1,7 @@
 
 fs = require 'fs'
 path = require 'path'
+yaml = require 'js-yaml'
 _ = require 'underscore'
 {spawn} = require 'child_process'
 {say, shout, scream, whisper} = (require './logger') 'Utils>'
@@ -174,15 +175,21 @@ read_json_file = (filename) ->
 read_json_file.async = (filename, cb) ->
     fs.readFile filename, FILE_ENCODING, (err, res) ->
         if err
-            scream "Error reading file #{filename}"
             cb err
         else
             try
-                cb CB_SUCCESS, (Object.freeze (JSON.parse res))
+                 json_file = (Object.freeze (JSON.parse res))
             catch e
-                console.log "Error parsing json file #{filename}: #{e}"
-                cb e
+                err = e
+            finally
+                cb err, json_file
 
+read_yaml_file = () -> throw "Method read_yaml_file is not implemented"
+
+read_yaml_file.async = (filename, cb) ->
+    fs.readFile filename, FILE_ENCODING, (err, res) ->
+        yaml.loadAll res, (data) ->
+                cb null, data
 
 trim = (s) -> s.replace /^\s+|\s+$/g, ''
 
@@ -382,6 +389,7 @@ module.exports = {
     filter_dict
     is_debug_context
     read_json_file
+    read_yaml_file
     trim
     exists
     is_dir
