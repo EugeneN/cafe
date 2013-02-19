@@ -1,7 +1,10 @@
 path = require 'path'
 u = require 'underscore'
 
-{read_json_file, flatten, extend, is_file, toArray, partial} = require '../../lib/utils'
+{read_json_file,flatten, extend,
+is_file, toArray, partial,
+read_yaml_file} = require '../../lib/utils'
+
 {construct_module, modules_equals} = require './modules'
 {construct_realm_bundle} = require './bundles'
 
@@ -41,12 +44,27 @@ read_if_is_file = (recipe_path) -> # # TOTEST
         ["Recipe file #{recipe_path} is not found", undefined]
 
 
-read_if_is_file.async = (recipe_path, cb) -> # TOTEST
+read_if_is_file.async = (recipe_path, cb) ->
     is_file.async recipe_path, (err, result) ->
         (return cb ["Failed to read recipe file #{err}", undefined]) if err
+
         if result is true
-            read_json_file.async recipe_path, (err, result) ->
-                (return cb [err, undefined]) if err
+            extension = path.extname recipe_path
+
+            reader_dict =
+                ".json": read_json_file
+                ".yaml": read_yaml_file
+
+            reader = reader_dict[extension]
+
+            unless reader?
+                cb ["Unknown recipe format file #{recipe_path}", null] # TOTEST
+
+            reader.async recipe_path, (err, result) ->
+                if err
+                    err = "Failded to read recipe file #{recipe_path} #{err}"
+                    (return cb [err, undefined])
+
                 cb [OK, result]
         else
             cb ["Recipe file #{recipe_path} is not found", undefined]

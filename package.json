@@ -27,6 +27,7 @@
     "chokidar": "*",
     "growl": "*",
     "wrapper-commonjs":"*",
-    "libmonad": "*"
+    "libmonad": "*",
+    "js-yaml": "*"
   }
 }
