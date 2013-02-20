@@ -4,6 +4,7 @@ u = require 'underscore'
 {read_json_file,flatten, extend,
 is_file, toArray, partial,
 read_yaml_file} = require '../../lib/utils'
+{error_m, OK}  = require '../../lib/monads'
 
 {construct_module, modules_equals} = require './modules'
 {construct_realm_bundle} = require './bundles'
@@ -18,15 +19,6 @@ read_yaml_file} = require '../../lib/utils'
 
 RECIPE = 'recipe.json'
 
-OK = undefined
-error_m = -> # TODO: move this to libmonad
-    is_error = ([err, val]) -> err isnt OK
-
-    result: (v) -> [OK, v]
-
-    bind: (mv, f) ->
-        if (is_error mv) then mv else (f mv[1])
-
 #-----------------------------------
 # Recipe parsing sequence functions
 #-----------------------------------
@@ -36,7 +28,7 @@ chain_check = (level, recipe_path) ->
     else
         [OK, recipe_path]
 
-read_if_is_file = (recipe_path) -> # # TOTEST
+read_if_is_file = (recipe_path) -> # TOTEST, TODO: separate on 2 funcs (is_file, read)
     if is_file recipe_path
         # TODO: hadle recipe validation error
         [OK, (read_json_file recipe_path)]
@@ -126,19 +118,24 @@ read_recipe.async = (recipe_path, level=0, cb) ->
 #-----------------------------------
 get_raw_modules = (recipe) ->
     """ Parse all modules from recipe."""
-    recipe.modules
+    if recipe.modules?
+        [null, recipe.modules]
+    else
+        ["Recipe has no modules section", null]
 
 
 construct_modules = (modules) ->
-    modules.map (m) -> construct_module m
+    err = null
 
+    modules = modules.map (m) ->
+        [err, parsed, module] = construct_module m
 
-remove_modules_duplicates = (modules) ->
-    reduce_func =(a, b) ->
-        a.push b unless (u.any a, (m) -> modules_equals m, b)
-        a
+        unless parsed is true
+            err or= "Failed to parse module definition #{module}"
+        else
+            module
 
-    modules.reduce reduce_func, []
+    [err, modules]
 
 
 fill_modules_deps = (recipe, modules) ->
@@ -149,19 +146,17 @@ fill_modules_deps = (recipe, modules) ->
                     m.deps = toArray m.deps
                     m.deps.push p for p in prop_val
                 m
-    modules
+    [null, modules]
 
 
 get_modules = (recipe) ->
     seq = [
         get_raw_modules
         construct_modules
-        # remove_modules_duplicates
         partial(fill_modules_deps, recipe)
     ]
 
-    work_monad = maybe_m {is_error: is_null}
-    (domonad work_monad, seq, recipe)
+    (domonad error_m(), seq, recipe)
 
 
 #-----------------------------------
@@ -175,7 +170,6 @@ get_bundles = (recipe) ->
 module.exports = {
     get_raw_modules
     read_recipe
-    remove_modules_duplicates
     construct_modules
     fill_modules_deps
     get_modules

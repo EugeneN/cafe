@@ -1,5 +1,7 @@
 {or_} = require '../utils'
 u = require 'underscore'
+{skip_or_error_m, OK} = require '../monads'
+{domonad} = require 'libmonad'
 
 get_module = (
     path=""
@@ -58,28 +60,82 @@ get_module = (
 modules_equals = (m1, m2) -> m1.name is m2.name
 
 
+_m_check_format = (meta) ->
+    """
+    Checks input metadata to be an object with 1 key (module name)
+    """
+    unless meta instanceof Object
+        return ["Wrong module format #{meta}", false, null]
+
+    keys = Object.keys meta
+
+    unless keys.length
+        return ["Wrong module definition #{meta}", false, null]
+
+    if keys.length > 1
+        return ["Wrong module definition #{meta}", false, null]
+
+    [OK, false, meta]
+
+
+_m_parse_from_string = (meta) ->
+    """
+    Parses module from string value.
+    """
+    module_name = (Object.keys meta)[0]
+
+    if (typeof meta[module_name]) is "string"
+        [OK, true, get_module(name=module_name, path=meta[module_name])]
+    else
+        [OK, false, meta]
+
+
+_m_parse_from_list = (meta) ->
+    """
+    Parses from list arguments.
+    module_name: [path, type, deps]
+    """
+
+    module_name = (Object.keys meta)[0]
+
+    if Array.isArray meta[module_name]
+        [path, type, deps] = meta[module_name]
+        unless path?
+            ["Missing path in module definition. Module #{module_name}", false, null]
+        else
+            [OK
+             true
+             get_module(name=module_name, path=path, deps=deps, type=type)]
+    else
+
+        [OK, false, meta]
+
+
+_m_parse_from_dict = (meta) ->
+    module_name = (Object.keys meta)[0]
+    module = meta[module_name]
+
+    unless module?
+        return ["Module has wrong format #{module}", false, null]
+
+    {path, deps, type} = module
+    if path?
+        [OK
+         true
+         get_module(name=module_name, path=path, deps=deps, type=type)]
+    else
+        ["Path is not set for module #{module_name}", false, meta]
+
+
 construct_module = (meta) ->
-    console.log '>>>>', meta
-    if (typeof meta) is "string"
-        # TODO: check for file extension
-        get_module(name=meta, path=meta)
+    seq = [
+        _m_check_format
+        _m_parse_from_string
+        _m_parse_from_list
+        _m_parse_from_dict
+    ]
 
-    else if meta instanceof Object
-        keys = Object.keys meta
-        throw "Module object must have only one key(it's name)" if keys.length != 1
-        module_name = keys[0]
-        _module_meta = meta[module_name]
-        console.log module_name, _module_meta
-
-        if Array.isArray _module_meta
-            [path, type, location, deps, location] = meta[module_name]
-            path or=name
-            get_module(name=module_name, path=path, deps=deps, type=type, location=location)
-
-        else if _module_meta instanceof Object
-            {path, deps, type, location} = _module_meta
-            path or=name
-            get_module(name=module_name, path=path, deps=deps, type=type, location=location)
+    domonad skip_or_error_m(), seq, meta
 
 
 module.exports = {construct_module, get_module, modules_equals}

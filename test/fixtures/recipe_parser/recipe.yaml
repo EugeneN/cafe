@@ -1,7 +1,7 @@
 abstract: {api_version: 5}
 
 modules:
-    - module1
+    - module1: module1.coffee
     - module2: [cs/module2, plainjs]
     - module3:
         path: cs/module3.coffee

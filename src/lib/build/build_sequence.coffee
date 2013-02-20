@@ -111,7 +111,7 @@ process_module = (adapters, cached_sources, build_deps, ctx, module, module_cb) 
 
 
 # ====================================================================================
-init_build_sequence = (ctx, adapters_path, adapters_fn, init_cb) ->
+init_build_sequence = (ctx, adapters_path, adapters_fn, init_cb) -> # TOTEST
     """
     returns:
         {cache, cached_sources, build_deps, recipe, adapters} in init_cb.
@@ -150,8 +150,8 @@ init_build_sequence = (ctx, adapters_path, adapters_fn, init_cb) ->
             (err, results) ->
                 unless err
                     (results = results.reduce (a, b) -> extend a, b)
-                    results.modules = get_modules results.recipe
-                    (err = "No modules found in recipe") unless results.modules.length
+                    [err, modules] = get_modules results.recipe
+                    results.modules = modules
 
                 init_cb err, results
         )

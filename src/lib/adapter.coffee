@@ -5,17 +5,7 @@ fs = require 'fs'
 {ADAPTERS_PATH, ADAPTER_FN, JS_EXT} = require '../defs'
 fn_pattern = "#{ADAPTER_FN}#{JS_EXT}"
 {cont_t, domonad, lift_sync, lift_async, logger_t} = require 'libmonad'
-
-# -------------------- TODO: REMOVE TO LIBMONAD ----
-OK = undefined
-error_m = -> # TODO: move this to libmonad
-    is_error = ([err, val]) -> (err isnt OK) and (err isnt null)
-
-    result: (v) -> [OK, v]
-
-    bind: (mv, f) ->
-        if (is_error mv) then mv else (f mv[1])
-# --------------------------------------------------
+{error_m, OK} = require './monads'
 
 read_adapters_dir = (adapters_path, cb) ->
     fs.readdir adapters_path, (err, files) ->

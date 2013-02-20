@@ -1,7 +1,9 @@
 {construct_module} = require '../src/lib/build/modules'
 
 exports.test_modules_creation_from_string = (test) ->
-    module = construct_module 'module1'
+    [err, parsed, module] = construct_module {module1:'module1'}
+    test.ok parsed is true, "Module parsed indicator must be true"
+    test.ok !err?, "Error occured #{err}"
     test.ok module.name is 'module1'
     test.ok module.path is 'module1'
     test.ok module.type is 'commonjs'
@@ -10,7 +12,9 @@ exports.test_modules_creation_from_string = (test) ->
 
 
 exports.test_module_creation_from_object = (test) ->
-    module = construct_module {module1: {path:'module1', type:'plainjs'}}
+    [err, parsed, module] = construct_module {module1: {path:'module1', type:'plainjs'}}
+    test.ok parsed is true, "Module parsed indicator must be true"
+    test.ok !err?, "Error occured #{err}"
     test.ok module.name is 'module1'
     test.ok module.path is 'module1'
     test.ok module.type is 'plainjs'
@@ -19,7 +23,9 @@ exports.test_module_creation_from_object = (test) ->
 
 
 exports.test_module_creation_from_list = (test) ->
-    module = construct_module {module1: ['module1', 'plainjs']}
+    [err, parsed, module] = construct_module {module1: ['module1', 'plainjs']}
+    test.ok parsed is true, "Module parsed indicator must be true"
+    test.ok !err?, "Error occured #{err}"
     test.ok module.name is 'module1'
     test.ok module.path is 'module1'
     test.ok module.type is 'plainjs'

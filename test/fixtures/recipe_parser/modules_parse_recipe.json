@@ -3,17 +3,11 @@
         "api_version": 4
     },
 
-    "deps": {
-        "module2": [
-            "module6"
-        ]
-    },
-
     "modules": [
-        {"module1": {"deps":["module5"]}},
-       "module5",
+        {"module1": {"path":"module1","deps":["module5"]}},
+        {"module5": "module5"},
         {"module6": {"path": "module6", "type": "plainjs"}},
-        "module2"
+        {"module2": {"path":"module6", "deps":["module6"]}}
     ],
 
     "realms": {
@@ -22,19 +16,14 @@
                 "name": "bundle1",
                 "modules": [
                     "module1",
-                    "module2",
-                    ["module3", "plainjs"]
+                    "module2"
                 ]
             },
             {
                 "name": "bundle2",
                 "modules": [
                     "module1",
-                    "module2",
-                    {
-                        "name": "module4",
-                        "type": "plainjs"
-                    }
+                    "module2"
                 ]
             }
         ]
