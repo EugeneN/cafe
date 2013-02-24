@@ -3,13 +3,10 @@ u = require 'underscore'
 {skip_or_error_m, OK} = require '../monads'
 {domonad} = require 'libmonad'
 
-get_module = (
-    path=""
-    name=""
-    deps=[]
-    type="commonjs"
-    location="fs"
-    ) ->
+get_module = ({path, name, deps, type, location}) ->
+
+    location or= "fs"
+    type or= "commonjs"
 
     _sources = ""
     _mtime = 0
@@ -82,10 +79,11 @@ _m_parse_from_string = (meta) ->
     """
     Parses module from string value.
     """
-    module_name = (Object.keys meta)[0]
+    name = (Object.keys meta)[0]
+    path = meta[name]
 
-    if (typeof meta[module_name]) is "string"
-        [OK, true, get_module(name=module_name, path=meta[module_name])]
+    if (typeof meta[name]) is "string"
+        [OK, true, get_module({name, path})]
     else
         [OK, false, meta]
 
@@ -96,24 +94,24 @@ _m_parse_from_list = (meta) ->
     module_name: [path, type, deps]
     """
 
-    module_name = (Object.keys meta)[0]
+    name = (Object.keys meta)[0]
 
-    if Array.isArray meta[module_name]
-        [path, type, deps] = meta[module_name]
+    if Array.isArray meta[name]
+        [path, type, deps] = meta[name]
         unless path?
-            ["Missing path in module definition. Module #{module_name}", false, null]
+            ["Missing path in module definition. Module #{name}", false, null]
         else
             [OK
              true
-             get_module(name=module_name, path=path, deps=deps, type=type)]
+             get_module({name, path, deps, type})]
     else
 
         [OK, false, meta]
 
 
 _m_parse_from_dict = (meta) ->
-    module_name = (Object.keys meta)[0]
-    module = meta[module_name]
+    name = (Object.keys meta)[0]
+    module = meta[name]
 
     unless module?
         return ["Module has wrong format #{module}", false, null]
@@ -122,9 +120,9 @@ _m_parse_from_dict = (meta) ->
     if path?
         [OK
          true
-         get_module(name=module_name, path=path, deps=deps, type=type)]
+         get_module({name, path, deps, type})]
     else
-        ["Path is not set for module #{module_name}", false, meta]
+        ["Path is not set for module #{module}", false, meta]
 
 
 construct_module = (meta) ->

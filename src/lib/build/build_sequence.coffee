@@ -88,6 +88,7 @@ process_module = (adapters, cached_sources, build_deps, ctx, module, module_cb) 
     _adapter_match = (adapter, cb) ->
         adapter.match.async _adapter_ctx, (err, match) -> cb match
 
+    # TODO: make path exists check.
     async.detect adapters, _adapter_match, (adapter) ->
         module_cb "No adapter found for #{module.name} module" unless adapter?
         adapter = adapter.make_adaptor _adapter_ctx # TODO: ugly....
@@ -135,7 +136,7 @@ init_build_sequence = (ctx, adapters_path, adapters_fn, init_cb) -> # TOTEST
         _build_deps_fn = path.join (get_build_dir ctx.own_args.build_root), BUILD_DEPS_FN
         fs.readFile _build_deps_fn, (err, build_deps) ->
             build_deps = if err then null else JSON.parse build_deps
-            cb undefined, {build_deps}
+            cb err, {build_deps}
 
     get_modules_cache get_modules_cache_dir(ctx.own_args.app_root), (err, cache) ->
         (return init_cb err) if err
@@ -188,7 +189,7 @@ run_build_sequence = (ctx, sequence_cb) ->
                     save_results changed_modules, bundles, cache, cached_sources, ctx, sequence_cb
                 else
                     ctx.fb.shout "No changes, skip rebuild"
-                    sequence_cb err, result
+                    sequence_cb err, proc_bundles
 
 
 module.exports = {run_build_sequence, init_build_sequence}
