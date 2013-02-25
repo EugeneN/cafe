@@ -144,7 +144,7 @@ process_module = (adapters, cached_sources, build_deps, ctx, module, module_cb) 
                         else
                             cb ["Module compile error. Module - #{module.name}", false, undefined]
                 else
-                    cb [OK, true, module]
+                    cb [OK, true, undefined]
             else
                 harvest_module adapter, module, ctx, message, (err, module) ->
                     unless err?
@@ -219,15 +219,53 @@ init_build_sequence = (ctx, adapters_path, adapters_fn, init_cb) -> # TOTEST
 
 
 run_build_sequence = (ctx, sequence_cb) ->
-    init_build_sequence ctx, null, null, (err, results) ->
+
+    _m_init_build_sequence = (ctx, init_cb) ->
+        init_build_sequence ctx, null, null, (err, init_results) ->
+            init_cb [err, false, init_results]
+
+
+    _m_modules_processor = (ctx
+                            init_results
+                            module_proc_cb) ->
+
+        {cached_sources, recipe, adapters, modules} = init_results
+
+        _modules_iterator = partial(process_module,
+                                    adapters, cached_sources, build_deps, ctx)
+
+        async.map modules, _modules_iterator, (err, changed_modules) ->
+            unless changed_modules.length
+                module_proc_cb [OK, true, undefined]
+            else
+                module_proc_cb [err, false, [init_results, changed_modules]]
+
+
+    _m_bundles_processor = (ctx
+                            [init_results, changed_modules]
+                            bundles_proc_cb) ->
+
+        {cached_sources, build_deps, recipe, adapters, modules} = results
+
+        _bundles_iterator = partial(process_bundle, processed_modules, cached_sources, ctx)
+
+        async.map (get_bundles recipe), _bundles_iterator, (err, proc_bundles) ->
+            unless bundles.length
+                ctx.fb.shout "No changes found"
+                bundles_proc_cb [OK, true, undefined]
+            else
+                bundles_proc_cb [err, false, [init_results, changed_sources, proc_bundles]]
+
+    _m_save_results = (ctx
+                    [init_results, changed_sources, proc_bundles]) ->
+    ###init_build_sequence ctx, null, null, (err, results) ->
         (return sequence_cb err) if err
-        # TODO: add modules existance check to tests
         {cache, cached_sources, build_deps, recipe, adapters, modules} = results
 
         _modules_iterator = partial(process_module,
                                     adapters, cached_sources, build_deps, ctx)
 
-        async.map modules, _modules_iterator, (err, processed_modules) ->
+        async.map modules, _modules_iterator, (err, changed_modules) ->
             (return sequence_cb err) if err
 
             changed_modules = processed_modules.filter (m) -> m.has_sources()
@@ -236,7 +274,7 @@ run_build_sequence = (ctx, sequence_cb) ->
                 ctx.fb.shout "No module was changed, skip build ..."
                 return (sequence_cb CB_SUCCESS)
 
-            sequence_cb CB_SUCCESS
+            sequence_cb CB_SUCCESS###
 
             ###_bundles_iterator = partial(process_bundle, processed_modules, cached_sources, ctx)
 
