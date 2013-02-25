@@ -5,10 +5,13 @@ path = require 'path'
 mkdirp = require 'mkdirp'
 {read_recipe, get_modules, get_bundles} = require './recipe_parser'
 {get_adapters} = require '../adapter'
-{extend, partial, get_cafe_dir} = require '../utils'
+{extend, partial, get_cafe_dir, exists} = require '../utils'
 {CB_SUCCESS, RECIPE, BUILD_DIR, BUILD_DEPS_FN, ADAPTERS_PATH, ADAPTER_FN} = require '../../defs'
 {get_modules_cache} = require '../modules_cache'
 {wrap_bundle, wrap_modules, wrap_module} = require 'wrapper-commonjs'
+{skip_or_error_m, OK} = require '../monads'
+{domonad, cont_t, lift_async, lift_sync} = require 'libmonad'
+
 CACHE_FN = 'modules'
 
 
@@ -82,33 +85,90 @@ harvest_module = (adapter, module, ctx, message, cb) ->
         cb err, module
 
 
-process_module = (adapters, cached_sources, build_deps, ctx, module, module_cb) ->
-    _adapter_ctx = extend ctx, {module}
+process_module = (adapters, cached_sources, build_deps, ctx, module, module_cb) -> # TOTEST
 
-    _adapter_match = (adapter, cb) ->
-        adapter.match.async _adapter_ctx, (err, match) -> cb match
-
-    # TODO: make path exists check.
-    async.detect adapters, _adapter_match, (adapter) ->
-        module_cb "No adapter found for #{module.name} module" unless adapter?
-        adapter = adapter.make_adaptor _adapter_ctx # TODO: ugly....
-
-        unless ctx.own_args.f
-            cached_module = cached_sources[module.name] if cached_sources?
-            if cached_module?
-                cached_module.mtime or=0
-                adapter.last_modified (err, adapter_mtime) -> # if need to recompile module
-                    if module.need_to_recompile cached_module, adapter_mtime
-                        message = "Module #{module.name} was changed, harvesting ..."
-                        harvest_module adapter, module, ctx, message, module_cb
-                    else
-                        module_cb CB_SUCCESS, module
+    _m_module_path_exists = (ctx, module, cb) ->
+        module_path = path.join ctx.own_args.app_root, module.path
+        exists.async module_path, (err, exists) ->
+            if exists is true
+                cb [OK, false, module]
             else
-                message = "Harvesting module #{module.name} ..."
-                harvest_module adapter, module, ctx, message, module_cb
-        else
+                cb ["Module path #{module_path} for module #{module.name} was not found", false, undefined]
+
+    _m_get_adapter = (adapters, module, cb) ->
+        _adapter_ctx = extend ctx, {module}
+
+        _adapter_match = (adapter, _cb) ->
+            adapter.match.async _adapter_ctx, (err, match) -> _cb match
+
+        async.detect adapters, _adapter_match, (adapter) ->
+            unless adapter?
+                cb ["No adapter found for #{module.name}", false, undefined]
+            else
+                cb [OK, false, [module, adapter]]
+
+    _m_build_if_force = (ctx, [module, adapter], cb) ->
+        if ctx.own_args.f?
             message = "Forced harvesting #{module.name} ..."
-            harvest_module adapter, module, ctx, message, module_cb
+
+            harvest_module adapter, module, ctx, message, (err, module) ->
+                unless err?
+                    cb [OK, true, module]
+                else
+                    cb ["Module compile error. Module - #{module.name}", false, undefined]
+        else
+            cb [OK, false, [module, adapter]]
+
+    _m_build_if_changed = (ctx, cached_sources, [module, adapter], build_cb) ->
+        _adapter_ctx = extend ctx, {module}
+
+        _m_get_adapter = (adapter_ctx, adapter) ->
+            [OK, false, (adapter.make_adaptor adapter_ctx)]
+
+        _m_get_adapter_last_modified = (adapter, cb) ->
+            adapter.last_modified (err, mtime) ->
+                if err?
+                    return (cb ["Failed to retrieve module mtime. #{module.name}", false, undefined])
+                else
+                    cb [OK, false, [adapter, mtime]]
+
+        _m_harvest = (module, ctx, cached_sources, [adapter, mtime], cb) ->
+            cached_module = cached_sources[module.name]
+
+            if cached_module?
+                if module.need_to_recompile cached_module, mtime
+                    message = "Module #{module.name} was modified, harvesting ..."
+                    harvest_module adapter, module, ctx, message, (err, module) ->
+                        unless err?
+                            cb [OK, true, module]
+                        else
+                            cb ["Module compile error. Module - #{module.name}", false, undefined]
+                else
+                    cb [OK, true, module]
+            else
+                harvest_module adapter, module, ctx, message, (err, module) ->
+                    unless err?
+                        cb [OK, true, module]
+                    else
+                        cb ["Module compile error. Module - #{module.name}", false, undefined]
+
+        seq = [
+            lift_sync(2, partial(_m_get_adapter, _adapter_ctx))
+            lift_async(2, _m_get_adapter_last_modified)
+            lift_async(5, partial(_m_harvest, module, ctx, cached_sources))
+        ]
+
+        (domonad (cont_t skip_or_error_m()), seq, adapter) build_cb
+
+    seq = [
+        lift_async(3, partial(_m_module_path_exists, ctx))
+        lift_async(3, partial(_m_get_adapter, adapters))
+        lift_async(3, partial(_m_build_if_force, ctx))
+        lift_async(4, partial(_m_build_if_changed, ctx, cached_sources))
+    ]
+
+    (domonad (cont_t skip_or_error_m()), seq, module) ([err, skiped, module]) ->
+        module_cb err, module
 
 
 # ====================================================================================
@@ -176,7 +236,9 @@ run_build_sequence = (ctx, sequence_cb) ->
                 ctx.fb.shout "No module was changed, skip build ..."
                 return (sequence_cb CB_SUCCESS)
 
-            _bundles_iterator = partial(process_bundle, processed_modules, cached_sources, ctx)
+            sequence_cb CB_SUCCESS
+
+            ###_bundles_iterator = partial(process_bundle, processed_modules, cached_sources, ctx)
 
             async.map (get_bundles recipe), _bundles_iterator, (err, proc_bundles) ->
                 (return sequence_cb err) if err
@@ -189,7 +251,7 @@ run_build_sequence = (ctx, sequence_cb) ->
                     save_results changed_modules, bundles, cache, cached_sources, ctx, sequence_cb
                 else
                     ctx.fb.shout "No changes, skip rebuild"
-                    sequence_cb err, proc_bundles
+                    sequence_cb err, proc_bundles###
 
 
 module.exports = {run_build_sequence, init_build_sequence}
