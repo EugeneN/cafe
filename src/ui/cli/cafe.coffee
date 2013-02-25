@@ -5,7 +5,7 @@ Function::partial or= (part_args...) ->
     f = @
     (args...) -> f.apply(@, [part_args..., args...])
 
-LOG_PREFIX = 'UI/CLI>'
+LOG_PREFIX = 'Cafe>'
 
 path = require 'path'
 events = require 'events'

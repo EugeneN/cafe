@@ -38,23 +38,29 @@ save_results = (modules, bundles, cache, cached_sources, ctx, save_cb) ->
 
 
 # ======================== BUNDLES PROCESSING ======================================================
-process_bundle = (modules, cached_sources, ctx, bundle, bundle_cb) ->
+process_bundle = (modules, changed_modules, cached_sources, ctx, bundle, bundle_cb) ->
     # select modules for bundle
     modules = modules.filter (m) -> m.name in bundle.modules_names
     build_dir = get_build_dir ctx.own_args.build_root
+    changed_modules_names = changed_modules.map (m) -> m.name
 
     # Check what bundles wasn been recompiled.
-    was_compiled = (_modules, _bundle) ->
-        # TODO: compare with build_deps
+    was_compiled = (_bundle) ->
         u.some _bundle.modules_names, (m_name) ->
-            m = u.find _modules, (mod) -> mod.name is m_name
-            m.has_sources()? # if atleast one module was compiled
+            m_name in changed_modules_names
 
     fill_sources = (m, cb) ->
-        m.copy_sources(cached_sources[m.name].sources) unless m.has_sources()
-        cb null, m # temporary mock.
+        compiled_m = u.find changed_modules, (mod) -> mod.name is m.name
 
-    if was_compiled(modules, bundle) or meta_changed(modules, bundle)
+        if compiled_m?
+            m.copy_sources(compiled_m.get_sources())
+        else
+            m.copy_sources cached_sources[m.name]
+
+        cb null, m
+
+    meta_changed = (modules, bundle) -> false
+    if was_compiled(bundle) or meta_changed(modules, bundle)
 
         bundle_dir_path = path.dirname path.join(build_dir, bundle.name)
         bundle_file_path = path.join bundle_dir_path, (path.basename "#{bundle.name}.js")
@@ -133,7 +139,8 @@ process_module = (adapters, cached_sources, build_deps, ctx, module, module_cb) 
                     cb [OK, false, [adapter, mtime]]
 
         _m_harvest = (module, ctx, cached_sources, [adapter, mtime], cb) ->
-            cached_module = cached_sources[module.name]
+            if cached_sources?
+                cached_module = cached_sources[module.name]
 
             if cached_module?
                 if module.need_to_recompile cached_module, mtime
@@ -210,9 +217,13 @@ init_build_sequence = (ctx, adapters_path, adapters_fn, init_cb) -> # TOTEST
             ]
             (err, results) ->
                 unless err
-                    (results = results.reduce (a, b) -> extend a, b)
+                    (results = results.reduce (a, b) -> extend a, b) # wrap in monad ...
                     [err, modules] = get_modules results.recipe
                     results.modules = modules
+
+                    results.bundles = get_bundles results.recipe
+                    unless results.bundles.length
+                        err = "No bundles found in recipe #{recipe_path}" # wrap in monad ...
 
                 init_cb err, results
         )
@@ -229,7 +240,7 @@ run_build_sequence = (ctx, sequence_cb) ->
                             init_results
                             module_proc_cb) ->
 
-        {cached_sources, recipe, adapters, modules} = init_results
+        {cached_sources, recipe, adapters, modules, build_deps} = init_results
 
         _modules_iterator = partial(process_module,
                                     adapters, cached_sources, build_deps, ctx)
@@ -245,51 +256,39 @@ run_build_sequence = (ctx, sequence_cb) ->
                             [init_results, changed_modules]
                             bundles_proc_cb) ->
 
-        {cached_sources, build_deps, recipe, adapters, modules} = results
+        {cached_sources, build_deps, recipe, adapters, modules, bundles} = init_results
 
-        _bundles_iterator = partial(process_bundle, processed_modules, cached_sources, ctx)
+        _bundles_iterator = partial(process_bundle, modules, changed_modules, cached_sources, ctx)
 
-        async.map (get_bundles recipe), _bundles_iterator, (err, proc_bundles) ->
-            unless bundles.length
+        async.map bundles, _bundles_iterator, (err, proc_bundles) ->
+            proc_bundles = proc_bundles.filter (b) -> b?
+            unless proc_bundles.length
                 ctx.fb.shout "No changes found"
                 bundles_proc_cb [OK, true, undefined]
             else
-                bundles_proc_cb [err, false, [init_results, changed_sources, proc_bundles]]
+                bundle_names = proc_bundles.map (b) -> b.name
+                ctx.fb.say "Bundles [#{bundle_names}] was build successfully"
+                bundles_proc_cb [err, false, [init_results, changed_modules, proc_bundles]]
 
     _m_save_results = (ctx
-                    [init_results, changed_sources, proc_bundles]) ->
-    ###init_build_sequence ctx, null, null, (err, results) ->
-        (return sequence_cb err) if err
-        {cache, cached_sources, build_deps, recipe, adapters, modules} = results
+                       [init_results, changed_sources, proc_bundles]
+                       save_cb) ->
 
-        _modules_iterator = partial(process_module,
-                                    adapters, cached_sources, build_deps, ctx)
+        {cached_sources, cache} = init_results
 
-        async.map modules, _modules_iterator, (err, changed_modules) ->
-            (return sequence_cb err) if err
+        save_results changed_sources, proc_bundles, cache, cached_sources, ctx, (err, result) ->
+            save_cb [err, false, result]
 
-            changed_modules = processed_modules.filter (m) -> m.has_sources()
+    seq = [
+        lift_async(2, _m_init_build_sequence)
+        lift_async(3, partial(_m_modules_processor, ctx))
+        lift_async(3, partial(_m_bundles_processor, ctx))
+        #lift_async(3, partial(_m_save_results, ctx))
+    ]
 
-            unless changed_modules.length
-                ctx.fb.shout "No module was changed, skip build ..."
-                return (sequence_cb CB_SUCCESS)
-
-            sequence_cb CB_SUCCESS###
-
-            ###_bundles_iterator = partial(process_bundle, processed_modules, cached_sources, ctx)
-
-            async.map (get_bundles recipe), _bundles_iterator, (err, proc_bundles) ->
-                (return sequence_cb err) if err
-
-                bundles = proc_bundles.filter (b) -> b?
-
-                if bundles.length
-                    bundle_names = bundles.map (b) -> b.name
-                    ctx.fb.say "Bundles [#{bundle_names}] was build successfully"
-                    save_results changed_modules, bundles, cache, cached_sources, ctx, sequence_cb
-                else
-                    ctx.fb.shout "No changes, skip rebuild"
-                    sequence_cb err, proc_bundles###
+    (domonad (cont_t skip_or_error_m()), seq, ctx) ([err, skip, result]) ->
+        #console.log result
+        sequence_cb err, OK
 
 
 module.exports = {run_build_sequence, init_build_sequence}

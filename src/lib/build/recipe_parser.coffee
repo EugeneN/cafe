@@ -163,7 +163,6 @@ get_modules = (recipe) ->
 # Bundles parsing sequence functions
 #-----------------------------------
 get_bundles = (recipe) ->
-    # FIXME: returns invalid bundle names if called twice.
     bundles = if recipe.bundles?
         (for bundle_name, bundle_data of recipe.bundles
             (construct_bundle bundle_data, bundle_name))
