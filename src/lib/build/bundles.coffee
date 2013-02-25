@@ -28,9 +28,10 @@ construct_realm_bundle = (realm_name, data) ->
         construct_bundle raw_bundle
 
 
-construct_bundle = (data) ->
+construct_bundle = (data, name) ->
+    name or= data.name
     modules_names = data.modules.map (m) -> construct_module(m).name
-    get_bundle(name=data.name, modules_names=modules_names)
+    get_bundle(name, modules_names=modules_names)
 
 module.exports = {construct_realm_bundle, construct_bundle}
 

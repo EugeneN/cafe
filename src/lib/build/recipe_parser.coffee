@@ -7,7 +7,7 @@ read_yaml_file} = require '../../lib/utils'
 {error_m, OK}  = require '../../lib/monads'
 
 {construct_module, modules_equals} = require './modules'
-{construct_realm_bundle} = require './bundles'
+{construct_realm_bundle, construct_bundle} = require './bundles'
 
 {
     cont_t, cont_m,
@@ -164,7 +164,18 @@ get_modules = (recipe) ->
 #-----------------------------------
 get_bundles = (recipe) ->
     # FIXME: returns invalid bundle names if called twice.
-    flatten ((construct_realm_bundle realm, data) for realm, data of recipe.realms)
+    bundles = if recipe.bundles?
+        (for bundle_name, bundle_data of recipe.bundles
+            (construct_bundle bundle_data, bundle_name))
+    else
+        []
+
+    realm_bundles = if recipe.realms?
+        flatten ((construct_realm_bundle realm, data) for realm, data of recipe.realms)
+    else
+        []
+
+        (bundles.concat realm_bundles).filter (b) -> b?
 
 
 module.exports = {

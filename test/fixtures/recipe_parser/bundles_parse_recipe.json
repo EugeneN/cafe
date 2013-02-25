@@ -14,49 +14,18 @@
         {"path": "module6", "type": "plainjs"}
     ],
 
-    "realms": {
-        "realm1": [
-            {
-                "name": "bundle1",
-                "modules": [
-                    "module1",
-                    "module2",
-                    ["module3", "plainjs"]
-                ]
-            },
-            {
-                "name": "bundle2",
-                "modules": [
-                    "module1",
-                    "module2",
-                    {
-                        "name": "module4",
-                        "type": "plainjs"
-                    }
-                ]
-            }
-        ],
-
-        "realm2": [
-            {
-                "name": "bundle1",
-                "modules": [
-                    "module1",
-                    "module2",
-                    ["module3", "plainjs"]
-                ]
-            },
-            {
-                "name": "bundle2",
-                "modules": [
-                    "module1",
-                    "module2",
-                    {
-                        "name": "module4",
-                        "type": "plainjs"
-                    }
-                ]
-            }
-        ]
+    "bundles": {
+        "bundle1": {
+            "modules":[
+                "module1",
+                "module2"
+            ]
+        },
+        "bundle2": {
+            "modules":[
+                "module3",
+                "module4"
+            ]
+        }
     }
-}
+    }

@@ -14,6 +14,7 @@ recipe1_path = path.join fixtures_path, 'recipe.json'
 recipe2_path = path.join fixtures_path, 'recipe2.json'
 recipe3_path = path.join fixtures_path, 'recipe3.json'
 recipe_modules_parse_path = path.join fixtures_path, 'modules_parse_recipe.json'
+recipe_realm_bundles_parse_path = path.join fixtures_path, 'bundles_realm_parse_recipe.json'
 recipe_bundles_parse_path = path.join fixtures_path, 'bundles_parse_recipe.json'
 recipe_yaml_path = path.join fixtures_path, "recipe.yaml"
 
@@ -59,14 +60,26 @@ exports.test_recipe_modules_metadata_parse = (test) ->
     test.done()
 
 
-exports.test_recipe_bundles_parse = (test) ->
-    [error, recipe] = read_recipe recipe_bundles_parse_path
+exports.test_recipe_bundles_realms_parse = (test) ->
+    [error, recipe] = read_recipe recipe_realm_bundles_parse_path
     bundles_names = (get_bundles recipe).map (b) -> b.name
     result_realms = ["realm1/bundle1", "realm2/bundle1", "realm1/bundle2", "realm2/bundle2"]
     result_realms.map (b) ->
         test.ok((b in bundles_names), "#{b} must be in result #{bundles_names}")
 
     test.done()
+
+
+exports.test_recipe_bundles_parse = (test) ->
+    [error, recipe] = read_recipe recipe_bundles_parse_path
+    bundles = (get_bundles recipe)
+    bundles_names = bundles.map (b) -> b.name
+    result_bundles = ["bundle1", "bundle2"]
+    result_bundles.map (b) ->
+        test.ok((b in bundles_names), "#{b} must be in result #{bundles_names}")
+
+    test.done()
+
 
 
 exports.test_recipe_yaml_reader = (test) ->
