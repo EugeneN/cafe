@@ -7,6 +7,7 @@ get_module = ({path, name, deps, type, location}) ->
 
     location or= "fs"
     type or= "commonjs"
+    deps or= []
 
     _sources = ""
     _mtime = 0

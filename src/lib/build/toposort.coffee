@@ -1,4 +1,4 @@
-toposort = (debug_info, modules, ctx) ->
+toposort = (modules, ctx) ->
     modules_list = (m for name, m of modules)
 
     have_no_dependencies = (m for m in modules_list when m.deps.length is 0)
@@ -38,7 +38,7 @@ toposort = (debug_info, modules, ctx) ->
 
             ctx.fb.scream "Cyclic dependences found #{(k for k,v of (ordered_modules_names.reduce reduce_func, {}) if v > 1)}"
 
-        throw "Toposort failed #{debug_info.realm}/#{debug_info.bundle.name}:"
+        throw "Toposort failed"
 
     ordered_modules
 

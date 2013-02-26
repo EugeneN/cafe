@@ -4,6 +4,7 @@ u = require 'underscore'
 path = require 'path'
 mkdirp = require 'mkdirp'
 {read_recipe, get_modules, get_bundles} = require './recipe_parser'
+{toposort} = require './toposort'
 {get_adapters} = require '../adapter'
 {extend, partial, get_cafe_dir, exists} = require '../utils'
 {CB_SUCCESS, RECIPE, BUILD_DIR, BUILD_DEPS_FN, ADAPTERS_PATH, ADAPTER_FN} = require '../../defs'
@@ -22,7 +23,6 @@ get_build_dir = (build_root) -> path.resolve path.join build_root, BUILD_DIR
 # ======================== SAVING RESULTS ==========================================================
 save_results = (modules, bundles, cache, cached_sources, ctx, save_cb) ->
     build_dir = get_build_dir ctx.own_args.build_root
-    #console.log bundles
 
     save_build_deps = (cb) ->
         serrialized_bundles = JSON.stringify((bundles.map (b) -> b.serrialize()), null, 4)
@@ -73,7 +73,10 @@ process_bundle = (modules, changed_modules, cached_sources, ctx, bundle, bundle_
 
         mkdirp bundle_dir_path, (err) ->
             # TODO: make modules TOPOSORT
-            async.map modules, fill_sources, (err, modules_with_sources) ->
+
+            ordered_modules = toposort modules, ctx
+
+            async.map ordered_modules, fill_sources, (err, modules_with_sources) ->
                 bundle.set_modules modules_with_sources
                 sources = (modules_with_sources.map (m) -> m.get_sources())
                 bundle_sources = wrap_bundle sources.join '\n'
@@ -122,6 +125,8 @@ process_module = (adapters, cached_sources, build_deps, ctx, module, module_cb) 
     _m_build_if_force = (ctx, [module, adapter], cb) ->
         if ctx.own_args.f?
             message = "Forced harvesting #{module.name} ..."
+            _adapter_ctx = extend ctx, {module}
+            adapter = (adapter.make_adaptor _adapter_ctx)
 
             harvest_module adapter, module, ctx, message, (err, module) ->
                 unless err?
