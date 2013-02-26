@@ -22,15 +22,16 @@ get_build_dir = (build_root) -> path.resolve path.join build_root, BUILD_DIR
 # ======================== SAVING RESULTS ==========================================================
 save_results = (modules, bundles, cache, cached_sources, ctx, save_cb) ->
     build_dir = get_build_dir ctx.own_args.build_root
+    #console.log bundles
 
-    save_build_deps = (modules, cb) ->
+    save_build_deps = (cb) ->
         serrialized_bundles = JSON.stringify((bundles.map (b) -> b.serrialize()), null, 4)
         fs.writeFile (path.join build_dir, BUILD_DEPS_FN), serrialized_bundles, (err) ->
             cb err
 
     async.parallel(
         [
-            partial(save_build_deps, modules)
+            save_build_deps
             partial(cache.save_modules_async, modules, cached_sources, CACHE_FN)
         ]
         save_cb
@@ -42,7 +43,11 @@ process_bundle = (modules, changed_modules, cached_sources, ctx, bundle, bundle_
     # select modules for bundle
     modules = modules.filter (m) -> m.name in bundle.modules_names
     build_dir = get_build_dir ctx.own_args.build_root
-    changed_modules_names = changed_modules.map (m) -> m.name
+
+    changed_modules_names = if changed_modules.length
+        changed_modules.map (m) -> m.name
+    else
+        []
 
     # Check what bundles wasn been recompiled.
     was_compiled = (_bundle) ->
@@ -60,6 +65,7 @@ process_bundle = (modules, changed_modules, cached_sources, ctx, bundle, bundle_
         cb null, m
 
     meta_changed = (modules, bundle) -> false
+
     if was_compiled(bundle) or meta_changed(modules, bundle)
 
         bundle_dir_path = path.dirname path.join(build_dir, bundle.name)
@@ -239,7 +245,6 @@ run_build_sequence = (ctx, sequence_cb) ->
     _m_modules_processor = (ctx
                             init_results
                             module_proc_cb) ->
-
         {cached_sources, recipe, adapters, modules, build_deps} = init_results
 
         _modules_iterator = partial(process_module,
@@ -255,8 +260,9 @@ run_build_sequence = (ctx, sequence_cb) ->
     _m_bundles_processor = (ctx
                             [init_results, changed_modules]
                             bundles_proc_cb) ->
-
         {cached_sources, build_deps, recipe, adapters, modules, bundles} = init_results
+
+        changed_modules = changed_modules.filter (m) -> m? # removing empty
 
         _bundles_iterator = partial(process_bundle, modules, changed_modules, cached_sources, ctx)
 
@@ -271,23 +277,32 @@ run_build_sequence = (ctx, sequence_cb) ->
                 bundles_proc_cb [err, false, [init_results, changed_modules, proc_bundles]]
 
     _m_save_results = (ctx
-                       [init_results, changed_sources, proc_bundles]
+                       [init_results, changed_modules, proc_bundles]
                        save_cb) ->
+        {cached_sources, cache, modules, bundles} = init_results
 
-        {cached_sources, cache} = init_results
+        reduce_to_object = (a, b) ->
+            a[b.name] = b
+            a
 
-        save_results changed_sources, proc_bundles, cache, cached_sources, ctx, (err, result) ->
+        tmp_bundles_obj = bundles.reduce reduce_to_object, {}
+
+        for b in proc_bundles
+            tmp_bundles_obj[b.name] = b
+
+        merged_bundles = (v for k,v of tmp_bundles_obj)
+
+        save_results changed_modules, merged_bundles, cache, cached_sources, ctx, (err, result) ->
             save_cb [err, false, result]
 
     seq = [
         lift_async(2, _m_init_build_sequence)
         lift_async(3, partial(_m_modules_processor, ctx))
         lift_async(3, partial(_m_bundles_processor, ctx))
-        #lift_async(3, partial(_m_save_results, ctx))
+        lift_async(3, partial(_m_save_results, ctx))
     ]
 
     (domonad (cont_t skip_or_error_m()), seq, ctx) ([err, skip, result]) ->
-        #console.log result
         sequence_cb err, OK
 
 
