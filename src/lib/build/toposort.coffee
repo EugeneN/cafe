@@ -1,13 +1,14 @@
-u = require 'underscore'
+clone = (obj) -> JSON.parse JSON.stringify obj
 
-toposort = (modules, ctx) ->
+toposort = (modules) ->
+
     reducer = (a, b) ->
         ret = {}
         ret['name'] = b[0]
         ret['deps'] = b[1]
         a.concat [ret]
 
-    _modules = modules.map((m) -> [(u.clone m.name), (u.clone m.deps)]).reduce reducer, []
+    _modules = modules.map((m) -> [(clone m.name), (clone m.deps)]).reduce reducer, []
 
     modules_list = (m for name, m of _modules)
 
@@ -39,18 +40,18 @@ toposort = (modules, ctx) ->
         if modules_names.length > ordered_modules_names.length # we'v got trouble with dependencies
             message = "Failed to load dependencies or cyclic imports"
             + "[#{(modules_names.filter (m)-> m not in ordered_modules_names).join(',')}]"
-            ctx.fb.scream message
+            throw message
 
         else
             reduce_func = (a, b) ->
                 a[b] = unless b of a then 1 else a[b]+1
                 a
 
-            ctx.fb.scream "Cyclic dependences found #{(k for k,v of (ordered_modules_names.reduce reduce_func, {}) if v > 1)}"
+            throw "Cyclic dependences found #{(k for k,v of (ordered_modules_names.reduce reduce_func, {}) if v > 1)}"
 
         throw "Toposort failed"
 
-    ordered_modules.map (m) -> (u.find modules, (mod) -> mod.name is m.name)
+    ordered_modules.map (m) -> (modules.filter((mod) -> mod.name is m.name))[0]
 
 
 module.exports = {toposort}

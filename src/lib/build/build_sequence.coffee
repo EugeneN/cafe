@@ -64,7 +64,7 @@ process_bundle = (modules, changed_modules, cached_sources, ctx, bundle, bundle_
 
     _m_toposort = (ctx, [bundle, modules]) ->
         try
-            sorted_modules = toposort modules, ctx
+            sorted_modules = toposort modules
         catch ex
             err = "Toposort failed. #{ex}"
         [err, false, [bundle, sorted_modules]]
