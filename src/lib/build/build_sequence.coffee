@@ -25,7 +25,8 @@ save_results = (modules, bundles, cache, cached_sources, ctx, save_cb) ->
     build_dir = get_build_dir ctx.own_args.build_root
 
     save_build_deps = (cb) ->
-        serrialized_bundles = JSON.stringify((bundles.map (b) -> b.serrialize()), null, 4)
+        serrialized_bundles = JSON.stringify((bundles.map (b) ->
+                                             b.serrialize()), null, 4)
         fs.writeFile (path.join build_dir, BUILD_DEPS_FN), serrialized_bundles, (err) ->
             cb err
 
@@ -40,52 +41,80 @@ save_results = (modules, bundles, cache, cached_sources, ctx, save_cb) ->
 
 # ======================== BUNDLES PROCESSING ======================================================
 process_bundle = (modules, changed_modules, cached_sources, ctx, bundle, bundle_cb) ->
+    _m_check_to_rebuild = (modules, changed_modules, bundle) ->
+        changed_modules_names = if changed_modules.length then\
+            (changed_modules.map (m) -> m.name) else []
+
+        was_compiled = (_bundle) ->
+            u.some _bundle.modules_names, (m_name) ->
+                m_name in changed_modules_names
+
+        meta_changed = (modules, bundle) -> false
+
+        if was_compiled(bundle)
+            [OK, false, [bundle, modules]]
+        else if meta_changed(modules, bundle)
+            [OK, false, [bundle, modules]]
+        else
+            ctx.fb.shout "No changes found"
+            [OK, true, [bundle, modules]]
+
+    _m_make_build_path = (ctx, bundle_dir_path, [bundle, modules], build_path_cb)->
+        mkdirp bundle_dir_path, (err) -> build_path_cb [err, false, [bundle, modules]]
+
+    _m_toposort = (ctx, [bundle, modules]) ->
+        try
+            sorted_modules = toposort modules, ctx
+        catch ex
+            err = "Toposort failed. #{ex}"
+        [err, false, [bundle, sorted_modules]]
+
+    _m_fill_modules_sources = ([bundle, modules], fill_sources_cb) ->
+        fill_sources = (m, cb) ->
+            compiled_m = u.find changed_modules, (mod) -> mod.name is m.name
+
+            if compiled_m?
+                m.copy_sources(compiled_m.get_sources())
+            else
+                m.copy_sources cached_sources[m.name]
+
+            cb null, m
+
+        async.map modules, fill_sources, (err, modules_with_sources) ->
+            bundle.set_modules modules_with_sources
+            fill_sources_cb [err, false, [bundle, modules_with_sources]]
+
+    _m_wrap_bundle = ([bundle, modules]) ->
+        sources = (modules.map (m) -> m.get_sources())
+        try
+            wrapped_sources = wrap_bundle sources.join '\n'
+        catch ex
+            err = "Failed to wrap bundle. #{ex}"
+
+        [err, false, [bundle, modules, wrapped_sources]]
+
+    _m_write_bundle = (bundle_file_path, [bundle, modules, sources], write_cb) ->
+        fs.writeFile bundle_file_path, sources, (err) ->
+            err = "Failed to save bundle #{bundle.name}. #{err}" if err?
+            write_cb [err, false, [bundle, modules, sources]]
+
     # select modules for bundle
     modules = modules.filter (m) -> m.name in bundle.modules_names
     build_dir = get_build_dir ctx.own_args.build_root
+    bundle_dir_path = path.dirname path.join(build_dir, bundle.name)
+    bundle_file_path = path.join bundle_dir_path, (path.basename "#{bundle.name}.js")
 
-    changed_modules_names = if changed_modules.length
-        changed_modules.map (m) -> m.name
-    else
-        []
+    seq = [
+        lift_sync(3, partial(_m_check_to_rebuild, modules, changed_modules))
+        lift_async(4, partial(_m_make_build_path, ctx, bundle_dir_path))
+        lift_sync(2, partial(_m_toposort, ctx))
+        lift_async(2, _m_fill_modules_sources)
+        lift_sync(1, _m_wrap_bundle)
+        lift_async(3, partial(_m_write_bundle, bundle_file_path))
+    ]
 
-    # Check what bundles wasn been recompiled.
-    was_compiled = (_bundle) ->
-        u.some _bundle.modules_names, (m_name) ->
-            m_name in changed_modules_names
-
-    fill_sources = (m, cb) ->
-        compiled_m = u.find changed_modules, (mod) -> mod.name is m.name
-
-        if compiled_m?
-            m.copy_sources(compiled_m.get_sources())
-        else
-            m.copy_sources cached_sources[m.name]
-
-        cb null, m
-
-    meta_changed = (modules, bundle) -> false
-
-    if was_compiled(bundle) or meta_changed(modules, bundle)
-
-        bundle_dir_path = path.dirname path.join(build_dir, bundle.name)
-        bundle_file_path = path.join bundle_dir_path, (path.basename "#{bundle.name}.js")
-
-        mkdirp bundle_dir_path, (err) ->
-            # TODO: make modules TOPOSORT
-
-            ordered_modules = toposort modules, ctx
-
-            async.map ordered_modules, fill_sources, (err, modules_with_sources) ->
-                bundle.set_modules modules_with_sources
-                sources = (modules_with_sources.map (m) -> m.get_sources())
-                bundle_sources = wrap_bundle sources.join '\n'
-                # Post processing ... minify e.t.c.
-
-                fs.writeFile bundle_file_path, bundle_sources, (err) ->
-                    bundle_cb err, bundle
-    else
-        bundle_cb CB_SUCCESS, null
+    (domonad (cont_t skip_or_error_m()), seq, bundle) ([err, skiped, [bundle, modules, sources]]) ->
+        bundle_cb err, bundle
 
 
 # ======================== MODULES PROCESSING ======================================================
@@ -213,8 +242,16 @@ init_build_sequence = (ctx, adapters_path, adapters_fn, init_cb) -> # TOTEST
     _get_build_deps_async = (cb) ->
         _build_deps_fn = path.join (get_build_dir ctx.own_args.build_root), BUILD_DEPS_FN
         fs.readFile _build_deps_fn, (err, build_deps) ->
-            build_deps = if err then null else JSON.parse build_deps
-            cb err, {build_deps}
+            build_deps = if err
+                null
+            else
+                try
+                    JSON.parse build_deps
+                catch ex
+                    err_mess = "Failed to parse build deps file. #{ex}"
+                    null
+
+            cb err_mess, {build_deps}
 
     get_modules_cache get_modules_cache_dir(ctx.own_args.app_root), (err, cache) ->
         (return init_cb err) if err
@@ -241,7 +278,6 @@ init_build_sequence = (ctx, adapters_path, adapters_fn, init_cb) -> # TOTEST
 
 
 run_build_sequence = (ctx, sequence_cb) ->
-
     _m_init_build_sequence = (ctx, init_cb) ->
         init_build_sequence ctx, null, null, (err, init_results) ->
             init_cb [err, false, init_results]
@@ -274,7 +310,6 @@ run_build_sequence = (ctx, sequence_cb) ->
         async.map bundles, _bundles_iterator, (err, proc_bundles) ->
             proc_bundles = proc_bundles.filter (b) -> b?
             unless proc_bundles.length
-                ctx.fb.shout "No changes found"
                 bundles_proc_cb [OK, true, undefined]
             else
                 bundle_names = proc_bundles.map (b) -> b.name
