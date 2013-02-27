@@ -1,5 +1,15 @@
+u = require 'underscore'
+
 toposort = (modules, ctx) ->
-    modules_list = (m for name, m of modules)
+    reducer = (a, b) ->
+        ret = {}
+        ret['name'] = b[0]
+        ret['deps'] = b[1]
+        a.concat [ret]
+
+    _modules = modules.map((m) -> [(u.clone m.name), (u.clone m.deps)]).reduce reducer, []
+
+    modules_list = (m for name, m of _modules)
 
     have_no_dependencies = (m for m in modules_list when m.deps.length is 0)
     ordered_modules = []
@@ -40,6 +50,7 @@ toposort = (modules, ctx) ->
 
         throw "Toposort failed"
 
-    ordered_modules
+    ordered_modules.map (m) -> (u.find modules, (mod) -> mod.name is m.name)
+
 
 module.exports = {toposort}
