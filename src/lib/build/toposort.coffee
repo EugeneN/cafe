@@ -38,8 +38,8 @@ toposort = (modules) ->
         ordered_modules_names = ordered_modules.map (i) -> i.name
 
         if modules_names.length > ordered_modules_names.length # we'v got trouble with dependencies
-            message = "Failed to load dependencies or cyclic imports"
-            + "[#{(modules_names.filter (m)-> m not in ordered_modules_names).join(',')}]"
+            message = "Failed to load dependencies or cyclic imports"\
+                + "[#{(modules_names.filter (m)-> m not in ordered_modules_names).join(',')}]"
             throw message
 
         else

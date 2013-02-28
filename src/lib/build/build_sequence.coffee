@@ -40,8 +40,8 @@ save_results = (modules, bundles, cache, cached_sources, ctx, save_cb) ->
 
 
 # ======================== BUNDLES PROCESSING ======================================================
-process_bundle = (modules, changed_modules, cached_sources, ctx, bundle, bundle_cb) ->
-    _m_check_to_rebuild = (modules, changed_modules, bundle) ->
+process_bundle = (modules, build_deps, changed_modules, cached_sources, ctx, bundle, bundle_cb) ->
+    _m_check_to_rebuild = (modules, build_deps, changed_modules, bundle) ->
         changed_modules_names = if changed_modules.length then\
             (changed_modules.map (m) -> m.name) else []
 
@@ -49,14 +49,52 @@ process_bundle = (modules, changed_modules, cached_sources, ctx, bundle, bundle_
             u.some _bundle.modules_names, (m_name) ->
                 m_name in changed_modules_names
 
-        meta_changed = (modules, bundle) -> false
+        meta_changed = (modules, build_deps) ->
+            bd_bundle = u.find build_deps, (b) -> b.name is bundle.name
+
+            if bd_bundle?
+                # check if some module is missing
+                modules_names = modules.map (m) -> m.name
+                deleted_module = u.find(
+                    bd_bundle.modules, (m) -> m.name not in modules_names)
+
+                if deleted_module?
+                    ctx.fb.say "Module #{deleted_module.name} was removed from bundle #{bundle.name}. Rebundling ..."
+                    delete cached_sources[deleted_module.name] # removing from cache
+                    return true
+
+                module_with_changed_deps = u.find modules, (m) ->
+
+                    bd_module = u.find(bd_bundle.modules, (mod) -> mod.name is m.name)
+
+                    deps_count_not_equal = bd_module.deps.length isnt m.deps.length
+
+                    if m.deps.length
+                        deps_added = (m.deps.map((d) -> d not in bd_module.deps)
+                                            .reduce((a, b) -> a or b))
+                    if bd_module.deps.length
+                        deps_removed = (bd_module.deps.map(
+                            (d) -> d not in m.deps).reduce((a, b)-> a or b))
+
+                    seq = [
+                        deps_count_not_equal
+                        deps_added
+                        deps_removed
+                    ]
+
+                    seq.filter((c) -> c?).reduce((a, b) -> a or b)
+
+                if module_with_changed_deps?
+                    ctx.fb.say(
+                        "Changed module #{module_with_changed_deps.name} dependencies. Rebuilding bundle #{bundle.name} ...")
+                    return true
+            false
 
         if was_compiled(bundle)
             [OK, false, [bundle, modules]]
-        else if meta_changed(modules, bundle)
+        else if meta_changed(modules, build_deps)
             [OK, false, [bundle, modules]]
         else
-            ctx.fb.shout "No changes found"
             [OK, true, [bundle, modules]]
 
     _m_make_build_path = (ctx, bundle_dir_path, [bundle, modules], build_path_cb)->
@@ -105,7 +143,7 @@ process_bundle = (modules, changed_modules, cached_sources, ctx, bundle, bundle_
     bundle_file_path = path.join bundle_dir_path, (path.basename "#{bundle.name}.js")
 
     seq = [
-        lift_sync(3, partial(_m_check_to_rebuild, modules, changed_modules))
+        lift_sync(3, partial(_m_check_to_rebuild, modules, build_deps, changed_modules))
         lift_async(4, partial(_m_make_build_path, ctx, bundle_dir_path))
         lift_sync(2, partial(_m_toposort, ctx))
         lift_async(2, _m_fill_modules_sources)
@@ -114,12 +152,13 @@ process_bundle = (modules, changed_modules, cached_sources, ctx, bundle, bundle_
     ]
 
     (domonad (cont_t skip_or_error_m()), seq, bundle) ([err, skiped, [bundle, modules, sources]]) ->
+        bundle = null if skiped is true
         bundle_cb err, bundle
 
 
 # ======================== MODULES PROCESSING ======================================================
 harvest_module = (adapter, module, ctx, message, cb) ->
-    message or= "Harvesting module #{module.path}"
+    message or= "Harvesting module #{module.path} ..."
     ctx.fb.say message
     adapter.harvest (err, sources) ->
         return(cb err) if err
@@ -266,12 +305,16 @@ init_build_sequence = (ctx, adapters_path, adapters_fn, init_cb) -> # TOTEST
             (err, results) ->
                 unless err
                     (results = results.reduce (a, b) -> extend a, b) # wrap in monad ...
-                    [err, modules] = get_modules results.recipe
-                    results.modules = modules
 
                     results.bundles = get_bundles results.recipe
                     unless results.bundles.length
                         err = "No bundles found in recipe #{recipe_path}" # wrap in monad ...
+
+                    [err, modules] = get_modules results.recipe
+                    modules_in_bundles_names = results.bundles.map((b) -> b.modules_names)
+                                                              .reduce((a, b) -> a.concat b)
+
+                    results.modules = modules.filter (m) -> m.name in modules_in_bundles_names
 
                 init_cb err, results
         )
@@ -305,11 +348,12 @@ run_build_sequence = (ctx, sequence_cb) ->
 
         changed_modules = changed_modules.filter (m) -> m? # removing empty
 
-        _bundles_iterator = partial(process_bundle, modules, changed_modules, cached_sources, ctx)
+        _bundles_iterator = partial(process_bundle, modules, build_deps, changed_modules, cached_sources, ctx)
 
         async.map bundles, _bundles_iterator, (err, proc_bundles) ->
             proc_bundles = proc_bundles.filter (b) -> b?
             unless proc_bundles.length
+                ctx.fb.shout "No changes detected, skip build."
                 bundles_proc_cb [OK, true, undefined]
             else
                 bundle_names = proc_bundles.map (b) -> b.name
