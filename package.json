@@ -28,6 +28,7 @@
     "growl": "*",
     "wrapper-commonjs":"*",
     "libmonad": "*",
-    "js-yaml": "*"
+    "js-yaml": "*",
+    "easy-opts": "*"
   }
 }
