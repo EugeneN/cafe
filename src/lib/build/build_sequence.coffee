@@ -3,15 +3,19 @@ async = require 'async'
 u = require 'underscore'
 path = require 'path'
 mkdirp = require 'mkdirp'
+{domonad, cont_t, lift_async, lift_sync} = require 'libmonad'
+{spawn} = require 'child_process'
+{construct_cmd} = require 'easy-opts'
+
 {read_recipe, get_modules, get_bundles} = require './recipe_parser'
 {toposort} = require './toposort'
 {get_adapters} = require '../adapter'
-{extend, partial, get_cafe_dir, exists} = require '../utils'
-{CB_SUCCESS, RECIPE, BUILD_DIR, BUILD_DEPS_FN, ADAPTERS_PATH, ADAPTER_FN} = require '../../defs'
+{extend, partial, get_cafe_dir, exists, get_legacy_cafe_bin_path} = require '../utils'
+{CB_SUCCESS, RECIPE, BUILD_DIR, BUILD_DEPS_FN,
+RECIPE_API_LEVEL, ADAPTERS_PATH, ADAPTER_FN} = require '../../defs'
 {get_modules_cache} = require '../modules_cache'
 {wrap_bundle, wrap_modules, wrap_module} = require 'wrapper-commonjs'
 {skip_or_error_m, OK} = require '../monads'
-{domonad, cont_t, lift_async, lift_sync} = require 'libmonad'
 
 CACHE_FN = 'modules'
 
@@ -302,33 +306,51 @@ init_build_sequence = (ctx, adapters_path, adapters_fn, init_cb) -> # TOTEST
                 partial(_get_cache_modules_async, cache)
                 _get_build_deps_async
             ]
-            (err, results) ->
-                unless err
-                    (results = results.reduce (a, b) -> extend a, b) # wrap in monad ...
-
-                    results.bundles = get_bundles results.recipe
-                    unless results.bundles.length
-                        err = "No bundles found in recipe #{recipe_path}" # wrap in monad ...
-
-                    [err, modules] = get_modules results.recipe
-                    modules_in_bundles_names = results.bundles.map((b) -> b.modules_names)
-                                                              .reduce((a, b) -> a.concat b)
-
-                    results.modules = modules.filter (m) -> m.name in modules_in_bundles_names
-
-                init_cb err, results
+            (err, results) -> init_cb err, results.reduce (a, b) -> extend a, b
         )
 
 
 run_build_sequence = (ctx, sequence_cb) ->
     _m_init_build_sequence = (ctx, init_cb) ->
-        init_build_sequence ctx, null, null, (err, init_results) ->
-            init_cb [err, false, init_results]
+        init_build_sequence ctx, null, null, (err, init_results) -> init_cb [err, false, init_results]
 
+    _m_check_if_old_api_version = (ctx, init_result, check_cb) ->
+        {recipe} = init_result
+        if recipe.abstract.api_version is RECIPE_API_LEVEL
+            check_cb [OK, false, init_result]
+        else
+            legacy_cafe_bin = get_legacy_cafe_bin_path recipe.abstract.api_version
+            exists.async legacy_cafe_bin, (err, status) ->
+                console.log status, legacy_cafe_bin
+                unless status is true
+                    ctx.fb.shout "Unknown api_version recipe #{recipe.abstract.api_version}"
+                    check_cb [OK, true, init_result]
+                else
+                    ctx.fb.shout "Found old api_version #{recipe.abstract.api_version} launching old cafe"
+                    cmd_args = ['--nologo', '--noupdate', '--nogrowl']
+                    run = spawn legacy_cafe_bin, cmd_args.concat(construct_cmd ctx.full_args)
+                    run.stdout.on 'data', (data) -> ctx.fb.say "#{data}".replace /\n$/, ''
+                    run.stderr.on 'data', (data) -> ctx.fb.scream "#{data}".replace /\n$/, ''
+                    run.on 'exit', (code) -> # Handle inner cafe error
+                        check_cb [OK, true, init_result]
 
-    _m_modules_processor = (ctx
-                            init_results
-                            module_proc_cb) ->
+    _m_parse_modules_and_bundles = (init_result, parse_cb) ->
+        init_result.bundles = get_bundles init_result.recipe
+        unless init_result.bundles.length
+            parse_cb ["No bundles found in recipe #{recipe_path}", false, init_result]
+
+        [err, modules] = get_modules init_result.recipe
+        if err?
+            parse_cb ["Failed to parse modules #{err}", false, init_result]
+
+        modules_in_bundles_names = init_result.bundles.map((b) -> b.modules_names)
+            .reduce((a, b) -> a.concat b) # Add modules from deps.
+
+        init_result.modules = modules.filter (m) -> m.name in modules_in_bundles_names
+
+        parse_cb [OK, false, init_result]
+
+    _m_modules_processor = (ctx, init_results, module_proc_cb) ->
         {cached_sources, recipe, adapters, modules, build_deps} = init_results
 
         _modules_iterator = partial(process_module,
@@ -340,10 +362,7 @@ run_build_sequence = (ctx, sequence_cb) ->
             else
                 module_proc_cb [err, false, [init_results, changed_modules]]
 
-
-    _m_bundles_processor = (ctx
-                            [init_results, changed_modules]
-                            bundles_proc_cb) ->
+    _m_bundles_processor = (ctx, [init_results, changed_modules], bundles_proc_cb) ->
         {cached_sources, build_deps, recipe, adapters, modules, bundles} = init_results
 
         changed_modules = changed_modules.filter (m) -> m? # removing empty
@@ -360,9 +379,7 @@ run_build_sequence = (ctx, sequence_cb) ->
                 ctx.fb.say "Bundles [#{bundle_names}] was build successfully"
                 bundles_proc_cb [err, false, [init_results, changed_modules, proc_bundles]]
 
-    _m_save_results = (ctx
-                       [init_results, changed_modules, proc_bundles]
-                       save_cb) ->
+    _m_save_results = (ctx, [init_results, changed_modules, proc_bundles], save_cb) ->
         {cached_sources, cache, modules, bundles} = init_results
 
         reduce_to_object = (a, b) ->
@@ -381,6 +398,8 @@ run_build_sequence = (ctx, sequence_cb) ->
 
     seq = [
         lift_async(2, _m_init_build_sequence)
+        lift_async(3, partial(_m_check_if_old_api_version, ctx))
+        lift_async(2, _m_parse_modules_and_bundles)
         lift_async(3, partial(_m_modules_processor, ctx))
         lift_async(3, partial(_m_bundles_processor, ctx))
         lift_async(3, partial(_m_save_results, ctx))

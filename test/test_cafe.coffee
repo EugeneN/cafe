@@ -1,5 +1,4 @@
 cafe_factory = require '../lib-js/cafe'
-pessimist = require '../lib-js/lib/pessimist'
 GLOBAL_PARAM = "GLOB"
 events = require 'events'
 {EVENT_CAFE_DONE} = require '../lib-js/defs'
@@ -34,7 +33,7 @@ module.exports = {
             fb: null_fb
 
         go = get_cafe setup
-        go {args: pessimist [null, null]}
+        go {args: {}}
 
 
     test06: "emitter can be passed in": (test) ->
@@ -48,7 +47,7 @@ module.exports = {
             test.done()
 
         go = get_cafe setup
-        go {args: pessimist [null, null]}
+        go {args: {}}
 
 
     

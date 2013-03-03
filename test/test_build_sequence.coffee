@@ -7,15 +7,14 @@ build_root = path.resolve './test/fixtures/build_sequence/app/public'
 fn_pattern = "#{ADAPTER_FN}.coffee"
 adapters_dir = path.resolve './test/fixtures/adapters'
 
-is_present = (val) -> and_ val?, (val.length > 0)
+is_present = (val) -> val? and (val.length > 0)
 
 exports.test_init_build_sequence = (test) ->
     ctx = {own_args:{app_root, build_root}}
 
     init_build_sequence ctx, adapters_dir, fn_pattern, (err, results) ->
-        {cache, cached_sources, build_deps, recipe, adapters} = results
-        test.ok cache?, "Cache was not initialized in #{results}"
-        test.ok is_present(cached_sources), "Cached sources must be present in #{results}"
+        {build_deps, adapters} = results
+        test.ok results.hasOwnProperty("recipe"), "Recipe must be present in #{results}"
         test.ok is_present(build_deps), "Build deps must be present in #{results}"
         test.ok is_present(adapters), "Adapteres must be present in #{results}"
         test.done()
