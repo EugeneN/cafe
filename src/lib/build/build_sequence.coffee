@@ -104,12 +104,6 @@ process_bundle = (modules, build_deps, changed_modules, cached_sources, ctx, bun
     _m_make_build_path = (ctx, bundle_dir_path, [bundle, modules], build_path_cb)->
         mkdirp bundle_dir_path, (err) -> build_path_cb [err, false, [bundle, modules]]
 
-    _m_toposort = (ctx, [bundle, modules]) ->
-        try
-            sorted_modules = toposort modules
-        catch ex
-            err = "Toposort failed. #{ex}"
-        [err, false, [bundle, sorted_modules]]
 
     _m_fill_modules_sources = ([bundle, modules], fill_sources_cb) ->
         fill_sources = (m, cb) ->
@@ -141,7 +135,7 @@ process_bundle = (modules, build_deps, changed_modules, cached_sources, ctx, bun
             write_cb [err, false, [bundle, modules, sources]]
 
     # select modules for bundle
-    modules = modules.filter (m) -> m.name in bundle.modules_names
+    modules = bundle.modules_names.map (m_name) -> u.find modules, (m) -> m.name is m_name
     build_dir = get_build_dir ctx.own_args.build_root
     bundle_dir_path = path.dirname path.join(build_dir, bundle.name)
     bundle_file_path = path.join bundle_dir_path, (path.basename "#{bundle.name}.js")
@@ -149,7 +143,6 @@ process_bundle = (modules, build_deps, changed_modules, cached_sources, ctx, bun
     seq = [
         lift_sync(3, partial(_m_check_to_rebuild, modules, build_deps, changed_modules))
         lift_async(4, partial(_m_make_build_path, ctx, bundle_dir_path))
-        lift_sync(2, partial(_m_toposort, ctx))
         lift_async(2, _m_fill_modules_sources)
         lift_sync(1, _m_wrap_bundle)
         lift_async(3, partial(_m_write_bundle, bundle_file_path))
@@ -362,6 +355,7 @@ _run_build_sequence_monadic_functions =
         _bundles_iterator = partial(process_bundle, modules, build_deps, changed_modules, cached_sources, ctx)
 
         async.map bundles, _bundles_iterator, (err, proc_bundles) ->
+            bundles_proc_cb [err, false, null] if err
             proc_bundles = proc_bundles.filter (b) -> b?
             unless proc_bundles.length
                 ctx.fb.shout "No changes detected, skip build."

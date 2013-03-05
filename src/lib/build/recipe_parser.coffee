@@ -5,7 +5,7 @@ u = require 'underscore'
 is_file, toArray, partial,
 read_yaml_file} = require '../../lib/utils'
 {error_m, OK}  = require '../../lib/monads'
-
+{toposort} = require '../../lib/build/toposort'
 {construct_module, modules_equals} = require './modules'
 {construct_realm_bundle, construct_bundle} = require './bundles'
 
@@ -185,10 +185,9 @@ get_modules_and_bundles_for_sequence = (recipe, parse_cb) ->
     ret_modules = modules_in_bundles.concat modules_from_deps
 
     _parse_bundle_modules = (module_name, collected_deps, modules) ->
+
         _module = u.find modules, (m) -> m.name is module_name
-
         _module_deps_names = _module.deps.filter (name) -> name not in collected_deps
-
         result_modules_names = (collected_deps.concat _module_deps_names).reduce unique_reducer, []
 
         if _module_deps_names.length
@@ -201,8 +200,18 @@ get_modules_and_bundles_for_sequence = (recipe, parse_cb) ->
         result_modules_names
 
     bundles = bundles.map (bundle) ->
-        deps_mods = bundle.modules_names.map (name) -> _parse_bundle_modules name, bundle.modules_names, modules
-        bundle.modules_names = flatten(deps_mods).reduce unique_reducer, []
+        deps_mods = bundle.modules_names.map (name) ->
+            _parse_bundle_modules name, bundle.modules_names, modules
+        _modules_names = flatten(deps_mods).reduce unique_reducer, []
+        _resolved_modules = _modules_names.map (_name) -> u.find modules, (m) ->m.name is _name
+
+        try
+            _sorted_modules = toposort _resolved_modules
+        catch ex
+            ex = "Failed to resolve dependencies in bundle #{bundle.name} #{ex}" if ex?
+            return parse_cb [ex, null]
+
+        bundle.modules_names = _sorted_modules.map (m) -> m.name
         bundle
 
     parse_cb [OK, [ret_modules, bundles]]
