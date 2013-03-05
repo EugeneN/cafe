@@ -98,7 +98,13 @@ _m_parse_from_list = (meta) ->
     name = (Object.keys meta)[0]
 
     if Array.isArray meta[name]
-        [path, type, deps] = meta[name]
+        [path, arg2, arg3] = meta[name]
+
+        if Array.isArray arg2
+            [deps, type] = [arg2, arg3]
+        else
+            [deps, type] = [arg3, arg2]
+
         unless path?
             ["Missing path in module definition. Module #{name}", false, null]
         else
