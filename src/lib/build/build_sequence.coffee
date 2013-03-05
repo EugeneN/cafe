@@ -310,11 +310,12 @@ init_build_sequence = (ctx, adapters_path, adapters_fn, init_cb) -> # TOTEST
         )
 
 
-run_build_sequence = (ctx, sequence_cb) ->
-    _m_init_build_sequence = (ctx, init_cb) ->
-        init_build_sequence ctx, null, null, (err, init_results) -> init_cb [err, false, init_results]
+_run_build_sequence_monadic_functions =
+    _m_init_build_sequence: (ctx, init_cb) ->
+        init_build_sequence ctx, null, null, (err, init_results) ->
+            init_cb [err, false, init_results]
 
-    _m_check_if_old_api_version = (ctx, init_result, check_cb) ->
+    _m_check_if_old_api_version: (ctx, init_result, check_cb) -> #TOTEST
         {recipe} = init_result
         if recipe.abstract.api_version is RECIPE_API_LEVEL
             check_cb [OK, false, init_result]
@@ -334,7 +335,8 @@ run_build_sequence = (ctx, sequence_cb) ->
                     run.on 'exit', (code) -> # Handle inner cafe error
                         check_cb [OK, true, init_result]
 
-    _m_parse_modules_and_bundles = (init_result, parse_cb) ->
+    _m_parse_modules_and_bundles: (init_result, parse_cb) -> # TOTEST
+        """ Parses bundles and modules for sequence """
         init_result.bundles = get_bundles init_result.recipe
         unless init_result.bundles.length
             parse_cb ["No bundles found in recipe #{recipe_path}", false, init_result]
@@ -350,7 +352,7 @@ run_build_sequence = (ctx, sequence_cb) ->
 
         parse_cb [OK, false, init_result]
 
-    _m_modules_processor = (ctx, init_results, module_proc_cb) ->
+    _m_modules_processor: (ctx, init_results, module_proc_cb) ->
         {cached_sources, recipe, adapters, modules, build_deps} = init_results
 
         _modules_iterator = partial(process_module,
@@ -362,7 +364,7 @@ run_build_sequence = (ctx, sequence_cb) ->
             else
                 module_proc_cb [err, false, [init_results, changed_modules]]
 
-    _m_bundles_processor = (ctx, [init_results, changed_modules], bundles_proc_cb) ->
+    _m_bundles_processor: (ctx, [init_results, changed_modules], bundles_proc_cb) ->
         {cached_sources, build_deps, recipe, adapters, modules, bundles} = init_results
 
         changed_modules = changed_modules.filter (m) -> m? # removing empty
@@ -379,7 +381,7 @@ run_build_sequence = (ctx, sequence_cb) ->
                 ctx.fb.say "Bundles [#{bundle_names}] was build successfully"
                 bundles_proc_cb [err, false, [init_results, changed_modules, proc_bundles]]
 
-    _m_save_results = (ctx, [init_results, changed_modules, proc_bundles], save_cb) ->
+    _m_save_results: (ctx, [init_results, changed_modules, proc_bundles], save_cb) ->
         {cached_sources, cache, modules, bundles} = init_results
 
         reduce_to_object = (a, b) ->
@@ -396,17 +398,26 @@ run_build_sequence = (ctx, sequence_cb) ->
         save_results changed_modules, merged_bundles, cache, cached_sources, ctx, (err, result) ->
             save_cb [err, false, result]
 
+
+run_build_sequence = (ctx, sequence_cb) ->
+
+    mf = _run_build_sequence_monadic_functions
+
     seq = [
-        lift_async(2, _m_init_build_sequence)
-        lift_async(3, partial(_m_check_if_old_api_version, ctx))
-        lift_async(2, _m_parse_modules_and_bundles)
-        lift_async(3, partial(_m_modules_processor, ctx))
-        lift_async(3, partial(_m_bundles_processor, ctx))
-        lift_async(3, partial(_m_save_results, ctx))
+        lift_async(2, mf._m_init_build_sequence)
+        lift_async(3, partial(mf._m_check_if_old_api_version, ctx))
+        lift_async(2, mf._m_parse_modules_and_bundles)
+        lift_async(3, partial(mf._m_modules_processor, ctx))
+        lift_async(3, partial(mf._m_bundles_processor, ctx))
+        lift_async(3, partial(mf._m_save_results, ctx))
     ]
 
     (domonad (cont_t skip_or_error_m()), seq, ctx) ([err, skip, result]) ->
         sequence_cb err, OK
 
 
-module.exports = {run_build_sequence, init_build_sequence}
+module.exports = {
+    run_build_sequence
+    init_build_sequence
+    _run_build_sequence_monadic_functions
+}

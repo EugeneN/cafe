@@ -6,6 +6,7 @@ get_modules
 get_bundles
 remove_modules_duplicates
 construct_modules
+get_modules_and_bundles_for_sequence
 fill_modules_deps} = require '../src/lib/build/recipe_parser'
 
 fixtures_path = path.resolve './test/fixtures/recipe_parser'
@@ -17,6 +18,7 @@ recipe_modules_parse_path = path.join fixtures_path, 'modules_parse_recipe.json'
 recipe_realm_bundles_parse_path = path.join fixtures_path, 'bundles_realm_parse_recipe.json'
 recipe_bundles_parse_path = path.join fixtures_path, 'bundles_parse_recipe.json'
 recipe_yaml_path = path.join fixtures_path, "recipe.yaml"
+recipe_sequence_parse = path.join fixtures_path, "recipe_sequence.yaml"
 
 
 exports.test_recipe_read_basic_validation = (test) ->
@@ -81,7 +83,6 @@ exports.test_recipe_bundles_parse = (test) ->
     test.done()
 
 
-
 exports.test_recipe_yaml_reader = (test) ->
     read_recipe.async recipe_yaml_path, 0, ([error, recipe]) ->
         test.ok recipe.abstract, "Recipe object was not parsed"
@@ -89,6 +90,37 @@ exports.test_recipe_yaml_reader = (test) ->
         test.done()
 
 
+exports.test_get_modules_and_bundles_for_sequence = (test) ->
+    read_recipe.async recipe_sequence_parse, 0, ([error, recipe]) ->
+        get_modules_and_bundles_for_sequence recipe, ([err, [modules, bundles]]) ->
+            [bundle1, bundle2] = bundles
+            [jquery_module] = modules.filter (m) -> m.name is "jquery"
 
+            unique_reducer = (a, b) -> if b in a then a else a.concat b
+            unique_names = bundle1.modules_names.reduce unique_reducer, []
 
+            test.ok(
+                bundle1.modules_names.length is unique_names.length
+                "Bundle1 must have only unique module names"
+            )
 
+            test.ok(
+                jquery_module?
+                "Module jquery must be in result modules, because plain_coffee and test1 depends on it"
+            )
+            test.ok(
+                "jquery" in bundle1.modules_names
+                "Module jquery must be in bundle1, because plain_coffee and test1 depends on it #{bundle1.modules_names}"
+            )
+
+            test.ok(
+                "jquery" in bundle2.modules_names
+                "Module jquery must be in bundle2, because plain_coffee and test1 depends on it #{bundle2.modules_names}"
+            )
+
+            test.ok(
+                "test1" in bundle2.modules_names
+                "Module test1 must be in bundle2, because test2 depends on it #{bundle2.modules_names}"
+            )
+
+            test.done()

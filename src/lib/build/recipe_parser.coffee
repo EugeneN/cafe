@@ -159,6 +159,35 @@ get_modules = (recipe) ->
     (domonad error_m(), seq, recipe)
 
 
+get_modules_and_bundles_for_sequence = (recipe, parse_cb) ->
+    """
+    filters parsed modules from recipe that must take part in
+    build sequence.
+    """
+
+    bundles = get_bundles recipe
+    unless bundles.length
+        parse_cb ["No bundles found in recipe", null]
+
+    [err, modules] = get_modules recipe
+    if err?
+        parse_cb ["Failed to parse modules #{err}", null]
+
+    modules_in_bundles_names = flatten(bundles.map((b) -> b.modules_names))
+    modules_in_bundles = modules.filter (m) -> m.name in modules_in_bundles_names
+
+    unique_reducer = (a, b) -> if b in a then a else a.concat b
+    deps_of_modules_in_bundles = flatten(modules.map (m) -> m.deps).reduce unique_reducer, []
+
+    modules_from_deps = modules.filter (m) -> # Include modules from deps
+        (m.name in deps_of_modules_in_bundles) and (m.name not in modules_in_bundles_names)
+
+    modules_from_deps_names = modules_from_deps.map (m) -> m.name
+    ret_modules = modules_in_bundles.concat modules_from_deps
+
+    parse_cb [OK, [ret_modules, bundles]]
+
+
 #-----------------------------------
 # Bundles parsing sequence functions
 #-----------------------------------
@@ -185,4 +214,5 @@ module.exports = {
     get_modules
     get_bundles
     read_if_is_file
+    get_modules_and_bundles_for_sequence
 }
