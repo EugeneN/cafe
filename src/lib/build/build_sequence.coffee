@@ -7,7 +7,7 @@ mkdirp = require 'mkdirp'
 {spawn} = require 'child_process'
 {construct_cmd} = require 'easy-opts'
 
-{read_recipe, get_modules, get_bundles} = require './recipe_parser'
+{read_recipe, get_modules, get_bundles, get_modules_and_bundles_for_sequence} = require './recipe_parser'
 {toposort} = require './toposort'
 {get_adapters} = require '../adapter'
 {extend, partial, get_cafe_dir, exists, get_legacy_cafe_bin_path} = require '../utils'
@@ -337,20 +337,10 @@ _run_build_sequence_monadic_functions =
 
     _m_parse_modules_and_bundles: (init_result, parse_cb) -> # TOTEST
         """ Parses bundles and modules for sequence """
-        init_result.bundles = get_bundles init_result.recipe
-        unless init_result.bundles.length
-            parse_cb ["No bundles found in recipe #{recipe_path}", false, init_result]
-
-        [err, modules] = get_modules init_result.recipe
-        if err?
-            parse_cb ["Failed to parse modules #{err}", false, init_result]
-
-        modules_in_bundles_names = init_result.bundles.map((b) -> b.modules_names)
-            .reduce((a, b) -> a.concat b) # Add modules from deps.
-
-        init_result.modules = modules.filter (m) -> m.name in modules_in_bundles_names
-
-        parse_cb [OK, false, init_result]
+        {recipe} = init_result
+        get_modules_and_bundles_for_sequence recipe, ([err, [modules, bundles]]) ->
+            modules_bundles = {modules, bundles}
+            parse_cb [err, false, extend init_result, modules_bundles]
 
     _m_modules_processor: (ctx, init_results, module_proc_cb) ->
         {cached_sources, recipe, adapters, modules, build_deps} = init_results

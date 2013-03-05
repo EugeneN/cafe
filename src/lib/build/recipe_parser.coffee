@@ -182,8 +182,28 @@ get_modules_and_bundles_for_sequence = (recipe, parse_cb) ->
     modules_from_deps = modules.filter (m) -> # Include modules from deps
         (m.name in deps_of_modules_in_bundles) and (m.name not in modules_in_bundles_names)
 
-    modules_from_deps_names = modules_from_deps.map (m) -> m.name
     ret_modules = modules_in_bundles.concat modules_from_deps
+
+    _parse_bundle_modules = (module_name, collected_deps, modules) ->
+        _module = u.find modules, (m) -> m.name is module_name
+
+        _module_deps_names = _module.deps.filter (name) -> name not in collected_deps
+
+        result_modules_names = (collected_deps.concat _module_deps_names).reduce unique_reducer, []
+
+        if _module_deps_names.length
+            reducer = (a, b) -> flatten(_parse_bundle_modules b, a, modules)
+
+            inner_deps = flatten(_module_deps_names.reduce reducer, result_modules_names)
+            if inner_deps.length
+                result_modules_names = (result_modules_names.concat inner_deps).reduce unique_reducer, []
+
+        result_modules_names
+
+    bundles = bundles.map (bundle) ->
+        deps_mods = bundle.modules_names.map (name) -> _parse_bundle_modules name, bundle.modules_names, modules
+        bundle.modules_names = flatten(deps_mods).reduce unique_reducer, []
+        bundle
 
     parse_cb [OK, [ret_modules, bundles]]
 
