@@ -1,4 +1,4 @@
-{resolve_deps, toposort, build_bundle} = require '../src/lib/bundler'
+{toposort} = require '../src/lib/build/toposort'
 
 GLOBAL_PARAM = "GLOB"
 events = require 'events'
@@ -7,7 +7,7 @@ events = require 'events'
 module.exports =
     "Topological sort works" : (test) ->
         modules = require './fixtures/bundle/toposort'
-        output_list = toposort null, modules
+        output_list = toposort modules
         result_str = (m.name for m in output_list).join(',')
         test.equal(result_str, 'wife,grandpa,grandma,mother,father,sister,me,child')
         test.done()
