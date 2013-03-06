@@ -16,6 +16,7 @@ RECIPE_API_LEVEL, ADAPTERS_PATH, ADAPTER_FN} = require '../../defs'
 {get_modules_cache} = require '../modules_cache'
 {wrap_bundle, wrap_modules, wrap_module} = require 'wrapper-commonjs'
 {skip_or_error_m, OK} = require '../monads'
+{minify} = require './cafe_minify'
 
 # TODO: check that module name exists on modules parse
 # TODO: handle module compilation error, fails for now
@@ -48,7 +49,8 @@ save_results = (modules, bundles, cache, cached_sources, ctx, save_cb) ->
 
 
 # ======================== BUNDLES PROCESSING ======================================================
-process_bundle = (modules, build_deps, changed_modules, cached_sources, ctx, bundle, bundle_cb) ->
+process_bundle = (modules, build_deps, changed_modules, cached_sources, ctx, opts, bundle, bundle_cb) ->
+    opts or={}
     _m_check_to_rebuild = (modules, build_deps, changed_modules, bundle) ->
         changed_modules_names = if changed_modules.length then\
             (changed_modules.map (m) -> m.name) else []
@@ -133,6 +135,13 @@ process_bundle = (modules, build_deps, changed_modules, cached_sources, ctx, bun
 
         [err, false, [bundle, modules, wrapped_sources]]
 
+    _m_minify = (minify_fn, [bundle, modules, wrapped_sources], min_cb) ->
+        if opts?.minify is true
+            ctx.fb.say "Minify bundle #{bundle.name} ..."
+            minify minify_fn, [bundle, modules, wrapped_sources], min_cb
+        else
+            min_cb [OK, false, [bundle, modules, wrapped_sources]]
+
     _m_write_bundle = (bundle_file_path, [bundle, modules, sources], write_cb) ->
         fs.writeFile bundle_file_path, sources, (err) ->
             err = "Failed to save bundle #{bundle.name}. #{err}" if err?
@@ -143,12 +152,14 @@ process_bundle = (modules, build_deps, changed_modules, cached_sources, ctx, bun
     build_dir = get_build_dir ctx.own_args.build_root
     bundle_dir_path = path.dirname path.join(build_dir, bundle.name)
     bundle_file_path = path.join bundle_dir_path, (path.basename "#{bundle.name}.js")
+    minify_file_path = path.join bundle_dir_path, (path.basename "#{bundle.name}.min.js")
 
     seq = [
         lift_sync(3, partial(_m_check_to_rebuild, modules, build_deps, changed_modules))
         lift_async(4, partial(_m_make_build_path, ctx, bundle_dir_path))
         lift_async(2, _m_fill_modules_sources)
         lift_sync(1, _m_wrap_bundle)
+        lift_async(3, partial(_m_minify, minify_file_path))
         lift_async(3, partial(_m_write_bundle, bundle_file_path))
     ]
 
@@ -356,7 +367,14 @@ _run_build_sequence_monadic_functions =
 
         changed_modules = changed_modules.filter (m) -> m? # removing empty
 
-        _bundles_iterator = partial(process_bundle, modules, build_deps, changed_modules, cached_sources, ctx)
+        _bundles_iterator = partial(process_bundle
+                                    modules
+                                    build_deps
+                                    changed_modules
+                                    cached_sources
+                                    ctx
+                                    recipe.opts
+        )
 
         async.map bundles, _bundles_iterator, (err, proc_bundles) ->
             bundles_proc_cb [err, false, null] if err
