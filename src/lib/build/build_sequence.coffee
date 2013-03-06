@@ -19,6 +19,7 @@ RECIPE_API_LEVEL, ADAPTERS_PATH, ADAPTER_FN} = require '../../defs'
 
 # TODO: check that module name exists on modules parse
 # TODO: handle module compilation error, fails for now
+# TODO: check if bundle path changed (compile if need and then save in new path)
 
 CACHE_FN = 'modules'
 
@@ -207,7 +208,7 @@ process_module = (adapters, cached_sources, build_deps, ctx, module, module_cb) 
     _m_build_if_changed = (ctx, cached_sources, [module, adapter], build_cb) ->
         _adapter_ctx = extend ctx, {module}
 
-        _m_get_adapter = (adapter_ctx, adapter) ->
+        _m_get_adapter = (adapter_ctx, adapter) -> # TODO: move to upper _m_get_adapter
             [OK, false, (adapter.make_adaptor adapter_ctx)]
 
         _m_get_adapter_last_modified = (adapter, cb) ->
