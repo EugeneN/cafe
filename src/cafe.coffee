@@ -92,8 +92,8 @@ module.exports = (emitter) ->
 
         # the one and only exit point
         Emitter.on EVENT_CAFE_DONE, (status) ->
-            say "Coffee #{ID} brewed in <#{(new Date - START_TIME) / 1000} seconds> at #{new Date}"
-            fb.say "Coffee #{ID} brewed in <#{(new Date - START_TIME) / 1000} seconds> at #{new Date}"
+            say "Coffee brewed in <#{(new Date - START_TIME) / 1000} seconds> at #{new Date}"
+            fb.say "Coffee brewed in <#{(new Date - START_TIME) / 1000} seconds> at #{new Date}"
             exit_cb (if status is undefined then EXIT_NO_STATUS_CODE else status), bundles
 
         # global entry point
