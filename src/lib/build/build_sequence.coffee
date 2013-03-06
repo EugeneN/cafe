@@ -17,6 +17,9 @@ RECIPE_API_LEVEL, ADAPTERS_PATH, ADAPTER_FN} = require '../../defs'
 {wrap_bundle, wrap_modules, wrap_module} = require 'wrapper-commonjs'
 {skip_or_error_m, OK} = require '../monads'
 
+# TODO: check that module name exists on modules parse
+# TODO: handle module compilation error, fails for now
+
 CACHE_FN = 'modules'
 
 
@@ -112,7 +115,7 @@ process_bundle = (modules, build_deps, changed_modules, cached_sources, ctx, bun
             if compiled_m?
                 m.copy_sources(compiled_m.get_sources())
             else
-                m.copy_sources cached_sources[m.name]
+                m.copy_sources cached_sources[m.name].sources
 
             cb null, m
 
