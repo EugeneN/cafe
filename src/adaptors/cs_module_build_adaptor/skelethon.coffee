@@ -37,7 +37,8 @@ exports.module = (ctx_args) ->
     values: values
 
 
-exports.spinecontroller = () ->
+exports.spinecontroller = (ctx_args) ->
+    name = ctx_args[1]
     throw "Bad name `#{name}`" unless name
 
     template = "#{SPINE_ASSETS_PATH}/controller.coffee"
