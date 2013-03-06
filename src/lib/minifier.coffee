@@ -66,7 +66,7 @@ class Minifier
 
                         cb()
                     else
-                        fs.writeFile(min_full_filename, (uglify.minify data, {fromString: true}), FILE_ENCODING, (err) =>
+                        fs.writeFile(min_full_filename, (uglify.minify data, {fromString: true}).code, FILE_ENCODING, (err) =>
                             if err
                                 @fb.shout "Error writing file '#{min_full_filename}': #{err}"
                                 scream "Error writing file '#{min_full_filename}': #{err}"

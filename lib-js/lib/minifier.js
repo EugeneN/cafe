@@ -89,7 +89,9 @@
               scream("Error reading file '" + full_filename + "': " + err);
               return cb();
             } else {
-              return fs.writeFile(min_full_filename, uglify(data), FILE_ENCODING, function(err) {
+              return fs.writeFile(min_full_filename, (uglify.minify(data, {
+                fromString: true
+              })).code, FILE_ENCODING, function(err) {
                 if (err) {
                   _this.fb.shout("Error writing file '" + min_full_filename + "': " + err);
                   scream("Error writing file '" + min_full_filename + "': " + err);

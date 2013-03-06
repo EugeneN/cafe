@@ -54,8 +54,9 @@
     };
   };
 
-  exports.spinecontroller = function() {
-    var c_path, template, values;
+  exports.spinecontroller = function(ctx_args) {
+    var c_path, name, template, values;
+    name = ctx_args[1];
     if (!name) {
       throw "Bad name `" + name + "`";
     }
