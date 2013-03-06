@@ -1,6 +1,7 @@
 node_modules
 *.swp
 .idea/*
+*.iml
 *.sublime-project
 *.sublime-workspace
 lib-js/**

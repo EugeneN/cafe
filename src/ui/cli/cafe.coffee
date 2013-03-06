@@ -64,10 +64,10 @@ exit_cb = (status_code) ->
 
 subscribe = (emitter) ->
     emitter.on 'NOTIFY_SUCCESS', ->
-        growl "Cafe success :)", {image: SUCCESS_ICO}
+        growl "Cafe success :-)", {image: SUCCESS_ICO}
 
     emitter.on 'NOTIFY_FAILURE', ->
-        growl "Cafe error :)", {image: FAILURE_ICO}
+        growl "Cafe error :-(", {image: FAILURE_ICO}
 
     emitter.on EVENT_CAFE_DONE, (status, error) ->
         switch status
