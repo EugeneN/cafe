@@ -18,7 +18,6 @@ RECIPE_API_LEVEL, ADAPTERS_PATH, ADAPTER_FN, BUNDLE_HDR} = require '../../defs'
 {skip_or_error_m, OK} = require '../monads'
 {minify} = require './cafe_minify'
 
-# TODO: check that module name exists on modules parse
 # TODO: handle module compilation error, fails for now
 # TODO: check if bundle path changed (compile if need and then save in new path)
 
@@ -172,8 +171,9 @@ process_bundle = (modules, build_deps, changed_modules, cached_sources, ctx, opt
 harvest_module = (adapter, module, ctx, message, cb) ->
     message or= "Harvesting module #{module.path} ..."
     ctx.fb.say message
+    # TODO: handle adapter inner exception.
     adapter.harvest (err, sources) ->
-        return(cb err) if err
+        return(cb err, module) if err
         # post compile module processing sequence
         # TODO: check that sources are present
         module.set_sources wrap_module(sources.sources, sources.ns, module.type)
