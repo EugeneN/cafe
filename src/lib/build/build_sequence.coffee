@@ -12,7 +12,7 @@ mkdirp = require 'mkdirp'
 {get_adapters} = require '../adapter'
 {extend, partial, get_cafe_dir, exists, get_legacy_cafe_bin_path} = require '../utils'
 {CB_SUCCESS, RECIPE, BUILD_DIR, BUILD_DEPS_FN,
-RECIPE_API_LEVEL, ADAPTERS_PATH, ADAPTER_FN} = require '../../defs'
+RECIPE_API_LEVEL, ADAPTERS_PATH, ADAPTER_FN, BUNDLE_HDR} = require '../../defs'
 {get_modules_cache} = require '../modules_cache'
 {wrap_bundle, wrap_modules, wrap_module} = require 'wrapper-commonjs'
 {skip_or_error_m, OK} = require '../monads'
@@ -129,7 +129,7 @@ process_bundle = (modules, build_deps, changed_modules, cached_sources, ctx, opt
     _m_wrap_bundle = ([bundle, modules]) ->
         sources = (modules.map (m) -> m.get_sources())
         try
-            wrapped_sources = wrap_bundle sources.join '\n'
+            wrapped_sources = wrap_bundle (sources.join '\n'), BUNDLE_HDR
         catch ex
             err = "Failed to wrap bundle. #{ex}"
 
