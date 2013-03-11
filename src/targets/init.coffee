@@ -32,7 +32,6 @@ DEFAULT_APP_ROOT = 'cs'
 DEFAULT_BUILD_ROOT = 'public'
 
 
-
 app_init = (ctx, cb) ->
     ctx.fb.say 'Initializing new client side app'
     {app_root, build_root} = ctx.own_args
@@ -76,14 +75,14 @@ app_init = (ctx, cb) ->
                 build_root: build_root
                 formula: 'recipe.json'
 
-        fbuild = 
+        force = 
             build:
                 app_root: app_root
                 build_root: build_root
                 formula: 'recipe.json'
                 f: true 
 
-        wbuild = 
+        watch = 
             build:
                 app_root: app_root
                 build_root: build_root
@@ -92,8 +91,8 @@ app_init = (ctx, cb) ->
                 src: app_root
 
         menu._do_new_menu 'build', {full_args: build, fb: ctx.fb}
-        menu._do_new_menu 'fbuild', {full_args: fbuild, fb: ctx.fb}
-        menu._do_new_menu 'wbuild', {full_args: wbuild, fb: ctx.fb}
+        menu._do_new_menu 'force', {full_args: force, fb: ctx.fb}
+        menu._do_new_menu 'watch', {full_args: watch, fb: ctx.fb}
 
         cb()
 

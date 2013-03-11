@@ -25,11 +25,15 @@ Cafe is a build tool for client-side applications aiming to be language/module s
 
 Current version (cafe4) is a prototype and is written in Coffeescript in functional and asyncronous way (mostly functional and mostly asyncronous :-). 
 
-Cafe5 is going to be written in Clojure as an application description DSL library and a runtime for this DSL.
-
 #Installation
 
     npm install -g cafe4
 
 #Changelog
+
+-- 0.1.0 
+* yaml recipe reader
+* advanced recipe parsing logic [link to docs here]
+* some docs [link here]
+
 -- Added growl notifications. (can be disabled by option --nogrowl).

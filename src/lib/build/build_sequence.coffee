@@ -18,7 +18,6 @@ RECIPE_API_LEVEL, ADAPTERS_PATH, ADAPTER_FN, BUNDLE_HDR} = require '../../defs'
 {skip_or_error_m, OK} = require '../monads'
 {minify} = require './cafe_minify'
 
-# TODO: handle module compilation error, fails for now
 # TODO: check if bundle path changed (compile if need and then save in new path)
 
 CACHE_FN = 'modules'

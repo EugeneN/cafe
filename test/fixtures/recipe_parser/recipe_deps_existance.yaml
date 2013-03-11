@@ -1,7 +1,7 @@
 abstract: {api_version: 5}
 
 opts:
-    minify: true
+    minify: false
 
 
 modules:
