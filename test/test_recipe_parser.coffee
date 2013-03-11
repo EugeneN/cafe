@@ -7,7 +7,8 @@ get_bundles
 remove_modules_duplicates
 construct_modules
 get_modules_and_bundles_for_sequence
-fill_modules_deps} = require '../src/lib/build/recipe_parser'
+fill_modules_deps
+check_deps_names_exists} = require '../src/lib/build/recipe_parser'
 
 fixtures_path = path.resolve './test/fixtures/recipe_parser'
 
@@ -19,6 +20,7 @@ recipe_realm_bundles_parse_path = path.join fixtures_path, 'bundles_realm_parse_
 recipe_bundles_parse_path = path.join fixtures_path, 'bundles_parse_recipe.json'
 recipe_yaml_path = path.join fixtures_path, "recipe.yaml"
 recipe_sequence_parse = path.join fixtures_path, "recipe_sequence.yaml"
+recipe_deps_exists = path.join fixtures_path, "recipe_deps_existance.yaml"
 
 
 exports.test_recipe_read_basic_validation = (test) ->
@@ -124,3 +126,15 @@ exports.test_get_modules_and_bundles_for_sequence = (test) ->
             )
 
             test.done()
+
+exports.test_check_deps_existance  = (test) ->
+    read_recipe.async recipe_deps_exists, 0, ([error, recipe]) ->
+        [err, modules] = get_modules recipe
+
+        test.ok(
+            err?
+            "Error didn't occured while not existent module jquer was set as dependency for module plain_coffee"
+        )
+
+        test.done()
+

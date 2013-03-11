@@ -346,9 +346,12 @@ _run_build_sequence_monadic_functions =
     _m_parse_modules_and_bundles: (init_result, parse_cb) -> # TOTEST
         """ Parses bundles and modules for sequence """
         {recipe} = init_result
-        get_modules_and_bundles_for_sequence recipe, ([err, [modules, bundles]]) ->
-            modules_bundles = {modules, bundles}
-            parse_cb [err, false, extend init_result, modules_bundles]
+        get_modules_and_bundles_for_sequence recipe, ([err, modules_and_bundles]) ->
+            if err?
+                parse_cb [err, false, undefined]
+            else
+                [modules, bundles] = modules_and_bundles
+                parse_cb [err, false, extend init_result, {modules, bundles}]
 
     _m_modules_processor: (ctx, init_results, module_proc_cb) ->
         {cached_sources, recipe, adapters, modules, build_deps} = init_results

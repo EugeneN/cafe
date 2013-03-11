@@ -31,6 +31,7 @@ chain_check = (level, recipe_path) ->
 read_if_is_file = (recipe_path) -> # TOTEST, TODO: separate on 2 funcs (is_file, read)
     if is_file recipe_path
         # TODO: hadle recipe validation error
+        # TODO: handle yaml format sync reading
         [OK, (read_json_file recipe_path)]
     else
         ["Recipe file #{recipe_path} is not found", undefined]
@@ -134,7 +135,6 @@ construct_modules = (modules) ->
             err or= "Failed to parse module definition #{module}"
         else
             module
-
     [err, modules]
 
 
@@ -149,11 +149,22 @@ fill_modules_deps = (recipe, modules) ->
     [null, modules]
 
 
+check_deps_names_exists = (modules) ->
+    modules_names = modules.map (m) -> m.name
+    for module in modules
+        for dep in module.deps
+            unless dep in modules_names
+                return ["Dependency module name #{dep} of module #{module.name} was not found", null]
+    [null, modules]
+
+
+# TODO: make async
 get_modules = (recipe) ->
     seq = [
         get_raw_modules
         construct_modules
         partial(fill_modules_deps, recipe)
+        check_deps_names_exists
     ]
 
     (domonad error_m(), seq, recipe)
@@ -244,4 +255,5 @@ module.exports = {
     get_bundles
     read_if_is_file
     get_modules_and_bundles_for_sequence
+    check_deps_names_exists
 }
