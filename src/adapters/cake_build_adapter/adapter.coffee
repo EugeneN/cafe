@@ -22,7 +22,7 @@ fn_without_ext = (filename) ->
 
 get_paths = (ctx) ->
     app_root = path.resolve ctx.own_args.app_root
-    module_name = ctx.own_args.mod_name
+    module_name = ctx.module.path
     src = ctx.own_args.src
     mod_src = src or path.resolve app_root, module_name
     cakefile = path.resolve mod_src, CAKEFILE

@@ -19,6 +19,7 @@ RECIPE_API_LEVEL, ADAPTERS_PATH, ADAPTER_FN, BUNDLE_HDR} = require '../../defs'
 {minify} = require './cafe_minify'
 
 # TODO: check if bundle path changed (compile if need and then save in new path)
+# TODO: nothing happens when recipe is empty
 
 CACHE_FN = 'modules'
 
