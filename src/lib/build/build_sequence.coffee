@@ -168,7 +168,7 @@ process_bundle = (modules, build_deps, changed_modules, cached_sources, ctx, opt
 
 # ======================== MODULES PROCESSING ======================================================
 harvest_module = (adapter, module, ctx, message, cb) ->
-    message or= "Harvesting module #{module.path} ..."
+    message or= "Harvesting module #{module.name} (#{module.path}) ..."
     ctx.fb.say message
     # TODO: handle adapter inner exception.
     adapter.harvest (err, sources) ->
@@ -203,7 +203,7 @@ process_module = (adapters, cached_sources, build_deps, ctx, module, module_cb) 
 
     _m_build_if_force = (ctx, [module, adapter], cb) ->
         if ctx.own_args.f?
-            message = "Forced harvesting #{module.name} ..."
+            message = "Forced harvesting #{module.name} (#{module.path})..."
             _adapter_ctx = extend ctx, {module}
             adapter = (adapter.make_adaptor _adapter_ctx)
 
