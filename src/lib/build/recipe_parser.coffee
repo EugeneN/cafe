@@ -57,7 +57,6 @@ read_if_is_file.async = (recipe_path, cb) ->
                 if err
                     err = "Failded to read recipe file #{recipe_path} #{err}"
                     (return cb [err, undefined])
-
                 cb [OK, result]
         else
             cb ["Recipe file #{recipe_path} is not found", undefined]
@@ -78,18 +77,14 @@ check_for_inheritance = (level, recipe_path, read_recipe_fn, recipe) ->
 
 check_for_inheritance.async = (level, recipe_path, read_recipe_fn, recipe, cb) ->
     if recipe?.abstract?.extends
-        base_recipe_path = (path.resolve (path.dirname recipe_path),
-                                         recipe.abstract.extends)
-
+        base_recipe_path = (path.resolve (path.dirname recipe_path), recipe.abstract.extends)
         unless base_recipe_path is recipe_path
-            recursive_cb = ([error, base_recipe]) ->
-                recipe = (extend base_recipe, recipe)
-                cb [error, recipe]
-            (read_recipe_fn base_recipe_path, level+1, recursive_cb)
-
+            read_recipe_fn base_recipe_path, level+1, ([err, base_recipe]) ->
+                cb [err, (extend base_recipe, recipe)]
         else
             error = "Recipe #{recipe_path} can not inherit from itself"
-    cb [error, recipe]
+    else
+        cb [error, recipe]
 
 
 read_recipe = (recipe_path, level=0) ->
@@ -102,13 +97,13 @@ read_recipe = (recipe_path, level=0) ->
     domonad error_m(), lifted_handlers_chain, recipe_path
 
 
-read_recipe.async = (recipe_path, level=0, cb) ->
+read_recipe.async = (recipe_path, level=0, cb) -> # TOTEST !!!
     worker_monad = cont_t error_m()
 
     lifted_handlers_chain = [
         lift_sync(2, partial(chain_check, level))
         lift_async(2, read_if_is_file.async)
-        lift_async(5, partial(check_for_inheritance.async, level, recipe_path, read_recipe))
+        lift_async(5, partial(check_for_inheritance.async, level, recipe_path, read_recipe.async))
     ]
 
     (domonad worker_monad, lifted_handlers_chain, recipe_path) cb
