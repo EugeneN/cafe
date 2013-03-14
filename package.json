@@ -13,11 +13,7 @@
   "bin": { "cafe": "./bin/cafe", "telnet-cafe": "./bin/telnet-cafe"},
   "dependencies" : {
     "eco": "*",
-<<<<<<< HEAD
-    "uglify-js": "2.2.4",
-=======
     "uglify-js": ">=2.2.4",
->>>>>>> recipe-parser
     "fast-detective": "*",
     "coffee-script" : "*",
     "watch" : "*",
@@ -30,14 +26,10 @@
     "mkdirp": "*",
     "chokidar": "*",
     "growl": "*",
-<<<<<<< HEAD
-    "wrapper-commonjs":">=0.0.26"
-=======
     "wrapper-commonjs":">=0.0.26",
     "libmonad": "*",
     "libprotein": "*",
     "js-yaml": "*",
     "easy-opts": "*"
->>>>>>> recipe-parser
   }
 }
