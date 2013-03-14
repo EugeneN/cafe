@@ -26,7 +26,7 @@
     "mkdirp": "*",
     "chokidar": "*",
     "growl": "*",
-    "wrapper-commonjs":">=0.0.25",
+    "wrapper-commonjs":">=0.0.26",
     "libmonad": "*",
     "libprotein": "*",
     "js-yaml": "*",

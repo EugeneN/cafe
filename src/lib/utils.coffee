@@ -1,4 +1,3 @@
-
 fs = require 'fs'
 path = require 'path'
 yaml = require 'js-yaml'
@@ -10,11 +9,7 @@ _ = require 'underscore'
 
 read_slug = (p) ->
     slug_fn = path.resolve p, SLUG_FN
-
-    # if fs.existsSync(slug_fn)
     JSON.parse(fs.readFileSync(slug_fn, FILE_ENCODING))
-    # else
-        # {}
 
 walk = (dir, done) ->
     # concurrent async walk

@@ -109,7 +109,6 @@ process_bundle = (modules, build_deps, changed_modules, cached_sources, ctx, opt
     _m_make_build_path = (ctx, bundle_dir_path, [bundle, modules], build_path_cb)->
         mkdirp bundle_dir_path, (err) -> build_path_cb [err, false, [bundle, modules]]
 
-
     _m_fill_modules_sources = ([bundle, modules], fill_sources_cb) ->
         fill_sources = (m, cb) ->
             compiled_m = u.find changed_modules, (mod) -> mod.name is m.name
@@ -330,7 +329,6 @@ _run_build_sequence_monadic_functions =
         else
             legacy_cafe_bin = get_legacy_cafe_bin_path recipe.abstract.api_version
             exists.async legacy_cafe_bin, (err, status) ->
-                console.log status, legacy_cafe_bin
                 unless status is true
                     ctx.fb.shout "Unknown api_version recipe #{recipe.abstract.api_version}"
                     check_cb [OK, true, init_result]
