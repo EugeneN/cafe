@@ -65,6 +65,8 @@ module.exports = do ->
                 cwd: mod_src
                 env: process.env
 
+            opts.env.NODE_PATH = (path.join mod_src, 'node_modules') + (if opts.env.NODE_PATH then (":#{opts.env.NODE_PATH}") else "")
+
             child = fork get_cake_bin(), [CAKE_TARGET], opts
 
             child.on 'message', (modules) ->

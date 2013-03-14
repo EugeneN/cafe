@@ -1,7 +1,7 @@
 {
   "name": "cafe4",
   "description": "Client-side applications build tool",
-  "version": "0.0.88",
+  "version": "0.0.89",
   "author": "E.Naumenko, A.Mostovenko, B.Larin",
   "repository": {
     "type" : "git",
@@ -26,6 +26,6 @@
     "mkdirp": "*",
     "chokidar": "*",
     "growl": "*",
-    "wrapper-commonjs":"*"
+    "wrapper-commonjs":">=0.0.26"
   }
 }
