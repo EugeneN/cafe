@@ -67,7 +67,7 @@ child =
     name: 'child'
     deps: ['me', 'wife']
 
-module.exports = {
+module.exports = [
     child,
     father,
     grandma,
@@ -76,4 +76,4 @@ module.exports = {
     mother,
     sister,
     wife,
-}
+]

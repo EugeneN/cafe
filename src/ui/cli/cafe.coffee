@@ -5,14 +5,14 @@ Function::partial or= (part_args...) ->
     f = @
     (args...) -> f.apply(@, [part_args..., args...])
 
-LOG_PREFIX = 'UI/CLI>'
+LOG_PREFIX = 'Cafe>'
 
 path = require 'path'
 events = require 'events'
 growl = require 'growl'
+{parse_process_args} = require 'easy-opts'
 
 cafe_factory = require '../../cafe'
-pessimist = require '../../lib/pessimist'
 {is_array} = require '../../lib/utils'
 {draw_logo} = require '../../lib/pictures'
 logger = (require '../../lib/logger') LOG_PREFIX
@@ -85,8 +85,7 @@ subscribe = (emitter) ->
 
 
 module.exports = ->
-    argv = pessimist process.argv
-
+    argv = parse_process_args()
     logger.nocolor on if argv.global.hasOwnProperty 'nocolor'
     logger.shutup on if argv.global.hasOwnProperty 'shutup'
     logger.panic_mode on if argv.global.hasOwnProperty 'debug'

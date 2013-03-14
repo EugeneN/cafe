@@ -1,0 +1,19 @@
+abstract: {api_version: 5}
+
+opts:
+    minify: false
+
+
+modules:
+    - test1: [test1, [test2]]
+    - test2: [test2, commonjs, [jquery]]
+    - jquery: [jquery.min.js, plainjs]
+    - plain_coffee: [plain.coffee, plainjs, [jquer]]
+
+
+bundles:
+    bundle1:
+        modules:
+            - plain_coffee
+            - test2
+            - test1

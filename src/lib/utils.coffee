@@ -1,6 +1,6 @@
-
 fs = require 'fs'
 path = require 'path'
+yaml = require 'js-yaml'
 _ = require 'underscore'
 {spawn} = require 'child_process'
 {say, shout, scream, whisper} = (require './logger') 'Utils>'
@@ -9,11 +9,7 @@ _ = require 'underscore'
 
 read_slug = (p) ->
     slug_fn = path.resolve p, SLUG_FN
-
-    # if fs.existsSync(slug_fn)
     JSON.parse(fs.readFileSync(slug_fn, FILE_ENCODING))
-    # else
-        # {}
 
 walk = (dir, done) ->
     # concurrent async walk
@@ -64,9 +60,9 @@ get_mtime = (filename) ->
 get_mtime.async = (filename, cb) ->
     fs.stat filename, (err, stat) ->
         if err
-            cb err
+            cb err, null
         else
-            cb mtime_to_unixtime stat.mtime
+            cb null, (mtime_to_unixtime stat.mtime)
 
 newest = (l) -> Math.max.apply Math, l
 
@@ -174,15 +170,21 @@ read_json_file = (filename) ->
 read_json_file.async = (filename, cb) ->
     fs.readFile filename, FILE_ENCODING, (err, res) ->
         if err
-            scream "Error reading file #{filename}"
             cb err
         else
             try
-                cb CB_SUCCESS, (Object.freeze (JSON.parse res))
+                 json_file = (Object.freeze (JSON.parse res))
             catch e
-                console.log "Error parsing json file #{filename}: #{e}"
-                cb e
+                err = e
+            finally
+                cb err, json_file
 
+read_yaml_file = () -> throw "Method read_yaml_file is not implemented"
+
+read_yaml_file.async = (filename, cb) ->
+    fs.readFile filename, FILE_ENCODING, (err, res) ->
+        yaml.loadAll res, (data) ->
+                cb null, data
 
 trim = (s) -> s.replace /^\s+|\s+$/g, ''
 
@@ -382,6 +384,7 @@ module.exports = {
     filter_dict
     is_debug_context
     read_json_file
+    read_yaml_file
     trim
     exists
     is_dir

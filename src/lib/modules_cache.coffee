@@ -1,35 +1,57 @@
 fs = require 'fs'
 path = require 'path'
 mkdirp = require 'mkdirp'
-{get_mtime} = require('./utils')
+{get_mtime, extend} = require('./utils')
 
-exports.get_modules_cache = (cache_path) ->
+exports.get_modules_cache = (cache_path, cache_cb) ->
+    get_fn = (module_name) -> path.join cache_path, module_name + '.cache'
 
-    get_fn = (module_name) ->
-        path.join cache_path, module_name + '.cache'
+    result =
+        get: (module_name) -> # Deprecated
+            JSON.parse fs.readFileSync (get_fn module_name)
 
-    get: (module_name) ->
-        JSON.parse fs.readFileSync (get_fn module_name)
+        save_modules_async: (modules, cached_sources, filename, cb) ->
+            reducer = (a, b) ->
+                new_key = {}
+                new_key[b.name] = b
+                extend a, new_key
 
-    save: (cache) ->
-        module_name = get_fn cache.module.name
+            if cached_sources
+                for m in modules
+                    cached_sources[m.name] = m.serrialize_sources()
+                to_save = cached_sources
+            else
+                to_save = ((modules.map (m) -> m.serrialize_sources()).reduce reducer, {})
 
-        write_file = (cached_mod) ->
-            fs.writeFileSync (get_fn cached_mod.module.name), (JSON.stringify cached_mod)
+            fs.writeFile (get_fn filename), JSON.stringify(to_save), cb
 
-        if path.existsSync (path.dirname module_name)
-            write_file cache
+        get_modules_async: (filename, cb) ->
+            fs.readFile (get_fn filename), (err, data) ->
+                data = if err
+                    null
+                else
+                    try
+                        JSON.parse data
+                    catch er
+                        parse_error = "Error while reading cache file #{get_fn filename} #{er}"
+
+                cb parse_error, data
+
+        get_cached_file_path: (module_name) -> get_fn module_name
+
+        get_cache_mtime_async: (module, cb) -> get_mtime.async (get_fn module.name), cb
+
+    mkdirp cache_path, (err) ->
+        if err
+            cache_cb "Cannot create cache dirrectory #{err}", null
         else
-            mkdirp (path.dirname module_name), (err) ->
-                throw "Can not create cache dirrectory #{err}" if err
-                write_file cache
+            cache_cb null, result
 
-    get_cached_file_path: (module_name) ->
-        get_fn module_name
 
-    get_cache_mtime: (module) ->
-        try
-            get_mtime (get_fn module.name).toString()
-        catch e
-            0
+
+
+
+
+
+
 

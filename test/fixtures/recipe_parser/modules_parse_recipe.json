@@ -1,0 +1,31 @@
+{
+    "abstract": {
+        "api_version": 4
+    },
+
+    "modules": [
+        {"module1": {"path":"module1","deps":["module5"]}},
+        {"module5": "module5"},
+        {"module6": {"path": "module6", "type": "plainjs"}},
+        {"module2": {"path":"module6", "deps":["module6"]}}
+    ],
+
+    "realms": {
+        "realm1": [
+            {
+                "name": "bundle1",
+                "modules": [
+                    "module1",
+                    "module2"
+                ]
+            },
+            {
+                "name": "bundle2",
+                "modules": [
+                    "module1",
+                    "module2"
+                ]
+            }
+        ]
+    }
+}

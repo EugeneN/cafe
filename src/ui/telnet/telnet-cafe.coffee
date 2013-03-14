@@ -15,7 +15,7 @@ uuid = require 'node-uuid'
 cafe_factory = require '../../cafe'
 {is_array} = require "../../lib/utils"
 logger = (require '../../lib/logger')()
-pessimist = require '../../lib/pessimist'
+{parse_args} = require 'easy-opts'
 {draw_logo} = require '../../lib/pictures'
 ui = (require '../../lib/uilogger') LOG_PREFIX
 
@@ -47,9 +47,9 @@ cafe_done_cb = (fb) ->
 
 parse_input_from_client = (data) ->
     clean_data = data.toString().replace /(\r\n|\n|\r)/gm, ""
-    argv_like = ([null, null].concat clean_data.split ' ').filter (i) -> i isnt ''
+    argv_like = (clean_data.split ' ').filter (i) -> i isnt ''
 
-    pessimist argv_like
+    parse_args argv_like
 
 match_data_type = (raw_data) ->
     if raw_data[0] is TELNET_CMD_MARKER

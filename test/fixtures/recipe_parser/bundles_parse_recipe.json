@@ -1,0 +1,31 @@
+{
+    "abstract": {
+        "api_version": 4
+    },
+
+    "deps": {
+        "module1": [
+            "module5"
+        ]
+    },
+
+    "modules": [
+        "module5",
+        {"path": "module6", "type": "plainjs"}
+    ],
+
+    "bundles": {
+        "bundle1": {
+            "modules":[
+                "module1",
+                "module2"
+            ]
+        },
+        "bundle2": {
+            "modules":[
+                "module3",
+                "module4"
+            ]
+        }
+    }
+    }
