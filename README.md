@@ -31,7 +31,7 @@ Current version (cafe4) is a prototype and is written in Coffeescript in functio
 
 #Changelog
 
--- 0.1.0 
+0.0.90
 * yaml recipe reader
 * advanced recipe parsing logic [link to docs here]
 * some docs [link here]
