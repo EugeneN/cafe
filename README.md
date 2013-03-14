@@ -33,7 +33,9 @@ Current version (cafe4) is a prototype and is written in Coffeescript in functio
 
 0.0.90
 * yaml recipe reader
-* advanced recipe parsing logic [link to docs here]
-* some docs [link here]
+* advanced recipe parsing logic
+** aliases
+** different formats for modules
+* caching logic optimization. (2 times faster build process then in previous versions)
 
 -- Added growl notifications. (can be disabled by option --nogrowl).
