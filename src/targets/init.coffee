@@ -21,7 +21,7 @@ help = [
 fs = require 'fs'
 path = require 'path'
 {is_dir, is_file, exists} = require '../lib/utils'
-recipe_etalon_path = path.resolve __dirname, '../../assets/templates/init/recipe/recipe.json'
+recipe_etalon_path = path.resolve __dirname, '../../assets/templates/init/recipe/recipe.yaml'
 {make_target} = require '../lib/target'
 {make_skelethon} = require '../lib/skelethon/skelethon'
 menu = require '../lib/menu'
@@ -54,8 +54,8 @@ app_init = (ctx, cb) ->
         # recipe.json
         create_recipe_json = () ->
             recipe = fs.readFileSync recipe_etalon_path
-            fs.writeFileSync (path.join app_root, 'recipe.json'), recipe
-            ctx.fb.say "#{app_root}/recipe.json file created"
+            fs.writeFileSync (path.join app_root, 'recipe.yaml'), recipe
+            ctx.fb.say "#{app_root}/recipe.yaml file created"
             cb()
 
         unless exists build_root
@@ -73,20 +73,20 @@ app_init = (ctx, cb) ->
             build:
                 app_root: app_root
                 build_root: build_root
-                formula: 'recipe.json'
+                formula: 'recipe.yaml'
 
         force = 
             build:
                 app_root: app_root
                 build_root: build_root
-                formula: 'recipe.json'
+                formula: 'recipe.yaml'
                 f: true 
 
         watch = 
             build:
                 app_root: app_root
                 build_root: build_root
-                formula: 'recipe.json'
+                formula: 'recipe.yaml'
             watch:
                 src: app_root
 

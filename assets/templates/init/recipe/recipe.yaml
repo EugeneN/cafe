@@ -1,33 +1,17 @@
 abstract: 
     api_version: 5
-#   extends: ...           # recipe may be extended by some parent recipe
+    # extends:
 
 #opts:
 #    minify: false
 
 
 # modules section is for registering application modules
-# There are a couple of formats of how you can define your modules
 # you can read more detailed about modules format here - https://github.com/EugeneN/cafe/wiki/recipe-file
 modules:
-    - cafe_module: [cafe_module, [cj_js_file]                   # cafe module (folder with slug.json has namespace - "cafe_module")
-                                                                #              module_name: [deps]
-    - cj_coffee_file: coffee_file.coffee                        # commonjs coffeescript file (module name: path)
-    - cj_js_file: [js_file.js, [cj_coffee_file]]                # commonjs javascript file
-    - plain_coffee: [plain.coffee, plainjs, [plain_js]]         # plain coffeescript file (module name: path, type, [deps])
-    - plain_js: [js_file.js, plainjs]                           # plain javascript file 
 
 
 # Section for defining your bundles structure
 bundles:
-    bundle1:                     # will result to build/bundle1.js file in your build folder
+    bundle1:
         modules:
-            - cafe_module
-            - cj_coffee_file
-            - plain_js
-
-    default/bundle2:             # will result to build/default/bundle2.js file in your build folder
-        modules:
-            - plain_coffee
-            - cj_js_file
-            - cafe_module

@@ -72,7 +72,7 @@ default_config =
     ADAPTERS_LIB: ADAPTERS_LIB
     BUILD_DIR: BUILD_DIR
 
-    WATCH_FN_PATTERN: /^[^\.].+\.coffee$|^[^\.].+\.json$|^[^\.].+\.eco|^[^\.].+\.js$|^[^\.].+\.cljs$/i
+    WATCH_FN_PATTERN: /^[^\.].+\.coffee$|^[^\.].+\.yaml$|^[^\.].+\.json$|^[^\.].+\.eco|^[^\.].+\.js$|^[^\.].+\.cljs$/i
 
     RECIPE_EXT: '.json'
     RECIPE: "recipe.json"
