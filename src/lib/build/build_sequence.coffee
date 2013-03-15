@@ -239,7 +239,7 @@ process_module = (adapters, cached_sources, build_deps, ctx, module, module_cb) 
                         unless err?
                             cb [OK, true, module]
                         else
-                            cb ["Module compile error. Module - #{module.name}", false, undefined]
+                            cb ["Module compile error. Module - #{module.name}. #{err}", false, undefined]
                 else
                     cb [OK, true, undefined]
             else
@@ -247,7 +247,7 @@ process_module = (adapters, cached_sources, build_deps, ctx, module, module_cb) 
                     unless err?
                         cb [OK, true, module]
                     else
-                        cb ["Module compile error. Module - #{module.name}", false, undefined]
+                        cb ["Module compile error. Module - #{module.name}. #{err}", false, undefined]
 
         seq = [
             lift_sync(2, partial(_m_get_adapter, _adapter_ctx))
@@ -385,7 +385,7 @@ _run_build_sequence_monadic_functions =
                 bundles_proc_cb [OK, true, undefined]
             else
                 bundle_names = proc_bundles.map (b) -> b.name
-                ctx.fb.say "Bundles [#{bundle_names}] was build successfully"
+                ctx.fb.say "Bundles [#{bundle_names}] were build successfully"
                 bundles_proc_cb [err, false, [init_results, changed_modules, proc_bundles]]
 
     _m_save_results: (ctx, [init_results, changed_modules, proc_bundles], save_cb) ->
