@@ -30,6 +30,7 @@
     "libmonad": "*",
     "libprotein": "*",
     "js-yaml": "*",
-    "easy-opts": "*"
+    "easy-opts": "*",
+    "gimme-deps": "*"
   }
 }

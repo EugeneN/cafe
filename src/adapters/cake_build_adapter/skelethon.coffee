@@ -1,1 +1,0 @@
-exports.cake_create = ->
