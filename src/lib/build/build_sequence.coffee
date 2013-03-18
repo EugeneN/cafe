@@ -179,7 +179,7 @@ harvest_module = (adapter, module, ctx, message, cb) ->
         cb err, module
 
 
-process_module = (adapters, cached_sources, build_deps, ctx, module, module_cb) -> # TOTEST
+process_module = (adapters, cached_sources, build_deps, ctx, modules, module, module_cb) -> # TOTEST
 
     _m_module_path_exists = (ctx, module, cb) ->
         module_path = path.join ctx.own_args.app_root, module.path
@@ -205,7 +205,7 @@ process_module = (adapters, cached_sources, build_deps, ctx, module, module_cb) 
         if ctx.own_args.f?
             message = "Forced harvesting #{module.name} (#{module.path})..."
             _adapter_ctx = extend ctx, {module}
-            adapter = (adapter.make_adaptor _adapter_ctx)
+            adapter = (adapter.make_adaptor _adapter_ctx, modules) # TODO: pass modules as partial
 
             harvest_module adapter, module, ctx, message, (err, module) ->
                 unless err?
@@ -219,7 +219,7 @@ process_module = (adapters, cached_sources, build_deps, ctx, module, module_cb) 
         _adapter_ctx = extend ctx, {module}
 
         _m_get_adapter = (adapter_ctx, adapter) -> # TODO: move to upper _m_get_adapter
-            [OK, false, (adapter.make_adaptor adapter_ctx)]
+            [OK, false, (adapter.make_adaptor adapter_ctx, modules)] # TODO: pass modules as partial
 
         _m_get_adapter_last_modified = (adapter, cb) ->
             adapter.last_modified (err, mtime) ->
@@ -355,7 +355,7 @@ _run_build_sequence_monadic_functions =
         {cached_sources, recipe, adapters, modules, build_deps} = init_results
 
         _modules_iterator = partial(process_module,
-                                    adapters, cached_sources, build_deps, ctx)
+                                    adapters, cached_sources, build_deps, ctx, modules)
 
         async.map modules, _modules_iterator, (err, changed_modules) ->
             unless changed_modules.length

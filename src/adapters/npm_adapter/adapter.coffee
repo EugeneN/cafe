@@ -2,10 +2,22 @@ fs = require 'fs'
 path = require 'path'
 _ = require 'underscore'
 getdeps = require 'gimme-deps'
+{spawn} = require 'child_process'
 async = require 'async'
+{domonad, cont_t, lift_async, lift_sync} = require 'libmonad'
 
-{maybe_build, is_dir, is_file, has_ext, and_,
+{partial, maybe_build, is_dir, is_file, has_ext, and_,
  get_mtime, newer, walk, newest, extend} = require '../../lib/utils'
+
+OK = undefined
+
+error_m = -> # TODO: move this to libmonad
+    is_error = ([err, val]) -> (err isnt OK) and (err isnt null)
+
+    result: (v) -> [OK, v]
+
+    bind: (mv, f) ->
+        if (is_error mv) then mv else (f mv[1])
 
 CB_SUCCESS = undefined
 
@@ -32,15 +44,36 @@ module.exports = do ->
                             else
                                 cb CB_SUCCESS, false
 
-    make_adaptor = (ctx) ->
+    make_adaptor = (ctx, modules) ->
         type = 'npm_module'
-
+        
         harvest = (harvest_cb) ->
-            {mod_src} = get_paths ctx
 
-            getdeps mod_src, (err, info) ->
-                ns = path.basename mod_src
+            _m_read_package_json = (mod_src, cb) ->
+                fs.readFile (path.join mod_src, "package.json"), (err, packagejson) ->
+                    cb [err, {mod_src, packagejson}]
 
+            _m_execute_cafebuild = ({mod_src, packagejson}, cb) ->
+                if packagejson.cafebuild?
+                    child = spawn packagejson.cafebuild
+                    child.on 'exit', (code) ->
+                        if code is 0
+                            cb [null, {mod_src, packagejson}]
+                        else
+                            cb ["Npm package task execution failure #{packagejson.cafebuild}, status code - #{code}", null]
+                else
+                    cb [null, {mod_src, packagejson}]
+
+            _m_get_require_dependencies = ({mod_src, packagejson}, cb) ->
+                console.log mod_src
+                getdeps mod_src, (err, info) -> cb [err, {mod_src, packagejson, info}]
+
+            _m_filter_require_dependencies = (ns, registered_requires, {mod_src, packagejson, info}, cb) ->
+                info = info.filter (i) -> (i.module not in registered_requires) or (i.module is ns)
+                cb [null, {mod_src, packagejson, info}]
+
+            _m_fill_filtes_sources = (ns, {mod_src, packagejson, info}, fill_cb) ->
+                
                 npm_file_process = (_file, cb) ->
                     fs.readFile _file.path, (err, source) ->
                         fname = if _file.callee is ns
@@ -48,9 +81,26 @@ module.exports = do ->
                         else
                             _file.callee
 
-                        cb err, {filename: fname, source: source.toString(), type: "commonjs"}
+                        cb err, {filename: fname, source: source.toString()}
+                
                 async.map info, npm_file_process, (err, sources) ->
-                    harvest_cb null, {sources, ns}
+                    sources = {sources, ns}
+                    fill_cb [null, {mod_src, packagejson, info, sources}]
+
+            {mod_src} = get_paths ctx
+            ns = path.basename mod_src
+            registered_requires = modules.map (m) -> m.name
+
+            seq = [
+                lift_async(2, _m_read_package_json)
+                lift_async(2, _m_execute_cafebuild)
+                lift_async(2, _m_get_require_dependencies)
+                lift_async(4, partial(_m_filter_require_dependencies, ns, registered_requires))
+                lift_async(3, partial(_m_fill_filtes_sources, ns))
+            ]
+
+            domonad((cont_t error_m()), seq, mod_src) ([err, {sources}]) ->
+                harvest_cb err, sources
 
 
         last_modified = (cb) ->
