@@ -2,7 +2,7 @@ fs = require 'fs'
 path = require 'path'
 _ = require 'underscore'
 getdeps = require 'gimme-deps'
-{spawn} = require 'child_process'
+{exec} = require 'child_process'
 async = require 'async'
 {domonad, cont_t, lift_async, lift_sync} = require 'libmonad'
 
@@ -51,18 +51,23 @@ module.exports = do ->
 
             _m_read_package_json = (mod_src, cb) ->
                 fs.readFile (path.join mod_src, "package.json"), (err, packagejson) ->
+                    packagejson = JSON.parse packagejson.toString()
                     cb [err, {mod_src, packagejson}]
 
             _m_execute_cafebuild = ({mod_src, packagejson}, cb) ->
+                opts =
+                    cwd: mod_src
+                    env: process.env
+
+                opts.env.NODE_PATH = (path.join mod_src, 'node_modules') + (if opts.env.NODE_PATH then (":#{opts.env.NODE_PATH}") else "")
+
                 if packagejson.cafebuild?
-                    child = spawn packagejson.cafebuild
-                    child.on 'exit', (code) ->
-                        if code is 0
-                            cb [null, {mod_src, packagejson}]
-                        else
-                            cb ["Npm package task execution failure #{packagejson.cafebuild}, status code - #{code}", null]
-                else
-                    cb [null, {mod_src, packagejson}]
+                    child = exec packagejson.cafebuild, opts, (error, stdout, stderr) ->
+                        if error
+                            ctx.fb.scream stderr.replace /\n$/, ''
+                            return cb ["Npm package task execution failure #{packagejson.cafebuild}, #{error}", null]
+
+                        cb [null, {mod_src, packagejson}]
 
             _m_get_require_dependencies = ({mod_src, packagejson}, cb) ->
                 getdeps mod_src, (err, info) -> cb [err, {mod_src, packagejson, info}]
@@ -98,7 +103,8 @@ module.exports = do ->
                 lift_async(3, partial(_m_fill_filtes_sources, ns))
             ]
 
-            domonad((cont_t error_m()), seq, mod_src) ([err, {sources}]) ->
+            domonad((cont_t error_m()), seq, mod_src) ([err, resp]) ->
+                (sources = resp.sources) unless err
                 harvest_cb err, sources
 
 
