@@ -197,14 +197,18 @@ get_modules_and_bundles_for_sequence = (recipe, parse_cb) ->
         [OK, [modules, bundles]]
 
     _m_construct_bundles = ([modules, bundles]) ->
-        _parse_bundle_modules = (module_name, collected_deps, modules) ->
+        _parse_bundle_modules = (module_name, collected_deps, modules, bundle) ->
 
             _module = u.find modules, (m) -> m.name is module_name
+
+            unless _module
+                throw "Unregistered module #{module_name} from bundle #{bundle.name}"
+
             _module_deps_names = _module.deps.filter (name) -> name not in collected_deps
             result_modules_names = (collected_deps.concat _module_deps_names).reduce unique_reducer, []
 
             if _module_deps_names.length
-                reducer = (a, b) -> flatten(_parse_bundle_modules b, a, modules)
+                reducer = (a, b) -> flatten(_parse_bundle_modules b, a, modules, bundle)
 
                 inner_deps = flatten(_module_deps_names.reduce reducer, result_modules_names)
                 if inner_deps.length
@@ -212,20 +216,23 @@ get_modules_and_bundles_for_sequence = (recipe, parse_cb) ->
 
             result_modules_names
 
-        bundles = bundles.map (bundle) ->
-            deps_mods = bundle.modules_names.map (name) ->
-                _parse_bundle_modules name, bundle.modules_names, modules
-            _modules_names = flatten(deps_mods).reduce unique_reducer, []
-            _resolved_modules = _modules_names.map (_name) -> u.find modules, (m) ->m.name is _name
+        try # TODO: remove ugly try-catch ...
+            bundles = bundles.map (bundle) ->
+                deps_mods = bundle.modules_names.map (name) ->
+                    _parse_bundle_modules name, bundle.modules_names, modules, bundle
 
-            try
-                _sorted_modules = toposort _resolved_modules
-            catch ex
-                ex = "Failed to resolve dependencies in bundle #{bundle.name} #{ex}" if ex?
-                return [ex, null]
+                _modules_names = flatten(deps_mods).reduce unique_reducer, []
+                _resolved_modules = _modules_names.map (_name) -> u.find modules, (m) ->m.name is _name
 
-            bundle.modules_names = _sorted_modules.map (m) -> m.name
-            bundle
+                try
+                    _sorted_modules = toposort _resolved_modules
+                catch ex
+                    throw "Failed to resolve dependencies in bundle #{bundle.name} #{ex}"
+
+                bundle.modules_names = _sorted_modules.map (m) -> m.name
+                bundle
+        catch ex
+            return [ex, null]
 
         [OK, [modules, bundles]]
 

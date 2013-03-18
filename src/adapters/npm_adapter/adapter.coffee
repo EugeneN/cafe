@@ -65,7 +65,6 @@ module.exports = do ->
                     cb [null, {mod_src, packagejson}]
 
             _m_get_require_dependencies = ({mod_src, packagejson}, cb) ->
-                console.log mod_src
                 getdeps mod_src, (err, info) -> cb [err, {mod_src, packagejson, info}]
 
             _m_filter_require_dependencies = (ns, registered_requires, {mod_src, packagejson, info}, cb) ->
