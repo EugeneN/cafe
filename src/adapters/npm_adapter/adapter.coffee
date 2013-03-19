@@ -46,7 +46,7 @@ module.exports = do ->
 
     make_adaptor = (ctx, modules) ->
         type = 'npm_module'
-        
+        # TODO: set filename as path.relative mod_src , <recieved path from gimme-deps>
         harvest = (harvest_cb) ->
 
             _m_read_package_json = (mod_src, cb) ->
@@ -68,6 +68,8 @@ module.exports = do ->
                             return cb ["Npm package task execution failure #{packagejson.cafebuild}, #{error}", null]
 
                         cb [null, {mod_src, packagejson}]
+                else
+                    cb [null, {mod_src, packagejson}]
 
             _m_get_require_dependencies = ({mod_src, packagejson}, cb) ->
                 getdeps mod_src, (err, info) -> cb [err, {mod_src, packagejson, info}]
