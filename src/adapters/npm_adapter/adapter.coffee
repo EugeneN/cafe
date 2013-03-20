@@ -7,7 +7,7 @@ async = require 'async'
 {domonad, cont_t, lift_async, lift_sync} = require 'libmonad'
 
 {partial, maybe_build, is_dir, is_file, has_ext, and_,
- get_mtime, newer, walk, newest, extend} = require '../../lib/utils'
+ get_mtime, newer, walk, newest, extend, flatten, fn_without_ext} = require '../../lib/utils'
 
 OK = undefined
 
@@ -72,7 +72,9 @@ module.exports = do ->
                     cb [null, {mod_src, packagejson}]
 
             _m_get_require_dependencies = ({mod_src, packagejson}, cb) ->
-                getdeps mod_src, (err, info) -> cb [err, {mod_src, packagejson, info}]
+                getdeps mod_src, (err, info) -> 
+                    console.log info
+                    cb [err, {mod_src, packagejson, info}]
 
             _m_filter_require_dependencies = (ns, registered_requires, {mod_src, packagejson, info}, cb) ->
                 info = info.filter (i) -> (i.module not in registered_requires) or (i.module is ns)
@@ -80,16 +82,81 @@ module.exports = do ->
 
             _m_fill_filtes_sources = (ns, {mod_src, packagejson, info}, fill_cb) ->
                 
-                npm_file_process = (_file, cb) ->
-                    fs.readFile _file.path, (err, source) ->
-                        fname = if _file.callee is ns
-                            "index"
-                        else
-                            _file.callee
+                npm_mod_process = (mod, module_process_cb) ->
+                    _m_get_main_file = (mod_src, mod, get_main_file_cb) ->
+                        main_file = null
+                        if mod.main_file?
+                            main_file = _.find mod.files, (f) -> f.path is mod.main_file # TODO: check null
+                            fs.readFile mod.main_file, (err, source) ->
+                                filename = if path.basename(mod.module_path) isnt path.basename(mod_src) # if is root
+                                    path.join path.basename(mod.module_path), path.relative mod.module_path, main_file.path
+                                else
+                                    path.relative mod.module_path, main_file.path
 
-                        cb err, {filename: fname, source: source.toString()}
+                                main_file = {filename, source}
+                                get_main_file_cb [err, {mod, main_file}]
+
+                        else
+                            get_main_file_cb [null, {mod, main_file}]
+
+
+                    _m_link_main_to_index = (mod_src, {mod, main_file}, link_main_to_index_cb) ->
+                        files = []
+
+                        if main_file?
+                            console.log '----', path.basename(mod.module_path), path.basename(mod_src)
+                            if path.basename(mod.module_path) is path.basename(mod_src)
+                                if path.basename(main_file.filename) isnt "index.js"
+                                    source = "module.exports = require('#{fn_without_ext main_file.filename}')"
+                                    files.push {filename:"index.js", source}
+                            else
+                                if path.basename(main_file.filename) isnt "index.js"
+                                    source = "module.exports = require('#{fn_without_ext main_file.filename}')"
+                                    filename = "#{path.basename(mod.module_path)}/index.js"
+                                    files.push {filename, source} 
+
+                        link_main_to_index_cb [null, {mod, main_file, files}]
+
+
+                    _m_files_process = (mod_src, {mod, main_file, files}, file_process_cb) ->
+
+                        file_process = (file, file_parse_cb) ->
+
+                            fs.readFile file.path, (err, source) ->
+                                filename = if path.basename(mod.module_path) isnt path.basename(mod_src) # is root module
+                                    path.join path.basename(mod.module_path), path.relative mod.module_path, file.path
+                                else
+                                    path.relative mod.module_path, file.path
+                                file_parse_cb err, {filename, source}
+
+                        module_files = mod.files.filter (m) -> m.path isnt mod.main_file # select all except main files
+
+                        async.map module_files, file_process, (err, mod_files) ->
+                            mod_files = mod_files.concat files
+
+                            res_mod_files = if main_file?
+                                mod_files.concat [main_file]
+                            else
+                                mod_files
+
+                            file_process_cb [err, res_mod_files]
+
+                    seq = [
+                        lift_async(3, partial(_m_get_main_file, mod_src))
+                        lift_async(3, partial(_m_link_main_to_index, mod_src))
+                        lift_async(3, partial(_m_files_process, mod_src))
+                    ]
+
+                    domonad((cont_t error_m()), seq, mod) ([err, parsed_files]) ->
+                        #console.log err, parsed_files
+                        module_process_cb err, parsed_files
                 
-                async.map info, npm_file_process, (err, sources) ->
+                async.map info, npm_mod_process, (err, sources) ->
+                    #console.log flatten(sources)
+                    sources = flatten(sources).map (s) ->
+                        s.filename = fn_without_ext s.filename
+                        s
+
                     sources = {sources, ns}
                     fill_cb [null, {mod_src, packagejson, info, sources}]
 
