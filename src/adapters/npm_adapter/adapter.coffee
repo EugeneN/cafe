@@ -73,7 +73,6 @@ module.exports = do ->
 
             _m_get_require_dependencies = ({mod_src, packagejson}, cb) ->
                 getdeps mod_src, (err, info) -> 
-                    console.log info
                     cb [err, {mod_src, packagejson, info}]
 
             _m_filter_require_dependencies = (ns, registered_requires, {mod_src, packagejson, info}, cb) ->
@@ -104,7 +103,6 @@ module.exports = do ->
                         files = []
 
                         if main_file?
-                            console.log '----', path.basename(mod.module_path), path.basename(mod_src)
                             if path.basename(mod.module_path) is path.basename(mod_src)
                                 if path.basename(main_file.filename) isnt "index.js"
                                     source = "module.exports = require('#{fn_without_ext main_file.filename}')"
@@ -148,11 +146,9 @@ module.exports = do ->
                     ]
 
                     domonad((cont_t error_m()), seq, mod) ([err, parsed_files]) ->
-                        #console.log err, parsed_files
                         module_process_cb err, parsed_files
                 
                 async.map info, npm_mod_process, (err, sources) ->
-                    #console.log flatten(sources)
                     sources = flatten(sources).map (s) ->
                         s.filename = fn_without_ext s.filename
                         s
