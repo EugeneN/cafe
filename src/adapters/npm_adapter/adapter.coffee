@@ -1,6 +1,7 @@
 fs = require 'fs'
 path = require 'path'
 _ = require 'underscore'
+{run_install_in_dir} = require './npm_tasks'
 getdeps = require 'gimme-deps'
 {exec} = require 'child_process'
 async = require 'async'
@@ -53,6 +54,20 @@ module.exports = do ->
                 fs.readFile (path.join mod_src, "package.json"), (err, packagejson) ->
                     packagejson = JSON.parse packagejson.toString()
                     cb [err, {mod_src, packagejson}]
+
+
+            _m_run_npm_install = ({mod_src, packagejson}, npm_install_cb) ->
+                fs.exists path.join(path.resolve(mod_src), 'node_modules'), (exists) ->
+                    if exists
+                        npm_install_cb [null, {mod_src, packagejson}]
+                    else
+                        deps = (k for k, v of packagejson.dependencies)
+                        if deps.length # if has deps
+                            run_install_in_dir path.resolve(mod_src), (err, data) ->
+                                npm_install_cb [err, {mod_src, packagejson}]
+                        else
+                            npm_install_cb [err, {mod_src, packagejson}]
+
 
             _m_execute_cafebuild = ({mod_src, packagejson}, cb) ->
                 opts =
@@ -162,6 +177,7 @@ module.exports = do ->
 
             seq = [
                 lift_async(2, _m_read_package_json)
+                lift_async(2, _m_run_npm_install)
                 lift_async(2, _m_execute_cafebuild)
                 lift_async(2, _m_get_require_dependencies)
                 lift_async(4, partial(_m_filter_require_dependencies, ns, registered_requires))
