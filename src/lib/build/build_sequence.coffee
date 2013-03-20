@@ -75,6 +75,8 @@ process_bundle = (modules, build_deps, changed_modules, cached_sources, ctx, opt
                 module_with_changed_deps = u.find modules, (m) ->
 
                     bd_module = u.find(bd_bundle.modules, (mod) -> mod.name is m.name)
+                    unless bd_module?
+                        return false
 
                     deps_count_not_equal = bd_module.deps.length isnt m.deps.length
 
