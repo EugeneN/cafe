@@ -76,3 +76,41 @@ exports.test_module_creation_from_list = (test) ->
     test.done()
 
 
+exports.test_npm_prefix_parse = (test) ->
+    [err, skipped, module] = construct_module coffee: "npm://coffee-script_1@0.0.1"
+    
+    test.ok(
+        module.prefix_meta.prefix is "npm" 
+        "expected npm prefix , recieved #{module.prefix_meta.prefix}")
+
+    test.ok(
+        module.prefix_meta.npm_path is "coffee-script_1@0.0.1"
+        "expected coffee-script_1@0.0.1 path - recieved #{module.prefix_meta.npm_path}"
+        )
+
+    test.ok(
+        module.prefix_meta.version is "0.0.1"
+        "expected 0.0.1 module version - recieved #{module.prefix_meta.version}"
+        )
+
+    test.ok(
+        module.prefix_meta.npm_module_name is "coffee-script_1"
+        "expected npm module name - coffee-script_1, recieved - #{module.prefix_meta.npm_module_name}"
+        )
+
+    [err, skipped, module] = construct_module coffee: "npm://coffee-script_1"
+
+    test.ok(
+        module.prefix_meta.npm_path is "coffee-script_1"
+        "expected coffee-script_1 path - recieved #{module.prefix_meta.npm_path}"
+        )
+
+    test.ok(
+        module.prefix_meta.npm_module_name is "coffee-script_1"
+        "expected npm module name - coffee-script_1, recieved - #{module.prefix_meta.npm_module_name}"
+        )
+
+    test.done()
+
+
+

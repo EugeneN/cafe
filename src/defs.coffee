@@ -153,5 +153,6 @@ default_config =
     FAILURE_ICO : path.resolve __dirname, '../assets/img/failure.jpg'
     SKELETHON_ASSETS_PATH: SKELETHON_ASSETS_PATH
     CAFE_DIR: '.cafe'
+    NPM_MODULES_PATH: 'node_modules'
 
 module.exports = extend {}, default_config, user_config

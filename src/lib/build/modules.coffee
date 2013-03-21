@@ -1,13 +1,16 @@
-{or_} = require '../utils'
+{or_, partial, extend} = require '../utils'
+_path = require 'path'
+{NPM_MODULES_PATH} = require '../../defs'
 u = require 'underscore'
 {skip_or_error_m, OK} = require '../monads'
 {domonad} = require 'libmonad'
 
-get_module = ({path, name, deps, type, location}) ->
+get_module = ({path, name, deps, type, location, prefix_meta}) ->
 
     location or= "fs"
     type or= "commonjs"
     deps or= []
+    prefix_meta or={}
 
     _sources = ""
     _mtime = 0
@@ -36,9 +39,10 @@ get_module = ({path, name, deps, type, location}) ->
     serrialize_sources = ->
         {name:name, sources: get_sources(), mtime: get_mtime(), type:type, path:path}
 
-    serrialize_meta = -> {name, path, type, location, deps}
+    serrialize_meta = -> {name, path, type, location, deps, prefix_meta}
 
     {
+    prefix_meta
     name
     path
     deps
@@ -132,7 +136,31 @@ _m_parse_from_dict = (meta) ->
         ["Path is not set for module #{module}", false, meta]
 
 
-construct_module = (meta) ->
+_m_check_name_prefix = (module) ->
+    prefix_regexp = /([a-z+]+?):\/\/(.+)/
+    npm_path_regexp = /([A-Za-z0-9-_]+)@?(.+)?/
+
+    if prefix_regexp.test module.path
+        [_, prefix, npm_path] = module.path.match prefix_regexp
+
+        if prefix is "npm"        
+
+            unless npm_path_regexp.test npm_path
+                return ["npm module #{module.name} has wrong format", false, module]
+
+            [_, npm_module_name, version] = npm_path.match npm_path_regexp
+            module = extend module, {path: _path.join NPM_MODULES_PATH}
+
+            module.prefix_meta = extend(
+                module.prefix_meta 
+                {prefix, npm_path, version, npm_module_name})
+
+        module
+    else
+        module
+
+
+construct_module = (meta, ctx) ->
     seq = [
         _m_check_format
         _m_parse_from_string
@@ -140,7 +168,9 @@ construct_module = (meta) ->
         _m_parse_from_dict
     ]
 
-    domonad skip_or_error_m(), seq, meta
-
+    [err, skip, module] = (domonad skip_or_error_m(), seq, meta)
+    unless err
+        module = _m_check_name_prefix module
+    [err, skip, module]
 
 module.exports = {construct_module, get_module, modules_equals}

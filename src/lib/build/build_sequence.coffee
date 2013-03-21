@@ -6,6 +6,7 @@ mkdirp = require 'mkdirp'
 {domonad, cont_t, lift_async, lift_sync} = require 'libmonad'
 {spawn} = require 'child_process'
 {construct_cmd} = require 'easy-opts'
+{wrap_bundle, wrap_modules, wrap_module} = require 'wrapper-commonjs'
 
 {read_recipe, get_modules, get_bundles, get_modules_and_bundles_for_sequence} = require './recipe_parser'
 {toposort} = require './toposort'
@@ -14,7 +15,6 @@ mkdirp = require 'mkdirp'
 {CB_SUCCESS, RECIPE, BUILD_DIR, BUILD_DEPS_FN,
 RECIPE_API_LEVEL, ADAPTERS_PATH, ADAPTER_FN, BUNDLE_HDR} = require '../../defs'
 {get_modules_cache} = require '../modules_cache'
-{wrap_bundle, wrap_modules, wrap_module} = require 'wrapper-commonjs'
 {skip_or_error_m, OK} = require '../monads'
 {minify} = require './cafe_minify'
 
