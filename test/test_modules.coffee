@@ -1,4 +1,5 @@
 {construct_module} = require '../src/lib/build/modules'
+{NPM_MODULES_PATH} = require '../src/defs'
 
 exports.test_modules_creation_from_string = (test) ->
     [err, parsed, module] = construct_module {module1:'module1.coffee'}
@@ -96,6 +97,11 @@ exports.test_npm_prefix_parse = (test) ->
     test.ok(
         module.prefix_meta.npm_module_name is "coffee-script_1"
         "expected npm module name - coffee-script_1, recieved - #{module.prefix_meta.npm_module_name}"
+        )
+
+    test.ok(
+        module.path is "#{NPM_MODULES_PATH}/#{module.prefix_meta.npm_module_name}"
+        "expected #{NPM_MODULES_PATH}/#{module.prefix_meta.npm_module_name} module path - recieved #{module.path}"
         )
 
     [err, skipped, module] = construct_module coffee: "npm://coffee-script_1"
