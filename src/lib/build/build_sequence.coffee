@@ -13,10 +13,11 @@ mkdirp = require 'mkdirp'
 {get_adapters} = require '../adapter'
 {extend, partial, get_cafe_dir, exists, get_legacy_cafe_bin_path} = require '../utils'
 {CB_SUCCESS, RECIPE, BUILD_DIR, BUILD_DEPS_FN,
-RECIPE_API_LEVEL, ADAPTERS_PATH, ADAPTER_FN, BUNDLE_HDR} = require '../../defs'
+RECIPE_API_LEVEL, ADAPTERS_PATH, ADAPTER_FN, BUNDLE_HDR, NPM_MODULES_PATH} = require '../../defs'
 {get_modules_cache} = require '../modules_cache'
 {skip_or_error_m, OK} = require '../monads'
 {minify} = require './cafe_minify'
+{install_module} = require '../npm_tasks'
 
 # TODO: check if bundle path changed (compile if need and then save in new path)
 # TODO: nothing happens when recipe is empty
@@ -353,6 +354,30 @@ _run_build_sequence_monadic_functions =
                 [modules, bundles] = modules_and_bundles
                 parse_cb [err, false, extend init_result, {modules, bundles}]
 
+
+    _m_init_modules: (ctx, init_result, init_cb) ->
+        # Processing prefixes
+        {modules} = init_result
+        npm_modules = modules.filter (m) -> m.prefix_meta?.prefix is "npm"
+
+        npm_mod_initializer = (mod, cb) ->
+            p = path.resolve path.join(ctx.own_args.app_root, NPM_MODULES_PATH, mod.prefix_meta.npm_path)
+            
+            fs.exists p, (exists) ->
+                if (exists is false) or (ctx.own_args.f is true)
+                    app_root = path.resolve ctx.own_args.app_root
+                    install_module mod.prefix_meta.npm_path, app_root, (err, info) -> 
+                        cb err, mod
+                else
+                    cb OK, mod
+
+        if npm_modules.length
+            async.map npm_modules, npm_mod_initializer, (err, data) ->
+                init_cb [err, false, init_result]
+        else
+            init_cb [OK, false, init_result]
+
+
     _m_modules_processor: (ctx, init_results, module_proc_cb) ->
         {cached_sources, recipe, adapters, modules, build_deps} = init_results
 
@@ -416,6 +441,7 @@ run_build_sequence = (ctx, sequence_cb) ->
         lift_async(2, mf._m_init_build_sequence)
         lift_async(3, partial(mf._m_check_if_old_api_version, ctx))
         lift_async(2, mf._m_parse_modules_and_bundles)
+        lift_async(3, partial(mf._m_init_modules, ctx))
         lift_async(3, partial(mf._m_modules_processor, ctx))
         lift_async(3, partial(mf._m_bundles_processor, ctx))
         lift_async(3, partial(mf._m_save_results, ctx))

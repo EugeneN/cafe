@@ -153,7 +153,7 @@ _m_check_name_prefix = (module) ->
             module.prefix_meta = extend(
                 module.prefix_meta 
                 {prefix, npm_path, version, npm_module_name})
-            
+
             module = extend module, {path: _path.join(NPM_MODULES_PATH, module.prefix_meta.npm_module_name)}
 
         module
@@ -170,8 +170,11 @@ construct_module = (meta, ctx) ->
     ]
 
     [err, skip, module] = (domonad skip_or_error_m(), seq, meta)
+
     unless err
+        # TODO: here will be another monad sequence for post parse logic(prefixes e.t.c)
         module = _m_check_name_prefix module
+        
     [err, skip, module]
 
 module.exports = {construct_module, get_module, modules_equals}

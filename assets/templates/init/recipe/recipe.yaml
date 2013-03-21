@@ -9,9 +9,11 @@ abstract:
 # modules section is for registering application modules
 # you can read more detailed about modules format here - https://github.com/EugeneN/cafe/wiki/recipe-file
 modules:
+    #- jquery: npm://commonjs-jquery
 
 
 # Section for defining your bundles structure
 bundles:
     bundle1:
         modules:
+            #- jquery

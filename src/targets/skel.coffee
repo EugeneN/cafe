@@ -10,12 +10,12 @@ help = [
 {make_target} = require '../lib/target'
 {make_skelethon} = require '../lib/skelethon/skelethon'
 {SKELETHON_ASSETS_PATH} = require '../defs'
-get_adaptors = require '../lib/adaptor'
+{get_adapters} = require '../lib/adapter'
 u = require 'underscore'
 path = require 'path'
 
 list = (ctx, cb) ->
-  skels = get_adaptors()
+  skels = get_adapters()
           .map((a) -> a.make_skelethon?())
           .filter((a) -> a?)
           .reduce((a, b) -> u.extend(a, b))
@@ -33,7 +33,7 @@ skel = (ctx, cb) ->
 
     list(ctx, cb) if 'list' in args
 
-    skels = get_adaptors()\
+    skels = get_adapters()\
             .map((a) -> a.make_skelethon?())\
             .filter((a) -> a?)\
             .reduce((a, b) -> u.extend(a, b))
