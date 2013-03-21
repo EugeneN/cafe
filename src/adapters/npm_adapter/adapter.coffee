@@ -66,7 +66,7 @@ module.exports = do ->
                             run_install_in_dir path.resolve(mod_src), (err, data) ->
                                 npm_install_cb [err, {mod_src, packagejson}]
                         else
-                            npm_install_cb [err, {mod_src, packagejson}]
+                            npm_install_cb [null, {mod_src, packagejson}]
 
 
             _m_execute_cafebuild = ({mod_src, packagejson}, cb) ->
