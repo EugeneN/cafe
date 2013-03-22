@@ -4,7 +4,7 @@ u = require 'underscore'
 {read_json_file,flatten, extend,
 is_file, toArray, partial,
 read_yaml_file} = require '../../lib/utils'
-{error_m, OK}  = require '../../lib/monads'
+{error_m, OK, ok, nok}  = require '../../lib/monads'
 {toposort} = require '../../lib/build/toposort'
 {construct_module, modules_equals} = require './modules'
 {construct_realm_bundle, construct_bundle} = require './bundles'
@@ -24,22 +24,22 @@ RECIPE = 'recipe.json'
 #-----------------------------------
 chain_check = (level, recipe_path) ->
     if level > 3
-        ["Recipe inheritance chain to long", undefined]
+        nok "Recipe inheritance chain to long"
     else
-        [OK, recipe_path]
+        ok recipe_path
 
 read_if_is_file = (recipe_path) -> # TOTEST, TODO: separate on 2 funcs (is_file, read)
     if is_file recipe_path
         # TODO: hadle recipe validation error
         # TODO: handle yaml format sync reading
-        [OK, (read_json_file recipe_path)]
+        ok (read_json_file recipe_path)
     else
-        ["Recipe file #{recipe_path} not found", undefined]
+        nok "Recipe file #{recipe_path} not found"
 
 
 read_if_is_file.async = (recipe_path, cb) ->
     is_file.async recipe_path, (err, result) ->
-        (return cb ["Failed to read recipe file #{err}", undefined]) if err
+        (return cb (nok "Failed to read recipe file #{err}")) if err
 
         if result is true
             extension = path.extname recipe_path
@@ -51,15 +51,14 @@ read_if_is_file.async = (recipe_path, cb) ->
             reader = reader_dict[extension]
 
             unless reader?
-                cb ["Unknown recipe format file #{recipe_path}", null] # TOTEST
+                cb (nok "Unknown recipe format file #{recipe_path}") # TOTEST
 
             reader.async recipe_path, (err, result) ->
                 if err
-                    err = "Failded to read recipe file #{recipe_path} #{err}"
-                    (return cb [err, undefined])
-                cb [OK, result]
+                    (return cb (nok "Failded to read recipe file #{recipe_path} #{err}"))
+                cb (ok result)
         else
-            cb ["Recipe file #{recipe_path} is not found", undefined]
+            cb (nok "Recipe file #{recipe_path} is not found")
 
 
 check_for_inheritance = (level, recipe_path, read_recipe_fn, recipe) ->
@@ -69,10 +68,14 @@ check_for_inheritance = (level, recipe_path, read_recipe_fn, recipe) ->
 
         unless base_recipe_path is recipe_path
             [error, base_recipe] = (read_recipe_fn base_recipe_path, level+1)
-            recipe = (extend base_recipe, recipe)
+            if error
+                nok error 
+            else 
+                ok (extend base_recipe, recipe)
         else
-            error = "Recipe #{recipe_path} can not inherit from itself"
-    [error, recipe]
+            nok "Recipe #{recipe_path} can not inherit from itself"
+    else
+        ok null
 
 
 check_for_inheritance.async = (level, recipe_path, read_recipe_fn, recipe, cb) ->
@@ -80,18 +83,21 @@ check_for_inheritance.async = (level, recipe_path, read_recipe_fn, recipe, cb) -
         base_recipe_path = (path.resolve (path.dirname recipe_path), recipe.abstract.extends)
         unless base_recipe_path is recipe_path
             read_recipe_fn base_recipe_path, level+1, ([err, base_recipe]) ->
-                cb [err, (extend base_recipe, recipe)]
+                if err
+                    cb (nok err)
+                else
+                    cb (ok (extend base_recipe, recipe))
         else
-            error = "Recipe #{recipe_path} can not inherit from itself"
+            cb (nok "Recipe #{recipe_path} can not inherit from itself")
     else
-        cb [error, recipe]
+        cb (ok null)
 
 
 read_recipe = (recipe_path, level=0) ->
     lifted_handlers_chain = [
-        partial(chain_check, level)
+        partial chain_check, level
         read_if_is_file
-        partial(check_for_inheritance, level, recipe_path, read_recipe)
+        partial check_for_inheritance, level, recipe_path, read_recipe
     ]
 
     domonad error_m(), lifted_handlers_chain, recipe_path
@@ -101,9 +107,9 @@ read_recipe.async = (recipe_path, level=0, cb) -> # TOTEST !!!
     worker_monad = cont_t error_m()
 
     lifted_handlers_chain = [
-        lift_sync(2, partial(chain_check, level))
-        lift_async(2, read_if_is_file.async)
-        lift_async(5, partial(check_for_inheritance.async, level, recipe_path, read_recipe.async))
+        lift_sync 2, (partial chain_check, level)
+        lift_async 2, read_if_is_file.async
+        lift_async 5, (partial check_for_inheritance.async, level, recipe_path, read_recipe.async)
     ]
 
     (domonad worker_monad, lifted_handlers_chain, recipe_path) cb
@@ -115,9 +121,9 @@ read_recipe.async = (recipe_path, level=0, cb) -> # TOTEST !!!
 get_raw_modules = (recipe) ->
     """ Parse all modules from recipe."""
     if recipe.modules?
-        [null, recipe.modules]
+        ok recipe.modules
     else
-        ["Recipe has no modules section", null]
+        nok "Recipe has no modules section"
 
 
 construct_modules = (modules) ->
@@ -130,7 +136,8 @@ construct_modules = (modules) ->
             err or= "Failed to parse module definition #{module}"
         else
             module
-    [err, modules]
+            
+    if err then (nok err) else (ok modules)
 
 
 fill_modules_deps = (recipe, modules) ->
@@ -141,7 +148,7 @@ fill_modules_deps = (recipe, modules) ->
                     m.deps = toArray m.deps
                     m.deps.push p for p in prop_val
                 m
-    [null, modules]
+    ok modules
 
 
 check_deps_names_exists = (modules) ->
@@ -149,8 +156,8 @@ check_deps_names_exists = (modules) ->
     for module in modules
         for dep in module.deps
             unless dep in modules_names
-                return ["Dependency module name #{dep} of module #{module.name} was not found", null]
-    [null, modules]
+                return (nok "Dependency module name #{dep} of module #{module.name} was not found")
+    ok modules
 
 
 # TODO: make async
@@ -158,7 +165,7 @@ get_modules = (recipe) ->
     seq = [
         get_raw_modules
         construct_modules
-        partial(fill_modules_deps, recipe)
+        partial fill_modules_deps, recipe
         check_deps_names_exists
     ]
 
@@ -174,7 +181,7 @@ get_modules_and_bundles_for_sequence = (recipe, parse_cb) ->
     unique_reducer = (a, b) -> if b in a then a else a.concat b
 
     _m_get_bundles = (recipe) ->     # TODO, handle exceptions
-        [OK, [get_bundles recipe]]
+        ok [get_bundles recipe]
 
     _m_get_modules = (recipe, [bundles]) ->
         [err, modules] = get_modules recipe
@@ -194,7 +201,7 @@ get_modules_and_bundles_for_sequence = (recipe, parse_cb) ->
 
         modules = modules_in_bundles.concat modules_from_deps
 
-        [OK, [modules, bundles]]
+        ok [modules, bundles]
 
     _m_construct_bundles = ([modules, bundles]) ->
         _parse_bundle_modules = (module_name, collected_deps, modules, bundle) ->
@@ -232,13 +239,13 @@ get_modules_and_bundles_for_sequence = (recipe, parse_cb) ->
                 bundle.modules_names = _sorted_modules.map (m) -> m.name
                 bundle
         catch ex
-            return [ex, null]
+            return (nok ex)
 
-        [OK, [modules, bundles]]
+        ok [modules, bundles]
 
     _m_process_realms = (recipe, [modules, bundles]) ->
         unless recipe.realms?
-            [OK, [modules, bundles]]
+            ok [modules, bundles]
         else
             _realms = ([name, _bundles] for name, _bundles of recipe.realms)
 
@@ -252,15 +259,15 @@ get_modules_and_bundles_for_sequence = (recipe, parse_cb) ->
 
                 _realm_bundles.reduce realm_modules_reducer, []
                 
-            [OK, [modules, bundles]]
+            ok [modules, bundles]
 
 
     seq = [
         _m_get_bundles
-        partial(_m_get_modules, recipe)
+        partial _m_get_modules, recipe
         _m_construct_modules
         _m_construct_bundles
-        partial(_m_process_realms, recipe)
+        partial _m_process_realms, recipe
     ]
 
     parse_cb (domonad error_m(), seq, recipe)
