@@ -34,7 +34,7 @@ read_if_is_file = (recipe_path) -> # TOTEST, TODO: separate on 2 funcs (is_file,
         # TODO: handle yaml format sync reading
         [OK, (read_json_file recipe_path)]
     else
-        ["Recipe file #{recipe_path} is not found", undefined]
+        ["Recipe file #{recipe_path} not found", undefined]
 
 
 read_if_is_file.async = (recipe_path, cb) ->
