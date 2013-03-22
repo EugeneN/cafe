@@ -3,6 +3,7 @@ async = require 'async'
 u = require 'underscore'
 path = require 'path'
 mkdirp = require 'mkdirp'
+resolve = require 'resolve'
 {domonad, cont_t, lift_async, lift_sync} = require 'libmonad'
 {spawn} = require 'child_process'
 {construct_cmd} = require 'easy-opts'
@@ -21,6 +22,25 @@ RECIPE_API_LEVEL, ADAPTERS_PATH, ADAPTER_FN, BUNDLE_HDR, NPM_MODULES_PATH} = req
 
 # TODO: check if bundle path changed (compile if need and then save in new path)
 # TODO: nothing happens when recipe is empty
+
+get_npm_mod_folder = (resolved_path) ->
+
+    after_val_reducer = (val) ->
+        (a, b) ->
+            if val in a or b is val
+                a.concat b
+            else
+                a
+
+    rel_module_dir = resolved_path.split('node_modules')[-1..][0]
+    rel_module_dir_name = ((rel_module_dir.split path.sep).filter (i) -> i isnt '')[0]
+
+    module_dir = resolved_path.split(path.sep)
+                       .reverse()
+                       .reduce((after_val_reducer rel_module_dir_name), [])
+                       .reverse()
+                       .join(path.sep)
+    module_dir
 
 CACHE_FN = 'modules'
 
@@ -185,7 +205,10 @@ harvest_module = (adapter, module, ctx, message, cb) ->
 process_module = (adapters, cached_sources, build_deps, ctx, modules, module, module_cb) -> # TOTEST
 
     _m_module_path_exists = (ctx, module, cb) ->
-        module_path = path.join ctx.own_args.app_root, module.path
+        if module.prefix_meta.prefix is "npm"
+            module_path = module.path
+        else
+            module_path = path.join ctx.own_args.app_root, module.path
         exists.async module_path, (err, exists) ->
             if exists is true
                 cb [OK, false, module]
@@ -366,8 +389,10 @@ _run_build_sequence_monadic_functions =
             fs.exists p, (exists) ->
                 if (exists is false) or (ctx.own_args.u is true)
                     app_root = path.resolve ctx.own_args.app_root
-                    install_module mod.prefix_meta.npm_path, app_root, (err, info) -> 
-                        cb err, mod
+                    install_module mod.prefix_meta.npm_path, app_root, (err, info) ->
+                        resolve mod.prefix_meta.npm_module_name, {basedir: app_root}, (err, dirname) ->
+                            mod.path = get_npm_mod_folder dirname
+                            cb err, mod
                 else
                     cb OK, mod
 
@@ -392,7 +417,6 @@ _run_build_sequence_monadic_functions =
 
     _m_bundles_processor: (ctx, [init_results, changed_modules], bundles_proc_cb) ->
         {cached_sources, build_deps, recipe, adapters, modules, bundles} = init_results
-
         changed_modules = changed_modules.filter (m) -> m? # removing empty
 
         _bundles_iterator = partial(process_bundle

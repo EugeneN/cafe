@@ -26,11 +26,12 @@
     "mkdirp": "*",
     "chokidar": "*",
     "growl": "*",
-    "wrapper-commonjs":"~0.0.16",
+    "wrapper-commonjs":"~0.0.17",
     "libmonad": "*",
     "libprotein": "*",
     "js-yaml": "*",
     "easy-opts": "*",
-    "gimme-deps": "*"
+    "gimme-deps": "*",
+    "resolve":"*"
   }
 }
