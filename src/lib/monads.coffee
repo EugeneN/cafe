@@ -1,5 +1,9 @@
 OK = undefined
 
+ok = (v) -> [OK,v]
+nok = (m) -> [m, undefined]
+
+
 error_m = -> # TODO: move this to libmonad
     is_error = ([err, val]) -> (err isnt OK) and (err isnt null)
 
@@ -21,4 +25,4 @@ skip_or_error_m = ->
         else
             f mv[2]
 
-module.exports = {error_m, skip_or_error_m, OK}
+module.exports = {error_m, skip_or_error_m, OK, ok, nok}
