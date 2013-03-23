@@ -1,6 +1,7 @@
 OK = undefined
 
-ok = (v) -> [OK,v]
+ok = (v) -> [OK, v]
+
 nok = (m) -> [m, undefined]
 
 

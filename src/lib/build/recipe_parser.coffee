@@ -75,7 +75,7 @@ check_for_inheritance = (level, recipe_path, read_recipe_fn, recipe) ->
         else
             nok "Recipe #{recipe_path} can not inherit from itself"
     else
-        ok null
+        ok recipe
 
 
 check_for_inheritance.async = (level, recipe_path, read_recipe_fn, recipe, cb) ->
@@ -90,7 +90,7 @@ check_for_inheritance.async = (level, recipe_path, read_recipe_fn, recipe, cb) -
         else
             cb (nok "Recipe #{recipe_path} can not inherit from itself")
     else
-        cb (ok null)
+        cb (ok recipe)
 
 
 read_recipe = (recipe_path, level=0) ->
