@@ -206,7 +206,7 @@ process_module = (adapters, cached_sources, build_deps, ctx, modules, module, mo
 
     _m_module_path_exists = (ctx, module, cb) ->
         if module.prefix_meta.prefix is "npm"
-            module_path = path.resolve path.join((path.basename ctx.own_args.app_root), module.path)
+            module_path = module.path
         else
             module_path = path.join ctx.own_args.app_root, module.path
         exists.async module_path, (err, exists) ->
