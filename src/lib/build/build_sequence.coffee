@@ -387,17 +387,18 @@ _run_build_sequence_monadic_functions =
             app_root = path.resolve ctx.own_args.app_root
             resolve mod.prefix_meta.npm_module_name, {basedir: app_root}, (err, dirname) ->
                 if dirname?
-                    mod.path = get_npm_mod_folder dirname
-                
-                    fs.exists mod.path, (exists) ->
-                        if (exists is false) or (ctx.own_args.u is true)
-                            install_module mod.prefix_meta.npm_path, app_root, (err, info) ->
-                                cb err, mod
-                        else
-                            cb OK, mod
+                    mod.path = path.resolve app_root, get_npm_mod_folder dirname
+                    
+                    if ctx.own_args.u is true
+                        install_module mod.prefix_meta.npm_path, app_root, (err, info) ->
+                            cb err, mod
+                    else
+                        cb OK, mod
                 else
-                    install_module mod.prefix_meta.npm_path, app_root, (err, info) ->
-                                cb err, mod
+                    install_module mod.prefix_meta.npm_path, app_root, (err, info) -> 
+                        resolve mod.prefix_meta.npm_module_name, {basedir: app_root}, (err, dirname) ->
+                            mod.path = path.resolve app_root, get_npm_mod_folder dirname
+                            cb err, mod
 
         if npm_modules.length
             async.map npm_modules, npm_mod_initializer, (err, data) ->
