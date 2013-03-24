@@ -259,7 +259,7 @@ process_module = (adapters, cached_sources, build_deps, ctx, modules, module, mo
                 cached_module = cached_sources[module.name]
 
             if cached_module?
-                if module.need_to_recompile cached_module, mtime
+                if (module.need_to_recompile cached_module, mtime) is true
                     message = "Module #{module.name} was modified, harvesting ..."
                     harvest_module adapter, module, ctx, message, (err, module) ->
                         unless err?
@@ -304,8 +304,7 @@ init_build_sequence = (ctx, adapters_path, adapters_fn, init_cb) -> # TOTEST
     recipe_path = path.resolve ctx.own_args.app_root, (ctx.own_args.formula or RECIPE)
 
     _read_recipe_async = (cb) ->
-        get_recipe.async recipe_path, ([err, recipe]) -> # make recipe to return not monadic value
-            cb err, {recipe}
+        get_recipe.async recipe_path, ([err, recipe]) -> cb err, {recipe}
 
     _get_adapters_async = (adapters_path, adapters_fn, cb) ->
         get_adapters.async adapters_path, adapters_fn, (err, adapters) ->

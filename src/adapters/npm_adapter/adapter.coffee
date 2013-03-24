@@ -190,7 +190,7 @@ module.exports = do ->
 
 
         last_modified = (cb) ->
-            {mod_src} = get_paths ctx
+            mod_src = ctx.module.path
 
             walk mod_src, (err, results) ->
                 if results

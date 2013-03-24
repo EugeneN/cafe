@@ -284,6 +284,10 @@ get_modules_and_bundles_for_sequence = (recipe, parse_cb) ->
                 
             ok [modules, bundles]
 
+    _m_skip_modules_that_are_not_in_bundles = ([modules, bundles]) ->
+        bundles_modules_names = flatten(bundles.map((b) -> b.modules_names))
+        modules = modules.filter (m) -> m.name in bundles_modules_names
+        ok [modules, bundles]
 
     seq = [
         _m_get_bundles
@@ -291,6 +295,7 @@ get_modules_and_bundles_for_sequence = (recipe, parse_cb) ->
         _m_construct_modules
         _m_construct_bundles
         partial _m_process_realms, recipe
+        _m_skip_modules_that_are_not_in_bundles
     ]
 
     parse_cb (domonad error_m(), seq, recipe)
