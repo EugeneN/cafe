@@ -12,7 +12,7 @@ resolve = require 'resolve'
 {get_recipe, get_modules, get_bundles, get_modules_and_bundles_for_sequence} = require './recipe_parser'
 {toposort} = require './toposort'
 {get_adapters} = require '../adapter'
-{extend, partial, get_cafe_dir, exists, get_legacy_cafe_bin_path} = require '../utils'
+{extend, partial, get_cafe_dir, exists, get_legacy_cafe_bin_path, get_npm_mod_folder} = require '../utils'
 {CB_SUCCESS, RECIPE, BUILD_DIR, BUILD_DEPS_FN,
 RECIPE_API_LEVEL, ADAPTERS_PATH, ADAPTER_FN, BUNDLE_HDR, NPM_MODULES_PATH} = require '../../defs'
 {get_modules_cache} = require '../modules_cache'
@@ -22,25 +22,6 @@ RECIPE_API_LEVEL, ADAPTERS_PATH, ADAPTER_FN, BUNDLE_HDR, NPM_MODULES_PATH} = req
 
 # TODO: check if bundle path changed (compile if need and then save in new path)
 # TODO: nothing happens when recipe is empty
-
-get_npm_mod_folder = (resolved_path) ->
-
-    after_val_reducer = (val) ->
-        (a, b) ->
-            if val in a or b is val
-                a.concat b
-            else
-                a
-
-    rel_module_dir = resolved_path.split('node_modules')[-1..][0]
-    rel_module_dir_name = ((rel_module_dir.split path.sep).filter (i) -> i isnt '')[0]
-
-    module_dir = resolved_path.split(path.sep)
-                       .reverse()
-                       .reduce((after_val_reducer rel_module_dir_name), [])
-                       .reverse()
-                       .join(path.sep)
-    module_dir
 
 CACHE_FN = 'modules'
 

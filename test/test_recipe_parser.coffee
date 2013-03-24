@@ -24,6 +24,7 @@ recipe_sequence_parse = path.join fixtures_path, "recipe_sequence.yaml"
 recipe_deps_exists = path.join fixtures_path, "recipe_deps_existance.yaml"
 recipe_without_modules = path.join fixtures_path, "recipe_without_modules.yaml"
 recipe_abstract_check = path.join fixtures_path, "recipe_abstract_section.yaml"
+recipe_bundle_modules_empty = path.join fixtures_path, "bundle_modules_empty.yaml"
 
 
 exports.test_recipe_read_basic_validation = (test) ->
@@ -128,6 +129,20 @@ exports.test_get_modules_and_bundles_for_sequence = (test) ->
                 "Module test1 must be in bundle2, because test2 depends on it #{bundle2.modules_names}"
             )
 
+            test.ok(
+                "skipped" not in modules.map (m) -> m.name
+                "skipped module must not be included in result module, because it doesn't belongs to any bundle"
+                )
+
+            test.done()
+
+
+exports.test_bundle_modules_empty = (test) ->
+    get_recipe.async recipe_bundle_modules_empty, ([error, recipe]) ->
+        get_modules_and_bundles_for_sequence recipe, ([err, [modules, bundles]]) ->
+            test.ok(
+                modules.length is 0
+                "Bunle has no modules included, so no modules must be parsed for sequence")
             test.done()
 
 

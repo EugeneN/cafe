@@ -10,10 +10,3 @@ modules:
 bundles:
     bundle1:
         modules:
-            - plain_coffee
-            - test1
-            - test2
-
-    bundle2:
-        modules:
-            - test2

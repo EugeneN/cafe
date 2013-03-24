@@ -369,6 +369,25 @@ partial = (fn, args...) -> _.bind fn, null, args...
 get_legacy_cafe_bin_path = (version) ->
     path.resolve __dirname,"../../legacy/api_version_#{version}/cafe/bin/cafe"
 
+get_npm_mod_folder = (resolved_path) ->
+
+    after_val_reducer = (val) ->
+        (a, b) ->
+            if val in a or b is val
+                a.concat b
+            else
+                a
+
+    rel_module_dir = resolved_path.split('node_modules')[-1..][0]
+    rel_module_dir_name = ((rel_module_dir.split path.sep).filter (i) -> i isnt '')[0]
+
+    module_dir = resolved_path.split(path.sep)
+                       .reverse()
+                       .reduce((after_val_reducer rel_module_dir_name), [])
+                       .reverse()
+                       .join(path.sep)
+    module_dir
+
 module.exports = {
     read_slug
     walk
@@ -406,4 +425,5 @@ module.exports = {
     fn_without_ext
     partial
     get_legacy_cafe_bin_path
+    get_npm_mod_folder
 }
