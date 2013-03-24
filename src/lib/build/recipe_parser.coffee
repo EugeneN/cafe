@@ -114,6 +114,29 @@ read_recipe.async = (recipe_path, level=0, cb) -> # TOTEST !!!
 
     (domonad worker_monad, lifted_handlers_chain, recipe_path) cb
 
+get_recipe = (recipe_path) -> throw "not implemented"
+
+get_recipe.async = (recipe_path, cb) ->
+    _m_read_recipe = (recipe_path, read_cb) -> read_recipe.async recipe_path, 0, read_cb
+
+    _m_check_recipe_internal_structure = (recipe, s_cb) ->
+        unless recipe.modules?
+            return s_cb nok "modules section is missing in recipe"
+
+        unless recipe.abstract?.api_version?
+            return s_cb nok "api version section is missing in recipe"
+
+        unless (recipe.realms? or recipe.bundles?)
+            return s_cb nok "realms or bundles section must be present in recipe"
+        
+        s_cb ok recipe
+
+    seq = [
+        lift_async(2, _m_read_recipe)
+        lift_async(2, _m_check_recipe_internal_structure)
+    ]
+
+    (domonad (cont_t error_m()), seq, recipe_path) cb
 
 #-----------------------------------
 # Modules parsing sequence functions
@@ -292,6 +315,7 @@ get_bundles = (recipe) ->
 
 
 module.exports = {
+    get_recipe
     get_raw_modules
     read_recipe
     construct_modules

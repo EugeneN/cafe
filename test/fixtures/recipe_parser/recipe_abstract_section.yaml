@@ -1,0 +1,9 @@
+abstractt: {api_version: 5}
+
+modules:
+ 	- module1: mod1
+
+bundles:
+    bundle1:
+        modules:
+            - module1

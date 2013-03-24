@@ -1,0 +1,7 @@
+abstract: {api_version: 5}
+
+bundles:
+    bundle1:
+        modules:
+            - module1
+            - module3

@@ -9,7 +9,7 @@ resolve = require 'resolve'
 {construct_cmd} = require 'easy-opts'
 {wrap_bundle, wrap_modules, wrap_module} = require 'wrapper-commonjs'
 
-{read_recipe, get_modules, get_bundles, get_modules_and_bundles_for_sequence} = require './recipe_parser'
+{get_recipe, get_modules, get_bundles, get_modules_and_bundles_for_sequence} = require './recipe_parser'
 {toposort} = require './toposort'
 {get_adapters} = require '../adapter'
 {extend, partial, get_cafe_dir, exists, get_legacy_cafe_bin_path} = require '../utils'
@@ -304,7 +304,7 @@ init_build_sequence = (ctx, adapters_path, adapters_fn, init_cb) -> # TOTEST
     recipe_path = path.resolve ctx.own_args.app_root, (ctx.own_args.formula or RECIPE)
 
     _read_recipe_async = (cb) ->
-        read_recipe.async recipe_path, 0, ([err, recipe]) -> # make recipe to return not monadic value
+        get_recipe.async recipe_path, ([err, recipe]) -> # make recipe to return not monadic value
             cb err, {recipe}
 
     _get_adapters_async = (adapters_path, adapters_fn, cb) ->
