@@ -376,7 +376,10 @@ _run_build_sequence_monadic_functions =
                         cb OK, mod
                 else
                     install_module mod.prefix_meta.npm_path, app_root, (err, info) ->
+                        return(cb err, null) if err?
+                        
                         resolve mod.prefix_meta.npm_module_name, {basedir: app_root}, (err, dirname) ->
+                            return(cb err, null) if err?
                             mod.path = path.resolve app_root, get_npm_mod_folder dirname
                             cb err, mod
 
