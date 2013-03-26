@@ -6,13 +6,20 @@ getdeps = require 'gimme-deps'
 {exec} = require 'child_process'
 async = require 'async'
 {domonad, cont_t, lift_async, lift_sync} = require 'libmonad'
+resolve = require 'resolve'
 
 {partial, maybe_build, is_dir, is_file, has_ext, and_,
- get_mtime, newer, walk, newest, extend, flatten, fn_without_ext} = require '../../lib/utils'
+ get_mtime, newer, walk, newest, extend,
+ flatten, fn_without_ext, get_npm_mod_folder} = require '../../lib/utils'
 
+CB_SUCCESS = undefined
+
+# TODO: move this to libmonad
 OK = undefined
+ok = (v) -> [OK, v]
+nok = (err, v) -> [err, v]
 
-error_m = -> # TODO: move this to libmonad
+error_m = ->
     is_error = ([err, val]) -> (err isnt OK) and (err isnt null)
 
     result: (v) -> [OK, v]
@@ -20,53 +27,67 @@ error_m = -> # TODO: move this to libmonad
     bind: (mv, f) ->
         if (is_error mv) then mv else (f mv[1])
 
-CB_SUCCESS = undefined
-
-get_paths = (ctx) ->
+get_paths = (ctx, ctx_cb) ->
     app_root = path.resolve ctx.own_args.app_root
     module_name = ctx.module.path
-    src = ctx.own_args.src
-    mod_src = src or path.resolve app_root, module_name
-    packagejson = path.resolve mod_src, "package.json"
-    {mod_src, packagejson}
+
+    resolve module_name, {basedir: app_root}, (err, dirname) ->
+        if err
+            ctx_cb err, {}
+        else
+            mod_src = path.resolve app_root, (get_npm_mod_folder dirname)
+            packagejson = path.resolve mod_src, "package.json"
+
+            ctx_cb OK, {mod_src, packagejson}
 
 module.exports = do ->
     match = (ctx) ->
-        {mod_src, packagejson} = get_paths ctx
-        (is_dir mod_src) and (is_file packagejson)
+        throw "Sync match not available for npm adapter"
+        # {mod_src, packagejson} = get_paths ctx
+        # (is_dir mod_src) and (is_file packagejson)
 
     match.async = (ctx, cb) ->
-        {mod_src, packagejson} = get_paths ctx
-        async.parallel [((is_dir_cb) -> is_dir.async mod_src, is_dir_cb), 
-                        ((is_file_cb) -> is_file.async packagejson, is_file_cb)],
-                        (err, res) ->
-                            if not err and (and_ res...)
-                                cb CB_SUCCESS, true
-                            else
-                                cb CB_SUCCESS, false
+        get_paths ctx, (err, {mod_src, packagejson}) ->
+            if err
+                cb OK, false
+            else
+                async.parallel [((is_dir_cb) -> is_dir.async mod_src, is_dir_cb),
+                                ((is_file_cb) -> is_file.async packagejson, is_file_cb)],
+                                (err, res) ->
+                                    if not err and (and_ res...)
+                                        cb CB_SUCCESS, true
+                                    else
+                                        cb CB_SUCCESS, false
 
     make_adaptor = (ctx, modules) ->
         type = 'npm_module'
         # TODO: set filename as path.relative mod_src , <recieved path from gimme-deps>
         harvest = (harvest_cb) ->
 
-            _m_read_package_json = (mod_src, cb) ->
-                fs.readFile (path.join mod_src, "package.json"), (err, packagejson) ->
-                    packagejson = JSON.parse packagejson.toString()
-                    cb [err, {mod_src, packagejson}]
+            _m_read_package_json = ({mod_src, packagejson}, cb) ->
+                fs.readFile packagejson, (err, data) ->
+                    if err
+                        cb (nok err)
+                    else
+                        cb (ok {mod_src: mod_src, packagejson: (JSON.parse data.toString())})
 
 
             _m_run_npm_install = ({mod_src, packagejson}, npm_install_cb) ->
+
                 fs.exists path.join(path.resolve(mod_src), 'node_modules'), (exists) ->
-                    if exists
-                        npm_install_cb [null, {mod_src, packagejson}]
+                    if exists is true
+                        npm_install_cb (ok {mod_src, packagejson})
+
                     else
                         deps = (k for k, v of packagejson.dependencies)
                         if deps.length # if has deps
-                            run_install_in_dir path.resolve(mod_src), (err, data) ->
-                                npm_install_cb [err, {mod_src, packagejson}]
+                            run_install_in_dir (path.resolve mod_src), (err, data) ->
+                                if err
+                                    npm_install_cb (nok err)
+                                else
+                                    npm_install_cb (ok {mod_src, packagejson})
                         else
-                            npm_install_cb [null, {mod_src, packagejson}]
+                            npm_install_cb (ok {mod_src, packagejson})
 
 
             _m_execute_cafebuild = ({mod_src, packagejson}, cb) ->
@@ -74,119 +95,132 @@ module.exports = do ->
                     cwd: mod_src
                     env: process.env
 
-                opts.env.NODE_PATH = (path.join mod_src, 'node_modules') + (if opts.env.NODE_PATH then (":#{opts.env.NODE_PATH}") else "")
+                opts.env.NODE_PATH = (path.join mod_src, 'node_modules') # + (if opts.env.NODE_PATH then (":#{opts.env.NODE_PATH}") else "")
 
                 if packagejson.cafebuild?
                     child = exec packagejson.cafebuild, opts, (error, stdout, stderr) ->
                         if error
                             ctx.fb.scream stderr.replace /\n$/, ''
-                            return cb ["Npm package task execution failure #{packagejson.cafebuild}, #{error}", null]
+                            return cb (nok "Npm package task execution failure #{packagejson.cafebuild}, #{error}")
 
-                        cb [null, {mod_src, packagejson}]
+                        cb (ok {mod_src, packagejson})
                 else
-                    cb [null, {mod_src, packagejson}]
+                    cb (ok {mod_src, packagejson})
 
             _m_get_require_dependencies = ({mod_src, packagejson}, cb) ->
-                getdeps mod_src, (err, info) -> 
-                    cb [err, {mod_src, packagejson, info}]
+                getdeps mod_src, (err, info) ->
+                    if err
+                        cb (nok err)
+                    else
+                        cb (ok {mod_src, packagejson, info})
 
             _m_filter_require_dependencies = (ns, registered_requires, {mod_src, packagejson, info}, cb) ->
+                # TODO filter duplicates by module name which is used in require
                 info = info.filter (i) -> (i.module not in registered_requires) or (i.module is ns)
-                cb [null, {mod_src, packagejson, info}]
+                cb (ok {mod_src, packagejson, info})
 
-            _m_fill_filtes_sources = (ns, {mod_src, packagejson, info}, fill_cb) ->
-                
+            _m_fill_filter_sources = (ns, {mod_src, packagejson, info}, fill_cb) ->
+
                 npm_mod_process = (mod, module_process_cb) ->
                     _m_get_main_file = (mod_src, mod, get_main_file_cb) ->
                         main_file = null
                         if mod.main_file?
                             main_file = _.find mod.files, (f) -> f.path is mod.main_file # TODO: check null
                             fs.readFile mod.main_file, (err, source) ->
-                                filename = if path.basename(mod.module_path) isnt path.basename(mod_src) # if is root
-                                    path.join path.basename(mod.module_path), path.relative mod.module_path, main_file.path
-                                else
-                                    path.relative mod.module_path, main_file.path
+                                if err
+                                    get_main_file_cb (nok err)
 
-                                main_file = {filename, source}
-                                get_main_file_cb [err, {mod, main_file}]
+                                else
+                                    filename = if path.basename(mod.module_path) isnt (path.basename mod_src) # if is root
+                                        path.join (path.basename mod.module_path), (path.relative mod.module_path, main_file.path)
+                                    else
+                                        path.relative mod.module_path, main_file.path
+
+                                    main_file = {filename, source}
+                                    get_main_file_cb (ok {mod, main_file})
 
                         else
-                            get_main_file_cb [null, {mod, main_file}]
+                            get_main_file_cb (ok {mod, main_file})
 
 
                     _m_link_main_to_index = (mod_src, {mod, main_file}, link_main_to_index_cb) ->
                         files = []
 
                         if main_file?
-                            if path.basename(mod.module_path) is path.basename(mod_src)
-                                if path.basename(main_file.filename) isnt "index.js"
+                            if (path.basename mod.module_path) is (path.basename mod_src)
+                                if (path.basename main_file.filename) isnt "index.js" #FIXME
                                     source = "module.exports = require('#{fn_without_ext main_file.filename}')"
                                     files.push {filename:"index.js", source}
                             else
-                                if path.basename(main_file.filename) isnt "index.js"
+                                if (path.basename main_file.filename) isnt "index.js" #FIXME
                                     source = "module.exports = require('#{fn_without_ext main_file.filename}')"
                                     filename = "#{path.basename(mod.module_path)}/index.js"
-                                    files.push {filename, source} 
+                                    files.push {filename, source}
 
-                        link_main_to_index_cb [null, {mod, main_file, files}]
+                        link_main_to_index_cb (ok {mod, main_file, files})
 
 
                     _m_files_process = (mod_src, {mod, main_file, files}, file_process_cb) ->
 
                         file_process = (file, file_parse_cb) ->
-
                             fs.readFile file.path, (err, source) ->
-                                filename = if path.basename(mod.module_path) isnt path.basename(mod_src) # is root module
-                                    path.join path.basename(mod.module_path), path.relative mod.module_path, file.path
+                                if err
+                                    file_parse_cb err
                                 else
-                                    path.relative mod.module_path, file.path
-                                file_parse_cb err, {filename, source}
+                                    filename = if (path.basename mod.module_path) isnt (path.basename mod_src) # is root module
+                                        path.join (path.basename mod.module_path), (path.relative mod.module_path, file.path)
+                                    else
+                                        path.relative mod.module_path, file.path
+
+                                    file_parse_cb CB_SUCCESS, {filename, source}
 
                         module_files = mod.files.filter (m) -> m.path isnt mod.main_file # select all except main files
 
                         async.map module_files, file_process, (err, mod_files) ->
-                            mod_files = mod_files.concat files
-
-                            res_mod_files = if main_file?
-                                mod_files.concat [main_file]
+                            if err
+                                file_process_cb (nok err)
                             else
-                                mod_files
-
-                            file_process_cb [err, res_mod_files]
+                                mod_files = mod_files.concat files
+                                file_process_cb (ok (if main_file? then mod_files.concat [main_file] \
+                                                                   else mod_files))
 
                     seq = [
-                        lift_async(3, partial(_m_get_main_file, mod_src))
-                        lift_async(3, partial(_m_link_main_to_index, mod_src))
-                        lift_async(3, partial(_m_files_process, mod_src))
+                        lift_async 3, (partial _m_get_main_file, mod_src)
+                        lift_async 3, (partial _m_link_main_to_index, mod_src)
+                        lift_async 3, (partial _m_files_process, mod_src)
                     ]
 
-                    domonad((cont_t error_m()), seq, mod) ([err, parsed_files]) ->
+                    (domonad (cont_t error_m()), seq, mod) ([err, parsed_files]) ->
                         module_process_cb err, parsed_files
-                
+
                 async.map info, npm_mod_process, (err, sources) ->
-                    sources = flatten(sources).map (s) ->
-                        s.filename = fn_without_ext s.filename
-                        s
+                    if err
+                        fill_cb (nok err)
+                    else
+                        sources = flatten(sources).map (s) ->
+                            s.filename = fn_without_ext s.filename
+                            s
 
-                    sources = {sources, ns}
-                    fill_cb [null, {mod_src, packagejson, info, sources}]
+                        sources = {sources, ns}
+                        fill_cb (ok {mod_src, packagejson, info, sources})
 
-            {mod_src} = get_paths ctx
-            ns = path.basename mod_src
-            registered_requires = modules.map (m) -> m.name
 
-            seq = [
-                lift_async(2, _m_read_package_json)
-                lift_async(2, _m_run_npm_install)
-                lift_async(2, _m_execute_cafebuild)
-                lift_async(2, _m_get_require_dependencies)
-                lift_async(4, partial(_m_filter_require_dependencies, ns, registered_requires))
-                lift_async(3, partial(_m_fill_filtes_sources, ns))
-            ]
+            get_paths ctx, (err, {mod_src, packagejson}) ->
+                ns = path.basename mod_src
+                registered_requires = modules.map (m) -> m.name
 
-            domonad((cont_t error_m()), seq, mod_src) ([err, resp]) ->
-                (sources = resp.sources) unless err
-                harvest_cb err, sources
+                seq = [
+                    lift_async 2, _m_read_package_json
+                    lift_async 2, _m_run_npm_install
+                    lift_async 2, _m_execute_cafebuild
+                    lift_async 2, _m_get_require_dependencies
+                    lift_async 4, (partial _m_filter_require_dependencies, ns, registered_requires)
+                    lift_async 3, (partial _m_fill_filter_sources, ns)
+                ]
+
+                (domonad (cont_t error_m()), seq, {mod_src, packagejson}) ([err, resp]) ->
+                    # harvest_cb isn't a monadic continuation
+                    if err then (harvest_cb err) else (harvest_cb CB_SUCCESS, resp.sources)
 
 
         last_modified = (cb) ->
@@ -198,6 +232,7 @@ module.exports = do ->
                         newest (results.map (filename) -> get_mtime filename)
                     catch ex
                         0
+
                     cb CB_SUCCESS, max_time
                 else
                     cb CB_SUCCESS, 0

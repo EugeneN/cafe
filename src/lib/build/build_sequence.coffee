@@ -176,7 +176,7 @@ harvest_module = (adapter, module, ctx, message, cb) ->
     ctx.fb.say message
     # TODO: handle adapter inner exception.
     adapter.harvest (err, sources) ->
-        return(cb err, module) if err
+        return (cb err, module) if err
         # post compile module processing sequence
         # TODO: check that sources are present
         module.set_sources wrap_module(sources.sources, sources.ns, module.type)
@@ -218,7 +218,6 @@ process_module = (adapters, cached_sources, build_deps, ctx, modules, module, mo
                 unless err?
                     cb [OK, true, module]
                 else
-                    console.log '>>>>>>>>>>', adapter
                     cb ["Module compile error 1. Module - #{module.name}: #{err}", false, undefined]
         else
             cb [OK, false, [module, adapter]]
@@ -369,14 +368,14 @@ _run_build_sequence_monadic_functions =
             resolve mod.prefix_meta.npm_module_name, {basedir: app_root}, (err, dirname) ->
                 if dirname?
                     mod.path = path.resolve app_root, get_npm_mod_folder dirname
-                    
+
                     if ctx.own_args.u is true
                         install_module mod.prefix_meta.npm_path, app_root, (err, info) ->
                             cb err, mod
                     else
                         cb OK, mod
                 else
-                    install_module mod.prefix_meta.npm_path, app_root, (err, info) -> 
+                    install_module mod.prefix_meta.npm_path, app_root, (err, info) ->
                         resolve mod.prefix_meta.npm_module_name, {basedir: app_root}, (err, dirname) ->
                             mod.path = path.resolve app_root, get_npm_mod_folder dirname
                             cb err, mod
