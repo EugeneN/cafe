@@ -218,7 +218,8 @@ process_module = (adapters, cached_sources, build_deps, ctx, modules, module, mo
                 unless err?
                     cb [OK, true, module]
                 else
-                    cb ["Module compile error. Module - #{module.name}", false, undefined]
+                    console.log '>>>>>>>>>>', adapter
+                    cb ["Module compile error 1. Module - #{module.name}: #{err}", false, undefined]
         else
             cb [OK, false, [module, adapter]]
 
@@ -246,7 +247,7 @@ process_module = (adapters, cached_sources, build_deps, ctx, modules, module, mo
                         unless err?
                             cb [OK, true, module]
                         else
-                            cb ["Module compile error. Module - #{module.name}. #{err}", false, undefined]
+                            cb ["Module compile error 2. Module - #{module.name}. #{err}", false, undefined]
                 else
                     cb [OK, true, undefined]
             else
@@ -254,7 +255,7 @@ process_module = (adapters, cached_sources, build_deps, ctx, modules, module, mo
                     unless err?
                         cb [OK, true, module]
                     else
-                        cb ["Module compile error. Module - #{module.name}. #{err}", false, undefined]
+                        cb ["Module compile error 3. Module - #{module.name}. #{err}", false, undefined]
 
         seq = [
             lift_sync(2, partial(_m_get_adapter, _adapter_ctx))
