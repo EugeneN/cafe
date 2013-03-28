@@ -1,6 +1,7 @@
 fs = require 'fs'
 path = require 'path'
 async = require 'async'
+cli_cafe = require '../ui/cli/cafe'
 {compose} = require 'underscore'
 {fork, spawn} = require 'child_process'
 {say, shout, scream, whisper} = require('./logger') "Menu>"
@@ -53,24 +54,8 @@ cook_menu = (current_ctx, my_menu, cb) ->
     cmd_args = build_cmd current_ctx, my_menu
 
     current_ctx.fb.say "Replaying command sequence `#{cmd_args.join(" ")}`"
+    cli_cafe cmd_args
 
-    child = spawn SUB_CAFE, cmd_args #, {silent: true}
-
-    child.on 'message', (m) -> current_ctx.fb.murmur m
-
-    # when forking child std* is assosiated with parent's ones
-    child.stdout.on 'data', (data) -> current_ctx.fb.say "#{data}".replace /\n$/, ''
-    child.stderr.on 'data', (data) -> current_ctx.fb.scream "#{data}".replace /\n$/, ''
-    child.on 'exit', (code) ->
-        if code is 0
-            current_ctx.fb.say "Command sequence succeeded"
-            # should stop to prevent cafe processing menu's subcomamnds as own commands
-            cb? 'stop'
-        else
-            current_ctx.fb.scream "Command sequence failed with code #{code}"
-            cb? "sub_cafe_error", code
-
-    # cb?('stop') no exit or the process will exit
 
 store_new_menu = (reader, writer, new_menu_item_name, new_menu_item_value) ->
     # existing_menu is frozen

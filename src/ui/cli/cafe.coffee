@@ -10,7 +10,7 @@ LOG_PREFIX = 'Cafe>'
 path = require 'path'
 events = require 'events'
 growl = require 'growl'
-{parse_process_args} = require 'easy-opts'
+{parse_args, parse_process_args} = require 'easy-opts'
 
 cafe_factory = require '../../cafe'
 {is_array} = require '../../lib/utils'
@@ -84,8 +84,13 @@ subscribe = (emitter) ->
                 growl "Cafe error: <#{error}>", {image: FAILURE_ICO}
 
 
-module.exports = ->
-    argv = parse_process_args()
+module.exports = (args) ->
+
+    argv = if args
+        parse_args args
+    else
+        parse_process_args()
+
     logger.nocolor on if argv.global.hasOwnProperty 'nocolor'
     logger.shutup on if argv.global.hasOwnProperty 'shutup'
     logger.panic_mode on if argv.global.hasOwnProperty 'debug'
