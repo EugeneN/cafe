@@ -115,8 +115,15 @@ module.exports = do ->
                         cb (ok {mod_src, packagejson, info})
 
             _m_filter_require_dependencies = (ns, registered_requires, {mod_src, packagejson, info}, cb) ->
+                unique_reducer = (a, b) ->
+                    unless b.module of a
+                        a[b.module] = b
+                    a
+
                 # TODO filter duplicates by module name which is used in require
                 info = info.filter (i) -> (i.module not in registered_requires) or (i.module is ns)
+                info = info.reduce unique_reducer, {}
+                info = (v for k, v of info)
                 cb (ok {mod_src, packagejson, info})
 
             _m_fill_filter_sources = (ns, {mod_src, packagejson, info}, fill_cb) ->
@@ -129,13 +136,13 @@ module.exports = do ->
                             fs.readFile mod.main_file, (err, source) ->
                                 if err
                                     get_main_file_cb (nok err)
-
                                 else
+
                                     filename = if path.basename(mod.module_path) isnt (path.basename mod_src) # if is root
                                         path.join (path.basename mod.module_path), (path.relative mod.module_path, main_file.path)
                                     else
                                         path.relative mod.module_path, main_file.path
-
+                                        
                                     main_file = {filename, source}
                                     get_main_file_cb (ok {mod, main_file})
 
@@ -171,7 +178,6 @@ module.exports = do ->
                                         path.join (path.basename mod.module_path), (path.relative mod.module_path, file.path)
                                     else
                                         path.relative mod.module_path, file.path
-
                                     file_parse_cb CB_SUCCESS, {filename, source}
 
                         module_files = mod.files.filter (m) -> m.path isnt mod.main_file # select all except main files

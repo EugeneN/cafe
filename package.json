@@ -31,7 +31,7 @@
     "libprotein": "*",
     "js-yaml": "*",
     "easy-opts": "*",
-    "gimme-deps": "*",
+    "gimme-deps": ">=0.0.8",
     "resolve":"*"
   }
 }
