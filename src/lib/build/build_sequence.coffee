@@ -354,6 +354,13 @@ _run_build_sequence_monadic_functions =
             if err?
                 parse_cb [err, false, undefined]
             else
+                # Move this validation to separate func
+                unless recipe.modules?
+                    return parse_cb ["modules section is missing in recipe", false, init_result]
+
+                unless (recipe.realms? or recipe.bundles?)
+                    return parse_cb ["realms or bundles section must be present in recipe", false, init_result]
+
                 [modules, bundles] = modules_and_bundles
                 parse_cb [err, false, extend init_result, {modules, bundles}]
 

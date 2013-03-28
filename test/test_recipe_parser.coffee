@@ -158,10 +158,10 @@ exports.test_check_deps_existance  = (test) ->
         test.done()
 
 
-exports.test_check_if_modules_in_recipe = (test) ->
-    get_recipe.async recipe_without_modules, ([error, recipe]) ->
-        test.ok (error?), "Recipe without modules can't pass"
-        test.done()
+#exports.test_check_if_modules_in_recipe = (test) ->
+#    get_recipe.async recipe_without_modules, ([error, recipe]) ->
+#        test.ok (error?), "Recipe without modules can't pass"
+#        test.done()
 
 exports.test_check_abstract_section = (test) ->
     get_recipe.async recipe_abstract_check, ([error, recipe]) ->
