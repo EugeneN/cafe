@@ -131,7 +131,13 @@ process_bundle = (modules, build_deps, changed_modules, cached_sources, ctx, opt
     _m_wrap_bundle = ([bundle, modules]) ->
         sources = (modules.map (m) -> m.get_sources())
         try
-            wrapped_sources = wrap_bundle (sources.join '\n'), BUNDLE_HDR
+            has_commonjs = modules.filter((m) -> m.type is 'commonjs').length
+
+            wrapped_sources = if has_commonjs
+                wrap_bundle (sources.join '\n'), BUNDLE_HDR
+            else
+                [BUNDLE_HDR, (sources.join '\n')].join '\n'
+
         catch ex
             err = "Failed to wrap bundle. #{ex}"
 
