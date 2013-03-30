@@ -55,7 +55,7 @@ module.exports = do ->
 
                 try
                     sources  = (compiler.compile [target_fn]).map ({path: p, source: source}) ->
-                        result_fn = ctx.module.name
+                        result_fn = fn_without_ext path.relative ctx.own_args.app_root, p
                         {filename: result_fn, source: source}
                 catch e
                     ctx.fb.scream "File compilation error. File - #{target_fn}. Error - #{e}"
