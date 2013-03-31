@@ -71,7 +71,6 @@ module.exports = do ->
                     else
                         cb (ok {mod_src: mod_src, packagejson: (JSON.parse data.toString())})
 
-
             _m_run_npm_install = ({mod_src, packagejson}, npm_install_cb) ->
 
                 fs.exists path.join(path.resolve(mod_src), 'node_modules'), (exists) ->
@@ -88,7 +87,6 @@ module.exports = do ->
                                     npm_install_cb (ok {mod_src, packagejson})
                         else
                             npm_install_cb (ok {mod_src, packagejson})
-
 
             _m_execute_cafebuild = ({mod_src, packagejson}, cb) ->
                 opts =
@@ -129,6 +127,7 @@ module.exports = do ->
             _m_fill_filter_sources = (ns, {mod_src, packagejson, info}, fill_cb) ->
 
                 npm_mod_process = (mod, module_process_cb) ->
+
                     _m_get_main_file = (mod_src, mod, get_main_file_cb) ->
                         main_file = null
                         if mod.main_file?
@@ -149,7 +148,6 @@ module.exports = do ->
                         else
                             get_main_file_cb (ok {mod, main_file})
 
-
                     _m_link_main_to_index = (mod_src, {mod, main_file}, link_main_to_index_cb) ->
                         files = []
 
@@ -166,6 +164,16 @@ module.exports = do ->
 
                         link_main_to_index_cb (ok {mod, main_file, files})
 
+                    _m_check_includes = (module, mod_src, {mod, main_file, files}, check_includes_cb) ->
+                        if path.basename(mod.module_path) isnt (path.basename mod_src) # if not root
+                            check_includes_cb (ok {mod, main_file, files})
+                        else
+                            if module.prefix_meta?.include?.length
+                                _files = module.prefix_meta.include.map (f) -> {path: path.join(mod_src, f)}
+                                mod.files = mod.files.concat _files
+                                check_includes_cb (ok {mod, main_file, files})
+                            else
+                                check_includes_cb (ok {mod, main_file, files})
 
                     _m_files_process = (mod_src, {mod, main_file, files}, file_process_cb) ->
 
@@ -193,6 +201,7 @@ module.exports = do ->
                     seq = [
                         lift_async 3, (partial _m_get_main_file, mod_src)
                         lift_async 3, (partial _m_link_main_to_index, mod_src)
+                        lift_async 4, (partial _m_check_includes, ctx.module, mod_src)
                         lift_async 3, (partial _m_files_process, mod_src)
                     ]
 

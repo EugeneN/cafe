@@ -136,7 +136,7 @@ _m_parse_from_dict = (meta) ->
         ["Path is not set for module #{module}", false, meta]
 
 
-_m_check_name_prefix = (module) ->
+_m_check_name_prefix = (meta, module) ->
     prefix_regexp = /([a-z+]+?):\/\/(.+)/
     npm_path_regexp = /([A-Za-z0-9-_]+)@?(.+)?/
 
@@ -144,7 +144,7 @@ _m_check_name_prefix = (module) ->
         [_, prefix, npm_path] = module.path.match prefix_regexp
 
         if prefix is "npm"        
-
+            {include} = meta[module.name]
             unless npm_path_regexp.test npm_path
                 return ["npm module #{module.name} has wrong format", false, module]
 
@@ -152,7 +152,7 @@ _m_check_name_prefix = (module) ->
             
             module.prefix_meta = extend(
                 module.prefix_meta 
-                {prefix, npm_path, version, npm_module_name})
+                {prefix, npm_path, version, npm_module_name, include})
 
             module = extend module, {path: _path.join(NPM_MODULES_PATH, module.prefix_meta.npm_module_name)}
 
@@ -173,7 +173,7 @@ construct_module = (meta, ctx) ->
 
     unless err
         # TODO: here will be another monad sequence for post parse logic(prefixes e.t.c)
-        module = _m_check_name_prefix module
+        module = _m_check_name_prefix meta, module
         
     [err, skip, module]
 
