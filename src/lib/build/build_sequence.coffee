@@ -14,7 +14,8 @@ resolve = require 'resolve'
 {get_adapters} = require '../adapter'
 {extend, partial, get_cafe_dir, exists, get_legacy_cafe_bin_path, get_npm_mod_folder} = require '../utils'
 {CB_SUCCESS, RECIPE, BUILD_DIR, BUILD_DEPS_FN,
-RECIPE_API_LEVEL, ADAPTERS_PATH, ADAPTER_FN, BUNDLE_HDR, NPM_MODULES_PATH} = require '../../defs'
+ RECIPE_API_LEVEL, ADAPTERS_PATH, ADAPTER_FN, BUNDLE_HDR,
+ NPM_MODULES_PATH, MINIFY_MIN_SUFFIX, BUILD_FILE_EXT} = require '../../defs'
 {get_modules_cache} = require '../modules_cache'
 {skip_or_error_m, OK} = require '../monads'
 {minify} = require './cafe_minify'
@@ -159,8 +160,8 @@ process_bundle = (modules, build_deps, changed_modules, cached_sources, ctx, opt
     modules = bundle.modules_names.map (m_name) -> u.find modules, (m) -> m.name is m_name
     build_dir = get_build_dir ctx.own_args.build_root
     bundle_dir_path = path.dirname path.join(build_dir, bundle.name)
-    bundle_file_path = path.join bundle_dir_path, (path.basename "#{bundle.name}.js")
-    minify_file_path = path.join bundle_dir_path, (path.basename "#{bundle.name}.min.js")
+    bundle_file_path = path.join bundle_dir_path, (path.basename "#{bundle.name}#{BUILD_FILE_EXT}")
+    minify_file_path = path.join bundle_dir_path, (path.basename "#{bundle.name}#{MINIFY_MIN_SUFFIX}")
 
     seq = [
         lift_sync(3, partial(_m_check_to_rebuild, modules, build_deps, changed_modules))
@@ -390,7 +391,7 @@ _run_build_sequence_monadic_functions =
                 else
                     install_module mod.prefix_meta.npm_path, app_root, (err, info) ->
                         return(cb err, null) if err?
-                        
+
                         resolve mod.prefix_meta.npm_module_name, {basedir: app_root}, (err, dirname) ->
                             return(cb err, null) if err?
                             mod.path = path.resolve app_root, get_npm_mod_folder dirname
