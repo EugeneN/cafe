@@ -168,8 +168,8 @@ module.exports = do ->
                         if path.basename(mod.module_path) isnt (path.basename mod_src) # if not root
                             check_includes_cb (ok {mod, main_file, files})
                         else
-                            if module.prefix_meta?.include?.length
-                                _files = module.prefix_meta.include.map (f) -> {path: path.join(mod_src, f)}
+                            if module.get_prefix_meta()?.include?.length
+                                _files = module.get_prefix_meta().include.map (f) -> {path: path.join(mod_src, f)}
                                 mod.files = mod.files.concat _files
                                 check_includes_cb (ok {mod, main_file, files})
                             else

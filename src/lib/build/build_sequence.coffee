@@ -193,7 +193,7 @@ harvest_module = (adapter, module, ctx, message, cb) ->
 process_module = (adapters, cached_sources, build_deps, ctx, modules, module, module_cb) -> # TOTEST
 
     _m_module_path_exists = (ctx, module, cb) ->
-        if module.prefix_meta.prefix is "npm"
+        if module.get_prefix_meta().prefix is "npm"
             module_path = module.path
         else
             module_path = path.join ctx.own_args.app_root, module.path
@@ -375,24 +375,24 @@ _run_build_sequence_monadic_functions =
     _m_init_modules: (ctx, init_result, init_cb) ->
         # Processing prefixes
         {modules} = init_result
-        npm_modules = modules.filter (m) -> m.prefix_meta?.prefix is "npm"
+        npm_modules = modules.filter (m) -> m.get_prefix_meta()?.prefix is "npm"
 
         npm_mod_initializer = (mod, cb) ->
             app_root = path.resolve ctx.own_args.app_root
-            resolve mod.prefix_meta.npm_module_name, {basedir: app_root}, (err, dirname) ->
+            resolve mod.get_prefix_meta().npm_module_name, {basedir: app_root}, (err, dirname) ->
                 if dirname?
                     mod.path = path.resolve app_root, get_npm_mod_folder dirname
 
                     if ctx.own_args.u is true
-                        install_module mod.prefix_meta.npm_path, app_root, (err, info) ->
+                        install_module mod.get_prefix_meta().npm_path, app_root, (err, info) ->
                             cb err, mod
                     else
                         cb OK, mod
                 else
-                    install_module mod.prefix_meta.npm_path, app_root, (err, info) ->
+                    install_module mod.get_prefix_meta().npm_path, app_root, (err, info) ->
                         return(cb err, null) if err?
 
-                        resolve mod.prefix_meta.npm_module_name, {basedir: app_root}, (err, dirname) ->
+                        resolve mod.get_prefix_meta().npm_module_name, {basedir: app_root}, (err, dirname) ->
                             return(cb err, null) if err?
                             mod.path = path.resolve app_root, get_npm_mod_folder dirname
                             cb err, mod

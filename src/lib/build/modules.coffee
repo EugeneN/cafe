@@ -19,6 +19,9 @@ get_module = ({path, name, deps, type, location, prefix_meta}) ->
         _mtime = Date.now()
         _sources = sources
 
+    set_prefix_meta = (meta) -> prefix_meta = meta
+    get_prefix_meta = -> prefix_meta
+
     copy_sources = (sources) ->
         _sources = sources
 
@@ -56,6 +59,8 @@ get_module = ({path, name, deps, type, location, prefix_meta}) ->
     need_to_recompile
     need_to_reorder
     copy_sources
+    get_prefix_meta
+    set_prefix_meta
     }
 
 
@@ -150,11 +155,11 @@ _m_check_name_prefix = (meta, module) ->
 
             [_, npm_module_name, version] = npm_path.match npm_path_regexp
             
-            module.prefix_meta = extend(
-                module.prefix_meta 
+            module.set_prefix_meta extend(
+                module.get_prefix_meta()
                 {prefix, npm_path, version, npm_module_name, include})
 
-            module = extend module, {path: _path.join(NPM_MODULES_PATH, module.prefix_meta.npm_module_name)}
+            module = extend module, {path: _path.join(NPM_MODULES_PATH, module.get_prefix_meta().npm_module_name)}
 
         module
     else
