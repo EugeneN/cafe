@@ -1,7 +1,7 @@
 fs = require 'fs'
 path = require 'path'
 _ = require 'underscore'
-{run_install_in_dir} = require '../../lib/npm_tasks'
+{run_install_in_dir, install_module} = require '../../lib/npm_tasks'
 getdeps = require 'gimme-deps'
 {exec} = require 'child_process'
 async = require 'async'
@@ -41,10 +41,7 @@ get_paths = (ctx, ctx_cb) ->
             ctx_cb OK, {mod_src, packagejson}
 
 module.exports = do ->
-    match = (ctx) ->
-        throw "Sync match not available for npm adapter"
-        # {mod_src, packagejson} = get_paths ctx
-        # (is_dir mod_src) and (is_file packagejson)
+    match = (ctx) -> throw "Sync match not available for npm adapter"
 
     match.async = (ctx, cb) ->
         get_paths ctx, (err, {mod_src, packagejson}) ->
@@ -62,6 +59,7 @@ module.exports = do ->
     make_adaptor = (ctx, modules) ->
         type = 'npm_module'
         # TODO: set filename as path.relative mod_src , <recieved path from gimme-deps>
+
         harvest = (harvest_cb) ->
 
             _m_read_package_json = ({mod_src, packagejson}, cb) ->
@@ -72,7 +70,7 @@ module.exports = do ->
                         cb (ok {mod_src: mod_src, packagejson: (JSON.parse data.toString())})
 
             _m_run_npm_install = ({mod_src, packagejson}, npm_install_cb) ->
-
+                _package_json = packagejson #TODO: Little hack for update handler to prevent reading packagejson file twice.
                 fs.exists path.join(path.resolve(mod_src), 'node_modules'), (exists) ->
                     if exists is true
                         npm_install_cb (ok {mod_src, packagejson})
@@ -237,7 +235,6 @@ module.exports = do ->
                     # harvest_cb isn't a monadic continuation
                     if err then (harvest_cb err) else (harvest_cb CB_SUCCESS, resp.sources)
 
-
         last_modified = (cb) ->
             mod_src = ctx.module.path
 
@@ -252,6 +249,27 @@ module.exports = do ->
                 else
                     cb CB_SUCCESS, 0
 
-        {type, harvest, last_modified}
+        update = (update_cb) ->  # TODO: rewrite in monadic way !!!
+            # Checking version
+            get_paths ctx, (err, {mod_src, packagejson}) ->
+                return update_cb(err) if err
+
+                fs.readFile packagejson, (err, data) ->
+                    return update_cb(err) if err
+                        
+                    module_version = ctx.module.get_prefix_meta().version
+                    package_json_version = JSON.parse(data.toString())?.version
+
+                    if module_version?
+                        if package_json_version isnt module_version
+                            ctx.fb.say "Changing npm module version from #{package_json_version} to #{module_version}"
+                            install_module ctx.module.get_prefix_meta().npm_path, (path.resolve ctx.own_args.app_root), (err, data) ->
+                                update_cb err
+                        else
+                            update_cb()
+                    else
+                        update_cb()
+
+        {type, harvest, last_modified, update}
 
     {match, make_adaptor}

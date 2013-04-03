@@ -215,6 +215,15 @@ process_module = (adapters, cached_sources, build_deps, ctx, modules, module, mo
             else
                 cb [OK, false, [module, adapter]]
 
+    _m_update_if_need = ([module, adapter], cb) ->
+        _adapter_ctx = extend ctx, {module}
+        _adapter = adapter.make_adaptor _adapter_ctx, modules
+
+        if _adapter.hasOwnProperty "update"
+            _adapter.update (err) -> cb [err, false, [module, adapter]]
+        else
+            cb [OK, false, [module, adapter]]
+
     _m_build_if_force = (ctx, [module, adapter], cb) ->
         if ctx.own_args.f?
             message = "Forced harvesting #{module.name} (#{module.path})..."
@@ -274,6 +283,7 @@ process_module = (adapters, cached_sources, build_deps, ctx, modules, module, mo
     seq = [
         lift_async(3, partial(_m_module_path_exists, ctx))
         lift_async(3, partial(_m_get_adapter, adapters))
+        lift_async(2, _m_update_if_need)
         lift_async(3, partial(_m_build_if_force, ctx))
         lift_async(4, partial(_m_build_if_changed, ctx, cached_sources))
     ]
