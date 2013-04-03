@@ -70,7 +70,6 @@ module.exports = do ->
                         cb (ok {mod_src: mod_src, packagejson: (JSON.parse data.toString())})
 
             _m_run_npm_install = ({mod_src, packagejson}, npm_install_cb) ->
-                _package_json = packagejson #TODO: Little hack for update handler to prevent reading packagejson file twice.
                 fs.exists path.join(path.resolve(mod_src), 'node_modules'), (exists) ->
                     if exists is true
                         npm_install_cb (ok {mod_src, packagejson})
