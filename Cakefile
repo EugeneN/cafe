@@ -22,8 +22,6 @@ build = (callback) ->
     coffee.on 'exit', (code) ->
         console.log "Build is done"
 
-        inc_version()
-
         callback?() if code is 0
 
 gzip = (cb) ->
