@@ -12,7 +12,8 @@ resolve = require 'resolve'
 {get_recipe, get_modules, get_bundles, get_modules_and_bundles_for_sequence} = require './recipe_parser'
 {toposort} = require './toposort'
 {get_adapters} = require '../adapter'
-{extend, partial, get_cafe_dir, exists, get_legacy_cafe_bin_path, get_npm_mod_folder} = require '../utils'
+{extend, partial, get_cafe_dir, exists, 
+get_legacy_cafe_bin_path, get_npm_mod_folder, is_array} = require '../utils'
 {CB_SUCCESS, RECIPE, BUILD_DIR, BUILD_DEPS_FN,
  RECIPE_API_LEVEL, ADAPTERS_PATH, ADAPTER_FN, BUNDLE_HDR,
  NPM_MODULES_PATH, MINIFY_MIN_SUFFIX, BUILD_FILE_EXT} = require '../../defs'
@@ -186,8 +187,13 @@ harvest_module = (adapter, module, ctx, message, cb) ->
         return (cb err, module) if err
         # post compile module processing sequence
         # TODO: check that sources are present
-        module.set_sources wrap_module(sources.sources, sources.ns, module.type)
-        cb err, module
+        if is_array sources
+            result_sources = (sources.map (s) -> wrap_module s.sources, s.ns, module.type).join '\n'
+            module.set_sources result_sources
+            cb err, module
+        else
+            module.set_sources wrap_module(sources.sources, sources.ns, module.type)
+            cb err, module
 
 
 process_module = (adapters, cached_sources, build_deps, ctx, modules, module, module_cb) -> # TOTEST

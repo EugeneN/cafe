@@ -134,11 +134,7 @@ module.exports = do ->
                                     get_main_file_cb (nok err)
                                 else
 
-                                    filename = if path.basename(mod.module_path) isnt (path.basename mod_src) # if is root
-                                        path.join (path.basename mod.module_path), (path.relative mod.module_path, main_file.path)
-                                    else
-                                        path.relative mod.module_path, main_file.path
-                                        
+                                    filename = path.relative mod.module_path, main_file.path
                                     main_file = {filename, source}
                                     get_main_file_cb (ok {mod, main_file})
 
@@ -149,15 +145,10 @@ module.exports = do ->
                         files = []
 
                         if main_file?
-                            if (path.basename mod.module_path) is (path.basename mod_src)
-                                if (path.basename main_file.filename) isnt "index.js" #FIXME
-                                    source = "module.exports = require('#{fn_without_ext main_file.filename}')"
-                                    files.push {filename:"index.js", source}
-                            else
-                                if (path.basename main_file.filename) isnt "index.js" #FIXME
-                                    source = "module.exports = require('#{fn_without_ext main_file.filename}')"
-                                    filename = "#{path.basename(mod.module_path)}/index.js"
-                                    files.push {filename, source}
+                            if (path.basename main_file.filename) isnt "index.js" #FIXME
+                                source = "module.exports = require('#{fn_without_ext main_file.filename}')"
+                                filename = "index.js"
+                                files.push {filename, source}
 
                         link_main_to_index_cb (ok {mod, main_file, files})
 
@@ -179,10 +170,7 @@ module.exports = do ->
                                 if err
                                     file_parse_cb err
                                 else
-                                    filename = if (path.basename mod.module_path) isnt (path.basename mod_src) # is root module
-                                        path.join (path.basename mod.module_path), (path.relative mod.module_path, file.path)
-                                    else
-                                        path.relative mod.module_path, file.path
+                                    filename = path.relative mod.module_path, file.path
                                     file_parse_cb CB_SUCCESS, {filename, source}
 
                         module_files = mod.files.filter (m) -> m.path isnt mod.main_file # select all except main files
@@ -192,8 +180,19 @@ module.exports = do ->
                                 file_process_cb (nok err)
                             else
                                 mod_files = mod_files.concat files
-                                file_process_cb (ok (if main_file? then mod_files.concat [main_file] \
-                                                                   else mod_files))
+                                mod_files = if main_file? then mod_files.concat [main_file] else mod_files
+
+                                sources = flatten(mod_files).map (s) ->
+                                    s.filename = fn_without_ext s.filename
+                                    s
+
+                                ns = if path.basename(mod.module_path) isnt (path.basename mod_src)
+                                    path.basename mod.module_path
+                                else
+                                    ns
+
+                                result = {sources, ns}
+                                file_process_cb (ok result)
 
                     seq = [
                         lift_async 3, (partial _m_get_main_file, mod_src)
@@ -209,11 +208,6 @@ module.exports = do ->
                     if err
                         fill_cb (nok err)
                     else
-                        sources = flatten(sources).map (s) ->
-                            s.filename = fn_without_ext s.filename
-                            s
-
-                        sources = {sources, ns}
                         fill_cb (ok {mod_src, packagejson, info, sources})
 
 
