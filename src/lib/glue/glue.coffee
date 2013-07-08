@@ -66,12 +66,12 @@ _m_execute_glue = (ctx, [config, sprites], cb) ->
             (ctx.fb.say stdout) if stdout
             (ctx.fb.error stderr) if stderr
             unless error
-                sprite_cb ok()
+                sprite_cb null, [config, sprite, cmd]
             else
-                sprite_cb nok error
+                sprite_cb error
 
     async.map sprites, sprite_iterator, (err, results) ->
-        cb ok()
+        cb ok [config, sprites, results]
 
 
 launch_glue = (fn, ctx, cb) ->
@@ -84,8 +84,9 @@ launch_glue = (fn, ctx, cb) ->
         lift_async(3, partial(_m_execute_glue, ctx))
     ]
 
-    (domonad (cont_t error_m()), seq, fn) ([error, result]) ->
-        cb error, result
+    (domonad (cont_t error_m()), seq, fn) ([error, [config, sprites, results]]) ->
+        #console.log config, sprites, results
+        cb()
 
 module.exports = {launch_glue}
 
