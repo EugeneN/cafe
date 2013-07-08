@@ -61,14 +61,17 @@ _m_execute_glue = (ctx, [config, sprites], cb) ->
         cmd = "python #{config.glue_path} #{sprite.path} #{opts}"
         ctx.fb.shout "running glue cmd ..."
         ctx.fb.say cmd
-        sprite_cb null, "ok"
-#        exec(
-#            "python #{config.glue_path} #{sprite.path} #{get_sprite_opts sprite}"
-#            (error, stdout, stderr) ->
-#        )
+
+        exec cmd, (error, stdout, stderr) ->
+            (ctx.fb.say stdout) if stdout
+            (ctx.fb.error stderr) if stderr
+            unless error
+                sprite_cb ok()
+            else
+                sprite_cb nok error
 
     async.map sprites, sprite_iterator, (err, results) ->
-        cb ok config
+        cb ok()
 
 
 launch_glue = (fn, ctx, cb) ->

@@ -1,4 +1,4 @@
-glue_path: ../glue/glue.py
+glue_path: " "
 
 common_opts :
   img: ../glue-test/uaprom/public/image/sprites/
@@ -13,10 +13,10 @@ common_opts :
 
 
 sprites:
-  - main:
-      path: ../glue-test/uaprom/public/image/sprites/main/
+  - sprite1:
+      path: ../glue_test/sprite1/sprite1.py
       sprite-file-name: "ololo"
 
-  - common:
-      path: ../glue-test/uaprom/public/image/sprites/common/
+  - sprite2:
+      path: ../glue_test/sprite2/sprite2.py
       sprite-file-name: "ololo2"
