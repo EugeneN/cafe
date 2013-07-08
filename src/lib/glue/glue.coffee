@@ -1,11 +1,15 @@
 async = require 'async'
+path = require 'path'
 {exec} = require 'child_process'
 {partial, is_file, read_yaml_file, extend, any} = require './../utils'
 {error_m, ok, nok}  = require './../monads'
 {cont_t, cont_m, maybe_t, maybe_m, logger_t, logger_m,
  domonad, is_null, lift_sync, lift_async } = require 'libmonad'
+chokidar = require 'chokidar'
+
 
 sprite_exclude_keys = ['path']
+
 
 get_sprite_opts = (sprite) ->
     ret_opts = {}
@@ -13,6 +17,7 @@ get_sprite_opts = (sprite) ->
     for k,v of sprite
         (ret_opts[k] = v) unless k in sprite_exclude_keys
     ret_opts
+
 
 opts2cmd = (opts) ->
     arg1 = (name, val) -> "--#{name}=#{val}"
@@ -74,6 +79,14 @@ _m_execute_glue = (ctx, [config, sprites], cb) ->
         cb ok [config, sprites, results]
 
 
+set_watchers = (ctx, execute_results) ->
+    paths = (sprite.path for [config, sprite, cmd] in execute_results).map (p)-> path.resolve p
+    console.log paths
+    watcher = chokidar.watch paths, {ignored: /^\./, persistent: true, ignoreInitial: true}
+    watcher.on 'change', (path, stats) -> console.log "changed #{path}"
+    ctx.fb.say "Watching changes in sprite folders"
+
+
 launch_glue = (fn, ctx, cb) ->
 
     seq = [
@@ -84,9 +97,12 @@ launch_glue = (fn, ctx, cb) ->
         lift_async(3, partial(_m_execute_glue, ctx))
     ]
 
-    (domonad (cont_t error_m()), seq, fn) ([error, [config, sprites, results]]) ->
-        #console.log config, sprites, results
-        cb()
+    (domonad (cont_t error_m()), seq, fn) ([error, [config, sprites, execute_results]])->
+        if ctx.own_args.w
+            #(return cb error) unless execute_results.length
+            set_watchers ctx, execute_results
+        else
+            cb error
 
 module.exports = {launch_glue}
 
