@@ -24,7 +24,7 @@ module.exports =
             deps: []
 
         test.throws(
-            -> topological_sort([one, two, three]),
+            (-> topological_sort([one, two, three])),
             "Cyclic dependency found: one, two",
             'Must throw error for cyclic deps'
         )

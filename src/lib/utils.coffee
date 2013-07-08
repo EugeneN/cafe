@@ -183,6 +183,7 @@ read_yaml_file = () -> throw "Method read_yaml_file is not implemented"
 
 read_yaml_file.async = (filename, cb) ->
     fs.readFile filename, FILE_ENCODING, (err, res) ->
+        (cb err) if err
         yaml.loadAll res, (data) ->
                 cb null, data
 
@@ -388,6 +389,10 @@ get_npm_mod_folder = (resolved_path) ->
                        .join(path.sep)
     module_dir
 
+any = (seq) -> seq.reduce (a, b) -> a or b
+
+all = (seq) -> seq.reduce (a, b) -> a and b
+
 module.exports = {
     read_slug
     walk
@@ -426,4 +431,6 @@ module.exports = {
     partial
     get_legacy_cafe_bin_path
     get_npm_mod_folder
+    all
+    any
 }

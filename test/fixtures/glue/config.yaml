@@ -1,0 +1,22 @@
+glue_path: ../glue/glue.py
+
+common_opts :
+  img: ../glue-test/uaprom/public/image/sprites/
+  css: ../glue-test/uaprom/public/image/sprites/
+  namespace: icon
+  padding: 2
+  p: true
+  each-template: "\"%(class_name)s\\n    background-position: %(x)s %(y)s\\n\""
+  global-template: "\"%(all_classes)s\\n    background-image: url('%(sprite_url)s')\\n    background-repeat: no-repeat\\n\""
+  url: "\"http://static0.prom.ua\""
+  css-ext: "\"sass\""
+
+
+sprites:
+  - main:
+      path: ../glue-test/uaprom/public/image/sprites/main/
+      sprite-file-name: "ololo"
+
+  - common:
+      path: ../glue-test/uaprom/public/image/sprites/common/
+      sprite-file-name: "ololo2"
