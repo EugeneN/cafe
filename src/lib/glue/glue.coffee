@@ -2,10 +2,10 @@ async = require 'async'
 path = require 'path'
 {exec} = require 'child_process'
 {partial, is_file, read_yaml_file, extend, any} = require './../utils'
-{error_m, ok, nok}  = require './../monads'
+{error_m, ok, nok}  = require '../monads'
 {cont_t, cont_m, maybe_t, maybe_m, logger_t, logger_m,
  domonad, is_null, lift_sync, lift_async } = require 'libmonad'
-chokidar = require 'chokidar'
+{watcher} = require '../cafe-watch'
 
 
 sprite_exclude_keys = ['path']
@@ -71,7 +71,7 @@ m_execute_glue = (ctx, [config, sprites], cb) ->
 
         exec cmd, (error, stdout, stderr) ->
             (ctx.fb.say stdout) if stdout
-            (ctx.fb.error stderr) if stderr
+            (ctx.fb.scream stderr) if stderr
             unless error
                 sprite_cb null, [config, sprite, cmd]
             else
@@ -82,16 +82,29 @@ m_execute_glue = (ctx, [config, sprites], cb) ->
 
 
 set_watchers = (ctx, execute_results) ->
-    watcher_handler = (path, stats) ->
+    w_handler = (path, stats) ->
         ctx.fb.say "Path #{path} changed"
-        [config, sprite, cmd] = (execute_results.filter(([config, sprite, cmd]) -> sprite.path is path))[0]
-        exec cmd, (error, stdout, stderr) ->
-            (ctx.fb.say stdout) if stdout
-            (ctx.fb.error stderr) if stderr
+
+        result = (execute_results.filter(
+            ([config, sprite, cmd]) -> sprite.path in path))
+
+        if result.length
+            [config, sprite, cmd] = result[0]
+
+            exec cmd, (error, stdout, stderr) ->
+                (ctx.fb.say stdout) if stdout
+                (ctx.fb.scream stderr) if stderr
+
+    error_handler = (error) -> ctx.fb.shout "Watcher error #{error}"
 
     paths = (sprite.path for [config, sprite, cmd] in execute_results)
-    watcher = chokidar.watch paths, {ignored: /^\./, persistent: true, ignoreInitial: true}
-    watcher.on 'change', watcher_handler
+
+    watcher({  paths
+             , change_handler: w_handler
+             , add_handler: w_handler
+             , remove_handler: w_handler
+             , error_handler})
+
     ctx.fb.say "Watching changes in sprite folders"
 
 
