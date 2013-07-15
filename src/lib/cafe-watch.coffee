@@ -4,6 +4,7 @@
 
 chokidar = require 'chokidar'
 path = require 'path'
+{WATCH_IGNORE} = require '../defs'
 
 
 watcher = ({paths
@@ -16,7 +17,7 @@ watcher = ({paths
          error_handler}     # optional
          ) ->
 
-    ignored or= /^\./
+    ignored or= WATCH_IGNORE
     interval or= 300
     persistent or=true
 

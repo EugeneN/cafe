@@ -73,6 +73,7 @@ default_config =
     BUILD_DIR: BUILD_DIR
 
     WATCH_FN_PATTERN: /^[^\.].+\.coffee$|^[^\.].+\.yaml$|^[^\.].+\.jison$|^[^\.].+\.json$|^[^\.].+\.eco|^[^\.].+\.js$|^[^\.].+\.cljs$/i
+    WATCH_IGNORE: /^\.+|^[^\.].+\.cache$/
 
     RECIPE_EXT: '.json'
     RECIPE: "recipe.json"

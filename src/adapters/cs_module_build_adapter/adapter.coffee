@@ -49,23 +49,24 @@ build_factory = (mod_src, ctx) ->
             {coffee, eco, js} = require '../../lib/compiler/compilers'
             compiler = ctx.cafelib.make_compiler [coffee, eco, js]
 
-            sources = slug.paths.map (slug_path) ->
-                paths = ctx.cafelib.utils.get_all_relative_files(
-                    slug_path
-                    null
-                    /^[^\.].+\.coffee$|^[^\.].+\.js$|^[^\.].+\.eco$/i
-                )
+            try
+                sources = slug.paths.map (slug_path) ->
+                    paths = ctx.cafelib.utils.get_all_relative_files(
+                        slug_path
+                        null
+                        /^[^\.].+\.coffee$|^[^\.].+\.js$|^[^\.].+\.eco$/i
+                    )
 
-                try
+
                     (compiler.compile paths).map ({path: p, source: source}) ->
                         filename: fn_without_ext (path.relative slug_path, p)
                         source: source
                         type: "commonjs"
-                catch e
-                    ctx.fb.scream "Module compilation error. Module - #{mod_src}. Error - #{e}"
-                    cb 'compile_error'
 
-            cb null, {sources: (ctx.cafelib.utils.flatten sources), ns: (path.basename mod_src)}
+                cb null, {sources: (ctx.cafelib.utils.flatten sources), ns: (path.basename mod_src)}
+
+            catch e
+                cb "Compile_error #{e}"
 
         do_compile (err, result) -> cb? err, result
 

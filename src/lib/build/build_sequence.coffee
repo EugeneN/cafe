@@ -4,11 +4,11 @@ u = require 'underscore'
 path = require 'path'
 mkdirp = require 'mkdirp'
 resolve = require 'resolve'
+
 {domonad, cont_t, lift_async, lift_sync} = require 'libmonad'
 {spawn} = require 'child_process'
 {construct_cmd} = require 'easy-opts'
 {wrap_bundle, wrap_modules, wrap_module} = require 'wrapper-commonjs'
-
 {get_recipe, get_modules, get_bundles, get_modules_and_bundles_for_sequence} = require './recipe_parser'
 {toposort} = require './toposort'
 {get_adapters} = require '../adapter'
@@ -21,6 +21,7 @@ get_legacy_cafe_bin_path, get_npm_mod_folder, is_array} = require '../utils'
 {skip_or_error_m, OK} = require '../monads'
 {minify} = require './cafe_minify'
 {install_module} = require '../npm_tasks'
+{watcher} = require '../cafe-watch'
 
 # TODO: check if bundle path changed (compile if need and then save in new path)
 # TODO: nothing happens when recipe is empty
@@ -446,6 +447,7 @@ _run_build_sequence_monadic_functions =
         )
 
         async.map bundles, _bundles_iterator, (err, proc_bundles) ->
+            console.log 'processing bundles...'
             bundles_proc_cb [err, false, null] if err
             proc_bundles = proc_bundles.filter (b) -> b?
             unless proc_bundles.length
@@ -474,8 +476,7 @@ _run_build_sequence_monadic_functions =
             save_cb [err, false, result]
 
 
-run_build_sequence = (ctx, sequence_cb) ->
-
+run_build = (ctx, cb) ->
     mf = _run_build_sequence_monadic_functions
 
     seq = [
@@ -489,7 +490,27 @@ run_build_sequence = (ctx, sequence_cb) ->
     ]
 
     (domonad (cont_t skip_or_error_m()), seq, ctx) ([err, skip, result]) ->
-        sequence_cb err, OK
+        cb err, OK
+
+
+run_build_sequence = (ctx, sequence_cb) ->
+    run_build ctx, (err, status) ->
+        return (sequence_cb err) if err
+
+        if ctx.own_args.w
+            ctx.emitter.emit "NOTIFY_SUCCESS", "Build success"
+
+            watch_handler = (path) ->
+                run_build ctx, (err, status) ->
+                    unless err
+                        ctx.emitter.emit "NOTIFY_SUCCESS", "Build success"
+                    else
+                        ctx.emitter.emit "NOTIFY_FAILURE", err
+
+            watcher({ paths: [ctx.own_args.app_root]
+                    , change_handler: watch_handler })
+        else
+            sequence_cb err, OK
 
 
 module.exports = {
