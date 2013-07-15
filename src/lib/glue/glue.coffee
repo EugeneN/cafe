@@ -8,29 +8,6 @@ path = require 'path'
 {watcher} = require '../cafe-watch'
 
 
-sprite_exclude_keys = ['path']
-
-
-get_sprite_opts = (sprite) ->
-    ret_opts = {}
-
-    for k,v of sprite
-        (ret_opts[k] = v) unless k in sprite_exclude_keys
-    ret_opts
-
-
-opts2cmd = (opts) ->
-    arg1 = (name, val) -> "--#{name}=#{val}"
-    arg2 = (name) -> "-#{name}"
-    cmd = ""
-    for opt_name, opt_value of opts
-        if opt_value is true
-            cmd = "#{cmd} #{arg2 opt_name}"
-        else
-            cmd = "#{cmd} #{arg1 opt_name, opt_value}"
-    cmd
-
-
 m_is_file = (fn, cb) ->
     is_file.async fn, (err, stat) ->
         if err
@@ -55,7 +32,8 @@ m_validate_config = (config, cb) ->
 m_parse_config = (config, cb) ->
     sprites = config.sprites.map (s) ->
         sprite_name = (k for k, v of s)[0]
-        sprite = extend s[sprite_name], config.common_opts
+        sprite = s[sprite_name]
+        sprite.opts = sprite.opts.concat config.common_opts
         sprite.path = path.resolve sprite.path
         sprite
 
@@ -64,21 +42,23 @@ m_parse_config = (config, cb) ->
 
 m_execute_glue = (ctx, [config, sprites], cb) ->
     sprite_iterator = (sprite, sprite_cb) ->
-        opts = opts2cmd(get_sprite_opts sprite)
+        opts = sprite.opts.join " "
         cmd = "python #{config.glue_path} #{sprite.path} #{opts}"
         ctx.fb.shout "running glue cmd ..."
         ctx.fb.say cmd
 
         exec cmd, (error, stdout, stderr) ->
             (ctx.fb.say stdout) if stdout
-            (ctx.fb.scream stderr) if stderr
             unless error
                 sprite_cb null, [config, sprite, cmd]
             else
                 sprite_cb error
 
     async.map sprites, sprite_iterator, (err, results) ->
-        cb ok [config, sprites, results]
+        unless err
+            cb ok [config, sprites, results]
+        else
+            cb nok err
 
 
 set_watchers = (ctx, execute_results) ->
@@ -118,10 +98,14 @@ launch_glue = (fn, ctx, cb) ->
         lift_async(3, partial(m_execute_glue, ctx))
     ]
 
-    (domonad (cont_t error_m()), seq, fn) ([error, [config, sprites, execute_results]])->
-        if ctx.own_args.w
-            (return cb error) if error
-            set_watchers ctx, execute_results
+    (domonad (cont_t error_m()), seq, fn) ([error, resp])->
+        unless error
+            [config, sprites, execute_results] = resp
+            if ctx.own_args.w
+                (return cb error) if error
+                set_watchers ctx, execute_results
+            else
+                cb error
         else
             cb error
 

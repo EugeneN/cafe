@@ -447,7 +447,6 @@ _run_build_sequence_monadic_functions =
         )
 
         async.map bundles, _bundles_iterator, (err, proc_bundles) ->
-            console.log 'processing bundles...'
             bundles_proc_cb [err, false, null] if err
             proc_bundles = proc_bundles.filter (b) -> b?
             unless proc_bundles.length

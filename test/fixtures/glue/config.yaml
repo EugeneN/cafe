@@ -1,22 +1,24 @@
 glue_path: " "
 
 common_opts :
-  img: ../glue-test/uaprom/public/image/sprites/
-  css: ../glue-test/uaprom/public/image/sprites/
-  namespace: icon
-  padding: 2
-  p: true
-  each-template: "\"%(class_name)s\\n    background-position: %(x)s %(y)s\\n\""
-  global-template: "\"%(all_classes)s\\n    background-image: url('%(sprite_url)s')\\n    background-repeat: no-repeat\\n\""
-  url: "\"http://static0.prom.ua\""
-  css-ext: "\"sass\""
+  -img=../glue-test/uaprom/public/image/sprites/
+  --css=../glue-test/uaprom/public/image/sprites/
+  --namespace=icon
+  --padding=2
+  -p
+  --each-template="\"%(class_name)s\\n    background-position: %(x)s %(y)s\\n\""
+  --global-template="\"%(all_classes)s\\n    background-image: url('%(sprite_url)s')\\n    background-repeat: no-repeat\\n\""
+  --url="\"http://static0.prom.ua\""
+  --css-ext="\"sass\""
 
 
 sprites:
   - sprite1:
       path: ../glue_test/sprite1/sprite1.py
-      sprite-file-name: "ololo"
+      opts:
+        --sprite-file-name=ololo
 
   - sprite2:
       path: ../glue_test/sprite2/sprite2.py
-      sprite-file-name: "ololo2"
+      opts:
+        --sprite-file-name=ololo2
