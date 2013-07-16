@@ -232,7 +232,7 @@ process_module = (adapters, cached_sources, build_deps, ctx, modules, module, mo
             cb [OK, false, [module, adapter]]
 
     _m_build_if_force = (ctx, [module, adapter], cb) ->
-        if ctx.own_args.f?
+        if ctx.own_args.f? or (not build_deps)
             message = "Forced harvesting #{module.name} (#{module.path})..."
             _adapter_ctx = extend ctx, {module}
             adapter = (adapter.make_adaptor _adapter_ctx, modules) # TODO: pass modules as partial
@@ -244,6 +244,7 @@ process_module = (adapters, cached_sources, build_deps, ctx, modules, module, mo
                     cb ["Module compile error 1. Module - #{module.name}: #{err}", false, undefined]
         else
             cb [OK, false, [module, adapter]]
+
 
     _m_build_if_changed = (ctx, cached_sources, [module, adapter], build_cb) ->
         _adapter_ctx = extend ctx, {module}
@@ -263,7 +264,7 @@ process_module = (adapters, cached_sources, build_deps, ctx, modules, module, mo
                 cached_module = cached_sources[module.name]
 
             if cached_module?
-                if (module.need_to_recompile cached_module, mtime) is true
+                if (module.need_to_recompile cached_module, mtime)
                     message = "Module #{module.name} was modified, harvesting ..."
                     harvest_module adapter, module, ctx, message, (err, module) ->
                         unless err?
@@ -335,7 +336,7 @@ init_build_sequence = (ctx, adapters_path, adapters_fn, init_cb) -> # TOTEST
                     err_mess = "Failed to parse build deps file. #{ex}"
                     null
 
-            cb err_mess, {build_deps}
+            cb OK, {build_deps}
 
     get_modules_cache get_modules_cache_dir(ctx.own_args.app_root), (err, cache) ->
         (return init_cb err) if err
