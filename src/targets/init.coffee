@@ -15,6 +15,7 @@ help = [
       - fbuild  - force build
       - wbuild  - build and watch application files.
 
+    cafe init menu - generates only menu file
     """
 ]
 
@@ -34,7 +35,8 @@ DEFAULT_BUILD_ROOT = 'public'
 
 
 app_init = (ctx, cb) ->
-    ctx.fb.say 'Initializing new client side app'
+    [arg1] = Object.keys(ctx.full_args).filter (i) -> i not in ['global', 'init']
+
     {app_root, build_root} = ctx.own_args
 
     app_root or= DEFAULT_APP_ROOT
@@ -94,8 +96,7 @@ app_init = (ctx, cb) ->
                 app_root: app_root
                 build_root: build_root
                 formula: 'recipe.yaml'
-            watch:
-                src: app_root
+                w: true
 
         update =
             build:
@@ -111,12 +112,17 @@ app_init = (ctx, cb) ->
 
         cb()
 
-    async.parallel [
-        create_app_root
-        create_build_root
-        create_menu_file
-        create_init_html_file
-        ], (err, results) ->
+    if arg1 is "menu"
+        create_menu_file ->
             cb 'stop'
+    else
+        ctx.fb.say 'Initializing new client side app'
+        async.parallel [
+            create_app_root
+            create_build_root
+            create_menu_file
+            create_init_html_file
+            ], (err, results) ->
+                cb 'stop'
 
 module.exports = make_target "init", app_init, help
