@@ -506,6 +506,7 @@ run_build_sequence = (ctx, sequence_cb) ->
 
             watch_handler = (path) ->
                 run_build ctx, (err, status) ->
+                    ctx.fb.say "watching ..."
                     unless err
                         ctx.emitter.emit "NOTIFY_SUCCESS", "Build success"
                     else
@@ -513,6 +514,7 @@ run_build_sequence = (ctx, sequence_cb) ->
 
             watcher({ paths: [ctx.own_args.app_root]
                     , change_handler: watch_handler })
+            ctx.fb.say "watching ..."
         else
             sequence_cb err, OK
 
