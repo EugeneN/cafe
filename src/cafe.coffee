@@ -32,7 +32,7 @@ fs = require 'fs'
 path = require 'path'
 async = require 'async'
 events = require 'events'
-uuid = require 'node-uuid'
+uuid = require '../third-party-lib/node-uuid'
 
 {run_target} = require './lib/target'
 {trim, is_debug_context, get_plugins} = require './lib/utils'

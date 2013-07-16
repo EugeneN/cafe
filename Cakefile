@@ -2,7 +2,7 @@
 {spawn} = require 'child_process'
 {exec} = require 'child_process'
 fs = require 'fs'
-uuid = require 'node-uuid'
+uuid = require './third-party-lib/node-uuid'
 
 
 {VERSION_FILE_PATH} = require './src/defs'

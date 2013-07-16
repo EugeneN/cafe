@@ -27,7 +27,7 @@ init_html_file_path = path.resolve __dirname, '../../assets/templates/init/init.
 {make_target} = require '../lib/target'
 {make_skelethon} = require '../lib/skelethon/skelethon'
 menu = require '../lib/menu'
-mkdirp = require 'mkdirp'
+mkdirp = require '../../third-party-lib/mkdirp'
 async = require 'async'
 
 DEFAULT_APP_ROOT = 'cs'

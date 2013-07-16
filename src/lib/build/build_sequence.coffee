@@ -2,7 +2,7 @@ fs = require 'fs'
 async = require 'async'
 u = require 'underscore'
 path = require 'path'
-mkdirp = require 'mkdirp'
+mkdirp = require '../../../third-party-lib/mkdirp'
 resolve = require 'resolve'
 
 {domonad, cont_t, lift_async, lift_sync} = require 'libmonad'

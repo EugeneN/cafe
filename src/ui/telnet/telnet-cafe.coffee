@@ -11,7 +11,7 @@ PASSWORD_PROMPT = "Password:"
 Net = require 'net'
 events = require 'events'
 
-uuid = require 'node-uuid'
+uuid = require '../../../third-party-lib/node-uuid'
 cafe_factory = require '../../cafe'
 {is_array} = require "../../lib/utils"
 logger = (require '../../lib/logger')()

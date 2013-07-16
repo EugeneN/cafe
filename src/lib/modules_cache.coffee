@@ -1,6 +1,6 @@
 fs = require 'fs'
 path = require 'path'
-mkdirp = require 'mkdirp'
+mkdirp = require '../../third-party-lib/mkdirp'
 {get_mtime, extend} = require('./utils')
 
 exports.get_modules_cache = (cache_path, cache_cb) ->
