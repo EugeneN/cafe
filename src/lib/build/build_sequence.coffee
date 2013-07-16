@@ -317,7 +317,11 @@ init_build_sequence = (ctx, adapters_path, adapters_fn, init_cb) -> # TOTEST
 
     _get_cache_modules_async = (cache, cb) ->
         cache.get_modules_async CACHE_FN, (err, cached_sources) ->
-            cb err, {cached_sources: cached_sources, cache: cache}
+            if err
+                ctx.fb.shout err
+                cb OK, {cached_sources:null, cache}
+            else
+                cb err, {cached_sources: cached_sources, cache: cache}
 
     _get_build_deps_async = (cb) ->
         _build_deps_fn = path.join (get_build_dir ctx.own_args.build_root), BUILD_DEPS_FN
