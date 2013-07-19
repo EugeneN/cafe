@@ -42,11 +42,6 @@ make_compiler = (compilers)->
 
             throw "No compiler is registered for path #{path}" # TODO: link to instruction for cafe compiler registration.
 
-        paths.map((p) ->
-            try
-                {path:p, source: (get_compiler(p, compilers).compile p)}
-            catch e
-                throw "Failed to compile file #{p}. #{e}"
-        )
+        paths.map (p) -> {path:p, source: (get_compiler(p, compilers).compile p)}
 
 module.exports = make_compiler
