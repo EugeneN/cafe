@@ -2,9 +2,15 @@ CoffeeScript = require 'coffee-script'
 eco = require 'eco'
 fs = require 'fs'
 
+
 exports.coffee =
     ext: 'coffee'
-    compile: (path) -> CoffeeScript.compile fs.readFileSync path, 'utf8'
+    compile: (path) -> 
+        code = fs.readFileSync path, 'utf8'
+        try
+            CoffeeScript.compile fs.readFileSync path, 'utf8'
+        catch err
+            throw new Error (CoffeeScript.helpers.prettyErrorMessage err, path, code, true)
 
 
 exports.eco =

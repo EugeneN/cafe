@@ -64,9 +64,9 @@ build_factory = (mod_src, ctx) ->
                         type: "commonjs"
 
                 cb null, {sources: (ctx.cafelib.utils.flatten sources), ns: (path.basename mod_src)}
-
+                
             catch e
-                cb "Compile_error #{e}"
+                cb e
 
         do_compile (err, result) -> cb? err, result
 

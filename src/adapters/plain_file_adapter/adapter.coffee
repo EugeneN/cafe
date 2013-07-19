@@ -59,7 +59,7 @@ module.exports = do ->
 
                     cb CB_SUCCESS, {sources: sources, ns:''}
                 catch e
-                    cb "Compilation_error. #{e}"
+                    cb e
             else
                 cb CB_SUCCESS, undefined
 
