@@ -52,14 +52,14 @@ module.exports = do ->
 
                 {coffee, eco, js} = require '../../lib/compiler/compilers'
                 compiler = ctx.cafelib.make_compiler [coffee, eco, js]
+                compiler.compile.async [target_fn], (err, compiled) ->
+                    unless err
+                        compiled_result = compiled.map ({path: p, source}) ->
+                            {filename: ctx.module.name, source: source}
 
-                try
-                    sources  = (compiler.compile [target_fn]).map ({path: p, source: source}) ->
-                        {filename: ctx.module.name, source: source}
-
-                    cb CB_SUCCESS, {sources: sources, ns:''}
-                catch e
-                    cb e
+                        cb err, {sources:compiled_result, ns:''}
+                    else
+                        cb err
             else
                 cb CB_SUCCESS, undefined
 

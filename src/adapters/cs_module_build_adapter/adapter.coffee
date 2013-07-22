@@ -49,24 +49,25 @@ build_factory = (mod_src, ctx) ->
             {coffee, eco, js} = require '../../lib/compiler/compilers'
             compiler = ctx.cafelib.make_compiler [coffee, eco, js]
 
-            try
-                sources = slug.paths.map (slug_path) ->
-                    paths = ctx.cafelib.utils.get_all_relative_files(
-                        slug_path
-                        null
-                        /^[^\.].+\.coffee$|^[^\.].+\.js$|^[^\.].+\.eco$/i
-                    )
+            get_sources = (slug, sources_cb) ->
+                paths = slug.paths.map (slug_path) ->
+                    ctx.cafelib.utils.get_all_relative_files(slug_path, null
+                        /^[^\.].+\.coffee$|^[^\.].+\.js$|^[^\.].+\.eco$/i)
+
+                compiler.compile.async ctx.cafelib.utils.flatten(paths), (err, result) ->
+                    ret_sources = ""
+
+                    if result
+                        ret_sources = result.map ({path: p, source: source}) ->
+                            filename: fn_without_ext (path.relative slug_path, p)
+                            source: source
+                            type: "commonjs"
+
+                    sources_cb err, ret_sources
 
 
-                    (compiler.compile paths).map ({path: p, source: source}) ->
-                        filename: fn_without_ext (path.relative slug_path, p)
-                        source: source
-                        type: "commonjs"
-
-                cb null, {sources: (ctx.cafelib.utils.flatten sources), ns: (path.basename mod_src)}
-                
-            catch e
-                cb e
+            get_sources slug, (err, sources) ->
+                cb err, {sources: (ctx.cafelib.utils.flatten sources), ns: (path.basename mod_src)}
 
         do_compile (err, result) -> cb? err, result
 
