@@ -14,6 +14,14 @@ resolve = require 'resolve'
 
 CB_SUCCESS = undefined
 
+get_ns_from_npm_child_mod_path = (base_npm_mod_path, npm_mod_path) ->
+    res = (path.relative base_npm_mod_path, npm_mod_path)
+        .split("/")
+        .filter((m) -> m isnt "node_modules")
+        .join("/")
+    path.join (path.basename base_npm_mod_path), res
+
+
 # TODO: move this to libmonad
 OK = undefined
 ok = (v) -> [OK, v]
@@ -186,8 +194,9 @@ module.exports = do ->
                                     s.filename = fn_without_ext s.filename
                                     s
 
+
                                 mod_ns = if path.basename(mod.module_path) isnt (path.basename mod_src)
-                                    path.basename mod.module_path
+                                    get_ns_from_npm_child_mod_path mod_src, mod.module_path
                                 else
                                     ns
 
