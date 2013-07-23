@@ -145,7 +145,7 @@ module.exports = do ->
                         files = []
 
                         if main_file?
-                            if (path.basename main_file.filename) isnt "index.js" #FIXME
+                            if (path.basename main_file.filename) isnt "index.js" #FIXME !!!
                                 source = "module.exports = require('#{fn_without_ext main_file.filename}')"
                                 filename = "index.js"
                                 files.push {filename, source}
@@ -186,12 +186,12 @@ module.exports = do ->
                                     s.filename = fn_without_ext s.filename
                                     s
 
-                                ns = if path.basename(mod.module_path) isnt (path.basename mod_src)
+                                mod_ns = if path.basename(mod.module_path) isnt (path.basename mod_src)
                                     path.basename mod.module_path
                                 else
                                     ns
 
-                                result = {sources, ns}
+                                result = {sources, ns:mod_ns}
                                 file_process_cb (ok result)
 
                     seq = [
