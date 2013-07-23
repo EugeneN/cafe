@@ -39,38 +39,34 @@ build_cs_mod = (ctx, cb) ->
 build_factory = (mod_src, ctx) ->
     {slug_path} = get_paths ctx
     slug = read_json_file slug_path
+    {flatten} = ctx.cafelib.utils
 
-    (cb) ->
-        do_compile = (cb) ->
-            # Read slug
-            slug = ctx.cafelib.utils.read_slug(mod_src, ctx.cafelib.utils.slug)
-            slug.paths = slug.paths.map (p) -> path.resolve(path.join mod_src, p)
+    do_compile = (cb) ->
+        # Read slug
+        slug = ctx.cafelib.utils.read_slug(mod_src, ctx.cafelib.utils.slug)
+        slug.paths = slug.paths.map (p) -> path.resolve(path.join mod_src, p)
 
-            {coffee, eco, js} = require '../../lib/compiler/compilers'
-            compiler = ctx.cafelib.make_compiler [coffee, eco, js]
+        {coffee, eco, js} = require '../../lib/compiler/compilers'
+        compiler = ctx.cafelib.make_compiler [coffee, eco, js]
 
-            get_sources = (slug, sources_cb) ->
-                paths = slug.paths.map (slug_path) ->
-                    ctx.cafelib.utils.get_all_relative_files(slug_path, null
-                        /^[^\.].+\.coffee$|^[^\.].+\.js$|^[^\.].+\.eco$/i)
+        slug_path_iterator = (slug_path, slug_path_cb) ->
+            paths = ctx.cafelib.utils.get_all_relative_files(
+                slug_path
+                null
+                /^[^\.].+\.coffee$|^[^\.].+\.js$|^[^\.].+\.eco$/i)
 
-                compiler.compile.async ctx.cafelib.utils.flatten(paths), (err, result) ->
-                    ret_sources = ""
+            compiler.compile.async paths, (err, compiled_paths) ->
+                return slug_path_cb(err) if err
 
-                    if result
-                        ret_sources = result.map ({path: p, source: source}) ->
-                            filename: fn_without_ext (path.relative slug_path, p)
-                            source: source
-                            type: "commonjs"
+                ret_result = compiled_paths.map ({path: p, source: source}) ->
+                    filename: fn_without_ext (path.relative slug_path, p)
+                    source: source
+                    type: "commonjs"
 
-                    sources_cb err, ret_sources
+                slug_path_cb err, ret_result
 
-
-            get_sources slug, (err, sources) ->
-                cb err, {sources: (ctx.cafelib.utils.flatten sources), ns: (path.basename mod_src)}
-
-        do_compile (err, result) -> cb? err, result
-
+        async.map slug.paths, slug_path_iterator, (err, results) ->
+            cb err, {sources: (flatten results), ns: path.basename mod_src}
 
 
 get_paths = (ctx) ->
