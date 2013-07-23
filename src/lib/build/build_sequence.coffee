@@ -510,6 +510,7 @@ run_build_sequence = (ctx, sequence_cb) ->
                     unless err
                         ctx.emitter.emit "NOTIFY_SUCCESS", "Build success"
                     else
+                        ctx.fb.scream err
                         ctx.emitter.emit "NOTIFY_FAILURE", err
 
             watcher({ paths: [ctx.own_args.app_root]

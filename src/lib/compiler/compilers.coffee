@@ -47,7 +47,6 @@ exports.eco = ->
 exports.js = ->
     compile = (path) -> (fs.readFileSync path).toString()
 
-    compile.async = (path, cb) ->
-        fs.readFile path, cb
+    compile.async = (path, cb) -> fs.readFile path, cb
 
     {ext: 'js', compile}
