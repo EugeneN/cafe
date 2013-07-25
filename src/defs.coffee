@@ -15,14 +15,14 @@ read_json_file = (filename) ->
 
 user_config = read_json_file CONFIG_FILE
 
-VERSION_FILE = 'VERSION'
+VERSION_FILE = 'package.json'
 CAFE_TARBALL = 'cafe.tar.gz'
 
 VERSION_FILE_PATH = path.resolve __dirname, "..", VERSION_FILE
 
 VERSION = do ->
     try
-        (fs.readFileSync(VERSION_FILE_PATH).toString()).replace /^\s+|\s+$/g, ''
+        (JSON.parse fs.readFileSync(VERSION_FILE_PATH).toString()).version
     catch e
         undefined
 
