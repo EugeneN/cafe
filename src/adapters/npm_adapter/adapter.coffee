@@ -6,7 +6,7 @@ getdeps = require 'gimme-deps'
 {exec} = require 'child_process'
 async = require 'async'
 {domonad, cont_t, lift_async, lift_sync} = require 'libmonad'
-resolve = require 'resolve'
+resolve = require '../../../third-party-lib/resolve'
 
 {partial, maybe_build, is_dir, is_file, has_ext, and_,
  get_mtime, newer, walk, newest, extend,

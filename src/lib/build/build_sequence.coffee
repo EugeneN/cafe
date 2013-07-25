@@ -3,7 +3,7 @@ async = require 'async'
 u = require 'underscore'
 path = require 'path'
 mkdirp = require '../../../third-party-lib/mkdirp'
-resolve = require 'resolve'
+resolve = require '../../../third-party-lib/resolve'
 
 {domonad, cont_t, lift_async, lift_sync} = require 'libmonad'
 {spawn} = require 'child_process'
@@ -411,6 +411,8 @@ _run_build_sequence_monadic_functions =
                     else
                         cb OK, mod
                 else
+                    (ctx.fb.scream err) if err
+
                     install_module mod.get_prefix_meta().npm_path, app_root, (err, info) ->
                         return(cb err, null) if err?
 
