@@ -53,7 +53,7 @@ reenter = (ctx, cb) ->
     run.stderr.on 'data', (data) -> ctx.fb.scream "#{data}".replace /\n$/, ''
     run.on 'exit', (code) ->
         ctx.fb.shout "Re-enter finished with code #{code}"
-        cb? 'stop'
+        cb? 'stop', code
 
 maybe_update = (ctx, cb) ->
     if ctx.full_args.global?.hasOwnProperty 'noupdate'
@@ -78,7 +78,7 @@ maybe_update = (ctx, cb) ->
                 ctx.fb.say "Cafe update succeeded"
                 reenter ctx, reenter_cb
             else
-                ctx.fb.shout "Cafe update failed: #{code}"
+                ctx.fb.shout "Cafe update failed: #{rc}"
                 cb()
 
 

@@ -288,7 +288,7 @@ reenter = (ctx, cb) ->
     run.stderr.on 'data', (data) -> scream "#{data}".replace /\n$/, ''
     run.on 'exit', (code) ->
         shout "=== Re-enter finished with code #{code} ==========="
-        cb? 'stop'
+        cb? 'stop', code
 
 get_opt = (opt, bundle_opts, recipe_opts) ->
     switch bundle_opts?[opt]

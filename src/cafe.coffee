@@ -123,7 +123,8 @@ module.exports = (emitter) ->
                     EXIT_STATUS = EXIT_SUCCESS
 
                 when 'stop'
-                    EXIT_STATUS = EXIT_SUCCESS
+                    fb.whisper "Stop with code #{results}"
+                    EXIT_STATUS = results or EXIT_SUCCESS
 
                 when 'sigint'
                     fb.whisper 'Sigint from outer world'
