@@ -18,7 +18,6 @@
     "async" : "*",
     "ansi-color": "*",
     "underscore": "*",
-    "request": "*",
     "chokidar": "*",
     "growl": "*",
     "wrapper-commonjs":">=0.0.28",

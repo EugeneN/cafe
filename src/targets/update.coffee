@@ -12,7 +12,6 @@ help = [
 
 fs = require 'fs'
 path = require 'path'
-request = require 'request'
 {spawn, exec} = require 'child_process'
 
 {make_target} = require '../lib/target'
