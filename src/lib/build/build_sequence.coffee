@@ -12,7 +12,7 @@ resolve = require '../../../third-party-lib/resolve'
 {get_recipe, get_modules, get_bundles, get_modules_and_bundles_for_sequence} = require './recipe_parser'
 {toposort} = require './toposort'
 {get_adapters} = require '../adapter'
-{extend, partial, get_cafe_dir, exists, 
+{extend, partial, get_cafe_dir, exists,
 get_legacy_cafe_bin_path, get_npm_mod_folder, is_array} = require '../utils'
 {CB_SUCCESS, RECIPE, BUILD_DIR, BUILD_DEPS_FN,
  RECIPE_API_LEVEL, ADAPTERS_PATH, ADAPTER_FN, BUNDLE_HDR,
@@ -411,7 +411,7 @@ _run_build_sequence_monadic_functions =
                     else
                         cb OK, mod
                 else
-                    (ctx.fb.scream err) if err
+                    #(ctx.fb.scream err) if err
 
                     install_module mod.get_prefix_meta().npm_path, app_root, (err, info) ->
                         return(cb err, null) if err?
