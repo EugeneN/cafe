@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+	<title>Your Website</title>
+	<link href="http://website.com/atom.xml" rel="self"/>
+	<link href="http://website.com"/>
+	<updated>2013-07-28T13:50:34.625Z</updated>
+	<id>http://website.com</id>
+	<author>
+		<name>Your Name</name>
+		<email>your@email.com</email>
+	</author>
+
+	
+		<entry>
+			<title>Cafe installation</title>
+			<link href="http://website.com//docs/Installation"/>
+			<updated>2013-07-27T12:29:40.000Z</updated>
+			<id>http://website.com//docs/Installation</id>
+			<content type="html">&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+	&lt;!-- Meta --&gt;
+	&lt;meta charset=&quot;utf-8&quot; /&gt;
+	&lt;meta http-equiv=&quot;content-type&quot; content=&quot;text/html; charset=utf-8&quot; /&gt;
+
+	&lt;!-- Use the .htaccess and remove these lines to avoid edge case issues.
+	   More info: h5bp.com/i/378 --&gt;
+	&lt;meta http-equiv=&quot;X-UA-Compatible&quot; content=&quot;IE=edge,chrome=1&quot; /&gt;
+
+	&lt;!-- Our site title and description --&gt;
+	&lt;title&gt;Cafe installation | Your Website&lt;/title&gt;
+	&lt;meta name=&quot;description&quot; content=&quot;When your website appears in search results in say Google, the text here will be shown underneath your website's title.&quot; /&gt;
+	&lt;meta name=&quot;keywords&quot; content=&quot;place, your, website, keywoards, here, keep, them, related, to, the, content, of, your, website&quot; /&gt;
+	&lt;meta name=&quot;author&quot; content=&quot;Your Name&quot; /&gt;
+
+	&lt;!-- Output DocPad produced meta elements --&gt;
+	&lt;meta http-equiv=&quot;X-Powered-By&quot; content=&quot;DocPad v6.46.4&quot;/&gt;
+
+	&lt;!-- Mobile viewport optimized: h5bp.com/viewport --&gt;
+	&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width&quot; /&gt;
+
+	&lt;!-- Icons --&gt;
+    &lt;link rel=&quot;shortcut icon&quot; href=&quot;icons/favicon.ico&quot;&gt;
+    &lt;link rel=&quot;apple-touch-icon-precomposed&quot; sizes=&quot;144x144&quot; href=&quot;icons/apple-touch-icon-144-precomposed.png&quot;&gt;
+    &lt;link rel=&quot;apple-touch-icon-precomposed&quot; sizes=&quot;114x114&quot; href=&quot;icons/apple-touch-icon-114-precomposed.png&quot;&gt;
+    &lt;link rel=&quot;apple-touch-icon-precomposed&quot; sizes=&quot;72x72&quot; href=&quot;icons/apple-touch-icon-72-precomposed.png&quot;&gt;
+    &lt;link rel=&quot;apple-touch-icon-precomposed&quot; href=&quot;icons/apple-touch-icon-57-precomposed.png&quot;&gt;
+
+	&lt;!-- Shims: IE6-8 support of HTML5 elements --&gt;
+	&lt;!--[if lt IE 9]&gt;
+		&lt;script async src=&quot;http://html5shim.googlecode.com/svn/trunk/html5.js&quot;&gt;&lt;/script&gt;
+	&lt;![endif]--&gt;
+
+	&lt;!-- Styles --&gt;
+	&lt;link  rel=&quot;stylesheet&quot; href=&quot;/styles/twitter-bootstrap.css&quot; /&gt;&lt;link  rel=&quot;stylesheet&quot; href=&quot;/styles/style.css&quot; /&gt;
+&lt;/head&gt;
+&lt;body&gt;
+	&lt;!-- Markup --&gt;
+	&lt;div class=&quot;navbar navbar-fixed-top&quot;&gt;
+		&lt;div class=&quot;navbar-inner&quot;&gt;
+			&lt;div class=&quot;container&quot;&gt;
+				&lt;a class=&quot;brand&quot; href=&quot;/&quot;&gt;Cafe&lt;/a&gt;
+				&lt;ul class=&quot;nav&quot;&gt;
+					
+						&lt;li typeof=&quot;sioc:Page&quot; about=&quot;/pages/hello&quot; class=&quot;&quot;&gt;
+							&lt;a href=&quot;/pages/hello&quot; property=&quot;dc:title&quot;&gt;Quick Start&lt;/a&gt;
+						&lt;/li&gt;
+					
+						&lt;li typeof=&quot;sioc:Page&quot; about=&quot;/pages/docs&quot; class=&quot;&quot;&gt;
+							&lt;a href=&quot;/pages/docs&quot; property=&quot;dc:title&quot;&gt;Docs&lt;/a&gt;
+						&lt;/li&gt;
+					
+						&lt;li typeof=&quot;sioc:Page&quot; about=&quot;/pages/tutorials&quot; class=&quot;&quot;&gt;
+							&lt;a href=&quot;/pages/tutorials&quot; property=&quot;dc:title&quot;&gt;Tutorials&lt;/a&gt;
+						&lt;/li&gt;
+					
+				&lt;/ul&gt;
+			&lt;/div&gt;
+		&lt;/div&gt;
+	&lt;/div&gt;
+	&lt;div class=&quot;container&quot;&gt;
+		&lt;section id=&quot;content&quot; class=&quot;content&quot;&gt;
+			&lt;article id=&quot;post&quot; class=&quot;post&quot;&gt;
+	&lt;h1 class=&quot;text-center&quot;&gt;Cafe installation&lt;/h1&gt;
+	&lt;div class=&quot;post-content&quot;&gt;&lt;h3&gt;Installing from npm&lt;/h3&gt;
+
+&lt;pre&gt;&lt;code&gt;sudo npm install -g cafe4&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3&gt;Installing from sources&lt;/h3&gt;
+
+&lt;ol&gt;
+&lt;li&gt;Clone repository &lt;a href=&quot;https://github.com/EugeneN/cafe&quot;&gt;&lt;a href=&quot;https://github.com/EugeneN/cafe&quot;&gt;&lt;a href='https://github.com/EugeneN/cafe'&gt;https://github.com/EugeneN/cafe&lt;/a&gt;&lt;/a&gt;&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;cd to repository folder, run npm install&lt;/li&gt;
+&lt;li&gt;execute &lt;strong&gt;&lt;em&gt;cake build &amp;amp;&amp;amp; cake gzip &amp;amp;&amp;amp; cake install&lt;/em&gt;&lt;/strong&gt;&lt;/li&gt;
+&lt;/ol&gt;&lt;/div&gt;
+&lt;/article&gt;
+
+&lt;footer&gt;
+	
+	&lt;section id=&quot;related&quot;&gt;
+		&lt;h3&gt;Related Posts&lt;/h3&gt;
+		&lt;nav class=&quot;linklist&quot;&gt;
+			
+				&lt;li&gt;
+				&lt;a href=&quot;/docs/setup&quot;&gt;Cafe setup&lt;/a&gt;&lt;/li&gt;
+			
+		&lt;/nav&gt;
+	&lt;/section&gt;
+	
+&lt;/footer&gt;
+		&lt;/section&gt;
+	&lt;/div&gt;&lt;!-- /container --&gt;
+
+	&lt;!-- Scripts --&gt;
+	&lt;script defer=&quot;defer&quot;  src=&quot;//cdnjs.cloudflare.com/ajax/libs/jquery/1.9.1/jquery.min.js&quot;&gt;&lt;/script&gt;&lt;script defer=&quot;defer&quot;  src=&quot;//cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js&quot;&gt;&lt;/script&gt;&lt;script defer=&quot;defer&quot;  src=&quot;/scripts/script.js&quot;&gt;&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</content>
+		</entry>
+	
+		<entry>
+			<title>Cafe setup</title>
+			<link href="http://website.com//docs/setup"/>
+			<updated>2013-07-27T12:32:20.000Z</updated>
+			<id>http://website.com//docs/setup</id>
+			<content type="html">&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+	&lt;!-- Meta --&gt;
+	&lt;meta charset=&quot;utf-8&quot; /&gt;
+	&lt;meta http-equiv=&quot;content-type&quot; content=&quot;text/html; charset=utf-8&quot; /&gt;
+
+	&lt;!-- Use the .htaccess and remove these lines to avoid edge case issues.
+	   More info: h5bp.com/i/378 --&gt;
+	&lt;meta http-equiv=&quot;X-UA-Compatible&quot; content=&quot;IE=edge,chrome=1&quot; /&gt;
+
+	&lt;!-- Our site title and description --&gt;
+	&lt;title&gt;Cafe setup | Your Website&lt;/title&gt;
+	&lt;meta name=&quot;description&quot; content=&quot;When your website appears in search results in say Google, the text here will be shown underneath your website's title.&quot; /&gt;
+	&lt;meta name=&quot;keywords&quot; content=&quot;place, your, website, keywoards, here, keep, them, related, to, the, content, of, your, website&quot; /&gt;
+	&lt;meta name=&quot;author&quot; content=&quot;Your Name&quot; /&gt;
+
+	&lt;!-- Output DocPad produced meta elements --&gt;
+	&lt;meta http-equiv=&quot;X-Powered-By&quot; content=&quot;DocPad v6.46.4&quot;/&gt;
+
+	&lt;!-- Mobile viewport optimized: h5bp.com/viewport --&gt;
+	&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width&quot; /&gt;
+
+	&lt;!-- Icons --&gt;
+    &lt;link rel=&quot;shortcut icon&quot; href=&quot;icons/favicon.ico&quot;&gt;
+    &lt;link rel=&quot;apple-touch-icon-precomposed&quot; sizes=&quot;144x144&quot; href=&quot;icons/apple-touch-icon-144-precomposed.png&quot;&gt;
+    &lt;link rel=&quot;apple-touch-icon-precomposed&quot; sizes=&quot;114x114&quot; href=&quot;icons/apple-touch-icon-114-precomposed.png&quot;&gt;
+    &lt;link rel=&quot;apple-touch-icon-precomposed&quot; sizes=&quot;72x72&quot; href=&quot;icons/apple-touch-icon-72-precomposed.png&quot;&gt;
+    &lt;link rel=&quot;apple-touch-icon-precomposed&quot; href=&quot;icons/apple-touch-icon-57-precomposed.png&quot;&gt;
+
+	&lt;!-- Shims: IE6-8 support of HTML5 elements --&gt;
+	&lt;!--[if lt IE 9]&gt;
+		&lt;script async src=&quot;http://html5shim.googlecode.com/svn/trunk/html5.js&quot;&gt;&lt;/script&gt;
+	&lt;![endif]--&gt;
+
+	&lt;!-- Styles --&gt;
+	&lt;link  rel=&quot;stylesheet&quot; href=&quot;/styles/twitter-bootstrap.css&quot; /&gt;&lt;link  rel=&quot;stylesheet&quot; href=&quot;/styles/style.css&quot; /&gt;
+&lt;/head&gt;
+&lt;body&gt;
+	&lt;!-- Markup --&gt;
+	&lt;div class=&quot;navbar navbar-fixed-top&quot;&gt;
+		&lt;div class=&quot;navbar-inner&quot;&gt;
+			&lt;div class=&quot;container&quot;&gt;
+				&lt;a class=&quot;brand&quot; href=&quot;/&quot;&gt;Cafe&lt;/a&gt;
+				&lt;ul class=&quot;nav&quot;&gt;
+					
+						&lt;li typeof=&quot;sioc:Page&quot; about=&quot;/pages/hello&quot; class=&quot;&quot;&gt;
+							&lt;a href=&quot;/pages/hello&quot; property=&quot;dc:title&quot;&gt;Quick Start&lt;/a&gt;
+						&lt;/li&gt;
+					
+						&lt;li typeof=&quot;sioc:Page&quot; about=&quot;/pages/docs&quot; class=&quot;&quot;&gt;
+							&lt;a href=&quot;/pages/docs&quot; property=&quot;dc:title&quot;&gt;Docs&lt;/a&gt;
+						&lt;/li&gt;
+					
+						&lt;li typeof=&quot;sioc:Page&quot; about=&quot;/pages/tutorials&quot; class=&quot;&quot;&gt;
+							&lt;a href=&quot;/pages/tutorials&quot; property=&quot;dc:title&quot;&gt;Tutorials&lt;/a&gt;
+						&lt;/li&gt;
+					
+				&lt;/ul&gt;
+			&lt;/div&gt;
+		&lt;/div&gt;
+	&lt;/div&gt;
+	&lt;div class=&quot;container&quot;&gt;
+		&lt;section id=&quot;content&quot; class=&quot;content&quot;&gt;
+			&lt;article id=&quot;post&quot; class=&quot;post&quot;&gt;
+	&lt;h1 class=&quot;text-center&quot;&gt;Cafe setup&lt;/h1&gt;
+	&lt;div class=&quot;post-content&quot;&gt;&lt;h3&gt;Prerequisites&lt;/h3&gt;
+
+&lt;ol&gt;
+&lt;li&gt;NodeJs 0.6+ or later &lt;/li&gt;
+&lt;li&gt;npm 1.2.14 or later&lt;/li&gt;
+&lt;li&gt;Don&amp;#39;t forget to add path to global node_modules folder in NODE_PATH. &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;pre&gt;&lt;code class=&quot;lang-sh&quot;&gt;exports = NODE_PATH=$NODE_PATH:/usr/local/lib/node_modules&lt;/code&gt;&lt;/pre&gt;
+
+&lt;ol&gt;
+&lt;li&gt;Cafe interact&amp;#39;s with npm api to download, install, wrap and bundle modules directly from the npm. So you may ensure than your current user has write permissions for folders &lt;strong&gt;&lt;em&gt;~/.npm&lt;/em&gt;&lt;/strong&gt; and &lt;strong&gt;&lt;em&gt;~/tmp&lt;/em&gt;&lt;/strong&gt;&lt;pre&gt;&lt;code&gt;chown -R \`id -u\`:\`id -g\` ~/.npm ~/tmp&lt;/code&gt;&lt;/pre&gt;
+&lt;/li&gt;
+&lt;/ol&gt;&lt;/div&gt;
+&lt;/article&gt;
+
+&lt;footer&gt;
+	
+	&lt;section id=&quot;related&quot;&gt;
+		&lt;h3&gt;Related Posts&lt;/h3&gt;
+		&lt;nav class=&quot;linklist&quot;&gt;
+			
+				&lt;li&gt;
+				&lt;a href=&quot;/docs/Installation&quot;&gt;Cafe installation&lt;/a&gt;&lt;/li&gt;
+			
+		&lt;/nav&gt;
+	&lt;/section&gt;
+	
+&lt;/footer&gt;
+		&lt;/section&gt;
+	&lt;/div&gt;&lt;!-- /container --&gt;
+
+	&lt;!-- Scripts --&gt;
+	&lt;script defer=&quot;defer&quot;  src=&quot;//cdnjs.cloudflare.com/ajax/libs/jquery/1.9.1/jquery.min.js&quot;&gt;&lt;/script&gt;&lt;script defer=&quot;defer&quot;  src=&quot;//cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js&quot;&gt;&lt;/script&gt;&lt;script defer=&quot;defer&quot;  src=&quot;/scripts/script.js&quot;&gt;&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</content>
+		</entry>
+	
+</feed>
