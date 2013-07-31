@@ -1,6 +1,6 @@
 events = require 'events'
 path = require 'path'
-{is_debug_context, is_debug_context} = require '../lib/utils'
+{is_debug_context, is_debug_context} = require 'cafe4-utils'
 {say, shout, scream, whisper, murmur} = require('../lib/logger') "Target factory>"
 
 
@@ -43,7 +43,7 @@ make_target = (name, exec_func, help, single) ->
             emitter: emitter
             fb: fb
             cafelib: {
-                utils: require './utils'
+                utils: require 'cafe4-utils' # Fix this shit!!!
                 make_compiler: require './compiler/compiler'
                 }
             print_help: (cb) ->

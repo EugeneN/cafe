@@ -1,7 +1,7 @@
 path = require 'path'
 async = require 'async'
 fs = require 'fs'
-{is_dir} = require './utils'
+{is_dir} = require 'cafe4-utils'
 {ADAPTERS_PATH, ADAPTER_FN, JS_EXT} = require '../defs'
 fn_pattern = "#{ADAPTER_FN}#{JS_EXT}"
 {cont_t, domonad, lift_sync, lift_async, logger_t} = require 'libmonad'

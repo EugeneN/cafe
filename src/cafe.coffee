@@ -32,10 +32,11 @@ fs = require 'fs'
 path = require 'path'
 async = require 'async'
 events = require 'events'
+{trim, is_debug_context, get_plugins} = require 'cafe4-utils'
+
 uuid = require '../third-party-lib/node-uuid'
 
 {run_target} = require './lib/target'
-{trim, is_debug_context, get_plugins} = require './lib/utils'
 
 {
     VERSION

@@ -13,7 +13,7 @@ events = require 'events'
 
 uuid = require '../../../third-party-lib/node-uuid'
 cafe_factory = require '../../cafe'
-{is_array} = require "../../lib/utils"
+{is_array} = require "cafe4-utils"
 logger = (require '../../lib/logger')()
 {parse_args} = require 'easy-opts'
 {draw_logo} = require '../../lib/pictures'

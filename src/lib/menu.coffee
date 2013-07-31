@@ -4,7 +4,7 @@ async = require 'async'
 cli_cafe = require '../ui/cli/cafe'
 {fork, spawn} = require 'child_process'
 {say, shout, scream, whisper} = require('./logger') "Menu>"
-{filter_dict, is_debug_context, read_json_file, add} = require './utils'
+{filter_dict, is_debug_context, read_json_file, add} = require 'cafe4-utils'
 
 
 {MENU_FILENAME, SUB_CAFE} = require '../defs'

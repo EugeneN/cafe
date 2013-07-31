@@ -22,8 +22,8 @@
     "wrapper-commonjs":">=0.0.28",
     "libmonad": "*",
     "libprotein": "*",
-    "js-yaml": "*",
     "easy-opts": "*",
-    "gimme-deps": ">=0.0.8"
+    "gimme-deps": ">=0.0.8",
+    "cafe4-utils": "*"
   }
 }

@@ -1,7 +1,7 @@
 # Plain old javascript file adaptor blah blah
 fs = require 'fs'
 path = require 'path'
-{is_file, has_ext, get_mtime, and_, fn_without_ext} = require '../../lib/utils'
+{is_file, has_ext, get_mtime, and_, fn_without_ext} = require 'cafe4-utils'
 {say, shout, scream, whisper} = (require '../../lib/logger') "Adaptor/javascript>"
 async = require 'async'
 cs = require 'coffee-script'

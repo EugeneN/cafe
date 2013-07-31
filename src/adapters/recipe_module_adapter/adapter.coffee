@@ -2,7 +2,7 @@ fs = require 'fs'
 path = require 'path'
 {exec, spawn, fork} = require 'child_process'
 {maybe_build, is_dir, is_file, has_ext, and_,
- get_mtime, newer, walk, newest, extend, is_array} = require '../../lib/utils'
+ get_mtime, newer, walk, newest, extend, is_array} = require 'cafe4-utils'
 
 LOG_PREFIX = 'UI/RecipeModule>'
 logger = (require '../../lib/logger') LOG_PREFIX

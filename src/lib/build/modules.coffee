@@ -1,4 +1,4 @@
-{or_, extend} = require '../utils'
+{or_, extend} = require 'cafe4-utils'
 {partial} = require 'libprotein'
 _path = require 'path'
 {NPM_MODULES_PATH} = require '../../defs'

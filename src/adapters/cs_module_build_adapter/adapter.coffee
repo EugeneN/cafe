@@ -7,10 +7,14 @@ async = require 'async'
 {
     maybe_build, toArray, add, read_json_file, get_mtime, and_, or_,
     is_file, is_dir, is_debug_context, extend, walk, newest  
-} = require '../../lib/utils'
+} = require 'cafe4-utils'
 
 {SLUG_FN, TMP_BUILD_DIR_SUFFIX, CS_ADAPTOR_PATH_SUFFIX, 
  CB_SUCCESS, CS_RUN_CONCURRENT, CAFE_DIR} = require '../../defs'
+
+read_slug = (p) ->
+    slug_fn = path.resolve p, SLUG_FN
+    JSON.parse(fs.readFileSync(slug_fn, "utf-8"))
 
 fn_without_ext = (filename) ->
     ext_length = (path.extname filename).length
@@ -43,7 +47,7 @@ build_factory = (mod_src, ctx) ->
 
     do_compile = (cb) ->
         # Read slug
-        slug = ctx.cafelib.utils.read_slug(mod_src, ctx.cafelib.utils.slug)
+        slug = read_slug(mod_src, ctx.cafelib.utils.slug)
         slug.paths = slug.paths.map (p) -> path.resolve(path.join mod_src, p)
 
         {coffee, eco, js} = require '../../lib/compiler/compilers'

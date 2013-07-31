@@ -1,7 +1,7 @@
 async = require 'async'
 path = require 'path'
 {exec} = require 'child_process'
-{is_file, read_yaml_file, extend, any} = require './../utils'
+{is_file, read_yaml_file, extend, any} = require 'cafe4-utils'
 {partial} = require 'libprotein'
 {error_m, ok, nok}  = require '../monads'
 {cont_t, cont_m, maybe_t, maybe_m, logger_t, logger_m,

@@ -1,7 +1,7 @@
 fs = require 'fs'
 path = require 'path'
 mkdirp = require '../../third-party-lib/mkdirp'
-{get_mtime, extend} = require('./utils')
+{get_mtime, extend} = require 'cafe4-utils'
 
 exports.get_modules_cache = (cache_path, cache_cb) ->
     get_fn = (module_name) -> path.join cache_path, module_name + '.cache'

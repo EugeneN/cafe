@@ -1,6 +1,6 @@
 fs = require 'fs'
 path = require 'path'
-{extend} = require './lib/utils'
+{extend} = require 'cafe4-utils'
 
 CONFIG_FILE = path.resolve process.env.HOME, '.cafe.json'
 

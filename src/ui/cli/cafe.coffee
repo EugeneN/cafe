@@ -13,7 +13,7 @@ growl = require 'growl'
 {parse_args, parse_process_args} = require 'easy-opts'
 
 cafe_factory = require '../../cafe'
-{is_array} = require '../../lib/utils'
+{is_array} = require 'cafe4-utils'
 {draw_logo} = require '../../lib/pictures'
 logger = (require '../../lib/logger') LOG_PREFIX
 

@@ -15,7 +15,7 @@ path = require 'path'
 {spawn, exec} = require 'child_process'
 
 {make_target} = require '../lib/target'
-{trim, filter_dict} = require '../lib/utils'
+{trim, filter_dict} = require 'cafe4-utils'
 {say, shout, scream, whisper} = (require '../lib/logger') 'Update>'
 
 

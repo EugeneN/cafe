@@ -21,7 +21,7 @@ help = [
 
 fs = require 'fs'
 path = require 'path'
-{is_dir, is_file, exists} = require '../lib/utils'
+{is_dir, is_file, exists} = require 'cafe4-utils'
 recipe_etalon_path = path.resolve __dirname, '../../assets/templates/init/recipe/recipe.yaml'
 init_html_file_path = path.resolve __dirname, '../../assets/templates/init/init.html'
 {make_target} = require '../lib/target'

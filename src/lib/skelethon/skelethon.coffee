@@ -4,7 +4,7 @@ This module is used for generation basic modules structure.
 
 fs     = require('fs')
 path     = require('path')
-{is_dir, get_all_relative_files} = require('../utils')
+{is_dir, get_all_relative_files} = require 'cafe4-utils'
 
 
 parse = (data, values) ->

@@ -9,7 +9,7 @@ resolve = require '../../../third-party-lib/resolve'
 {partial} = require 'libprotein'
 {maybe_build, is_dir, is_file, has_ext, and_,
  get_mtime, newer, walk, newest, extend,
- flatten, fn_without_ext, get_npm_mod_folder, find} = require '../../lib/utils'
+ flatten, fn_without_ext, get_npm_mod_folder, find} = require 'cafe4-utils'
 
 CB_SUCCESS = undefined
 

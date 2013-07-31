@@ -11,7 +11,7 @@ help = [
 {make_skelethon} = require '../lib/skelethon/skelethon'
 {SKELETHON_ASSETS_PATH} = require '../defs'
 {get_adapters} = require '../lib/adapter'
-{extend} = require '../lib/utils'
+{extend} = require 'cafe4-utils'
 path = require 'path'
 
 list = (ctx, cb) ->

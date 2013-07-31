@@ -50,7 +50,7 @@ help = [
 
 {make_target} = require '../lib/target'
 {run_build_sequence} = require '../lib/build/build_sequence'
-{is_dir} = require '../lib/utils'
+{is_dir} = require 'cafe4-utils'
 {CB_SUCCESS} = require '../defs'
 
 check_ctx = (ctx, cb) ->

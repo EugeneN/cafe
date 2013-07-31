@@ -2,7 +2,7 @@ path = require 'path'
 u = require 'underscore'
 
 {read_json_file,flatten, extend,
-is_file, toArray, read_yaml_file} = require '../../lib/utils'
+is_file, toArray, read_yaml_file} = require 'cafe4-utils'
 {partial} = require 'libprotein'
 {error_m, OK, ok, nok}  = require '../../lib/monads'
 {toposort} = require '../../lib/build/toposort'

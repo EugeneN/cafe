@@ -12,7 +12,7 @@ resolve = require '../../../third-party-lib/resolve'
 {get_recipe, get_modules, get_bundles, get_modules_and_bundles_for_sequence} = require './recipe_parser'
 {toposort} = require './toposort'
 {get_adapters} = require '../adapter'
-{extend, get_cafe_dir, exists, get_npm_mod_folder, is_array, any, find} = require '../utils'
+{extend, get_cafe_dir, exists, get_npm_mod_folder, is_array, any, find} = require 'cafe4-utils'
 {CB_SUCCESS, RECIPE, BUILD_DIR, BUILD_DEPS_FN,
  RECIPE_API_LEVEL, ADAPTERS_PATH, ADAPTER_FN, BUNDLE_HDR,
  NPM_MODULES_PATH, MINIFY_MIN_SUFFIX, BUILD_FILE_EXT, CAFE_DIR} = require '../../defs'
