@@ -1,15 +1,18 @@
 path = require 'path'
 async = require 'async'
 fs = require 'fs'
-{is_dir, partial} = require './utils'
+{is_dir} = require './utils'
 {ADAPTERS_PATH, ADAPTER_FN, JS_EXT} = require '../defs'
 fn_pattern = "#{ADAPTER_FN}#{JS_EXT}"
 {cont_t, domonad, lift_sync, lift_async, logger_t} = require 'libmonad'
 {error_m, OK} = require './monads'
+{partial} = require 'libprotein'
+
 
 read_adapters_dir = (adapters_path, cb) ->
     fs.readdir adapters_path, (err, files) ->
         cb [err, files]
+
 
 define_folders = (adapters_path, files, adapter_folders_cb) -> # TOTEST
     is_dir_iterator = (file, cb) ->
@@ -24,6 +27,7 @@ define_folders = (adapters_path, files, adapter_folders_cb) -> # TOTEST
     async.filter files, is_dir_iterator, (dirs) ->
         adapter_folders_cb [OK, dirs]
 
+
 define_adapters = (fn_pattern, dirs, cb) -> # TOTEST
     has_adapter_file_iterator = (dir, cb) ->
         fs.exists (path.join dir, fn_pattern), cb
@@ -35,6 +39,7 @@ define_adapters = (fn_pattern, dirs, cb) -> # TOTEST
 require_adapters = (fn_pattern, adapters_paths) ->
     # TODO: make parallel
     [OK, adapters_paths.map (a) -> require (path.join a, fn_pattern)]
+
 
 get_adapters = ->
     (fs.readdirSync ADAPTERS_PATH)
@@ -58,5 +63,3 @@ get_adapters.async = (adapters_dir, fn_pattern, adapters_cb) ->
         adapters_cb err, results
 
 module.exports = {get_adapters}
-
-

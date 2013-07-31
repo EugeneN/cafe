@@ -1,5 +1,4 @@
 path = require 'path'
-u = require 'underscore'
 {read_recipe
 get_recipe
 get_raw_modules

@@ -1,7 +1,7 @@
-{or_, partial, extend} = require '../utils'
+{or_, extend} = require '../utils'
+{partial} = require 'libprotein'
 _path = require 'path'
 {NPM_MODULES_PATH} = require '../../defs'
-u = require 'underscore'
 {skip_or_error_m, OK} = require '../monads'
 {domonad} = require 'libmonad'
 

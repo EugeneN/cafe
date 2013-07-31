@@ -1,16 +1,15 @@
 fs = require 'fs'
 path = require 'path'
-_ = require 'underscore'
 {run_install_in_dir, install_module} = require '../../lib/npm_tasks'
 getdeps = require 'gimme-deps'
 {exec} = require 'child_process'
 async = require 'async'
 {domonad, cont_t, lift_async, lift_sync} = require 'libmonad'
 resolve = require '../../../third-party-lib/resolve'
-
-{partial, maybe_build, is_dir, is_file, has_ext, and_,
+{partial} = require 'libprotein'
+{maybe_build, is_dir, is_file, has_ext, and_,
  get_mtime, newer, walk, newest, extend,
- flatten, fn_without_ext, get_npm_mod_folder} = require '../../lib/utils'
+ flatten, fn_without_ext, get_npm_mod_folder, find} = require '../../lib/utils'
 
 CB_SUCCESS = undefined
 
@@ -128,7 +127,7 @@ module.exports = do ->
                     _m_get_main_file = (mod_src, mod, get_main_file_cb) ->
                         main_file = null
                         if mod.main_file?
-                            main_file = _.find mod.files, (f) -> f.path is mod.main_file # TODO: check null
+                            main_file = find mod.files, (f) -> f.path is mod.main_file # TODO: check null
                             fs.readFile mod.main_file, (err, source) ->
                                 if err
                                     get_main_file_cb (nok err)

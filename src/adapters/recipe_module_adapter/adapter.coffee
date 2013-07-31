@@ -10,13 +10,12 @@ logger = (require '../../lib/logger') LOG_PREFIX
 
 async = require 'async'
 events = require 'events'
+{partial} = require 'libprotein'
 
-_ = require 'underscore'
 
 {FILE_ENCODING, TMP_BUILD_DIR_SUFFIX, JS_EXT,
   NODE_PATH, CB_SUCCESS, RECIPE} = require '../../defs'
 
-partial = (fn, args...) -> _.bind fn, null, args...
 
 get_target_fn = (js_path, app_root, target_fn) ->
     if js_path

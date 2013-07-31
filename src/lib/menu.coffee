@@ -2,7 +2,6 @@ fs = require 'fs'
 path = require 'path'
 async = require 'async'
 cli_cafe = require '../ui/cli/cafe'
-{compose} = require 'underscore'
 {fork, spawn} = require 'child_process'
 {say, shout, scream, whisper} = require('./logger') "Menu>"
 {filter_dict, is_debug_context, read_json_file, add} = require './utils'

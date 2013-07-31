@@ -17,7 +17,6 @@
     "coffee-script" : "*",
     "async" : "*",
     "ansi-color": "*",
-    "underscore": "*",
     "chokidar": "*",
     "growl": "*",
     "wrapper-commonjs":">=0.0.28",

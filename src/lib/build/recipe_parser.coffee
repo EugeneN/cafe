@@ -2,8 +2,8 @@ path = require 'path'
 u = require 'underscore'
 
 {read_json_file,flatten, extend,
-is_file, toArray, partial,
-read_yaml_file} = require '../../lib/utils'
+is_file, toArray, read_yaml_file} = require '../../lib/utils'
+{partial} = require 'libprotein'
 {error_m, OK, ok, nok}  = require '../../lib/monads'
 {toposort} = require '../../lib/build/toposort'
 {construct_module, modules_equals} = require './modules'

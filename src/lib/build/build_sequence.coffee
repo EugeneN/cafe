@@ -1,22 +1,22 @@
 fs = require 'fs'
 async = require 'async'
-u = require 'underscore'
 path = require 'path'
 mkdirp = require '../../../third-party-lib/mkdirp'
 resolve = require '../../../third-party-lib/resolve'
 
 {domonad, cont_t, lift_async, lift_sync} = require 'libmonad'
+{partial} = require 'libprotein'
 {spawn} = require 'child_process'
 {construct_cmd} = require 'easy-opts'
 {wrap_bundle, wrap_modules, wrap_module} = require 'wrapper-commonjs'
 {get_recipe, get_modules, get_bundles, get_modules_and_bundles_for_sequence} = require './recipe_parser'
 {toposort} = require './toposort'
 {get_adapters} = require '../adapter'
-{extend, partial, get_cafe_dir, exists,
-get_legacy_cafe_bin_path, get_npm_mod_folder, is_array} = require '../utils'
+{extend, get_cafe_dir, exists,
+get_legacy_cafe_bin_path, get_npm_mod_folder, is_array, any, find} = require '../utils'
 {CB_SUCCESS, RECIPE, BUILD_DIR, BUILD_DEPS_FN,
  RECIPE_API_LEVEL, ADAPTERS_PATH, ADAPTER_FN, BUNDLE_HDR,
- NPM_MODULES_PATH, MINIFY_MIN_SUFFIX, BUILD_FILE_EXT} = require '../../defs'
+ NPM_MODULES_PATH, MINIFY_MIN_SUFFIX, BUILD_FILE_EXT, CAFE_DIR} = require '../../defs'
 {get_modules_cache} = require '../modules_cache'
 {skip_or_error_m, OK} = require '../monads'
 {minify} = require './cafe_minify'
@@ -29,7 +29,7 @@ get_legacy_cafe_bin_path, get_npm_mod_folder, is_array} = require '../utils'
 CACHE_FN = 'modules'
 
 
-get_modules_cache_dir = (app_root) -> path.resolve path.join get_cafe_dir(app_root), 'modules_cache' #move to defs
+get_modules_cache_dir = (app_root) -> path.resolve path.join get_cafe_dir(app_root, CAFE_DIR), 'modules_cache' #move to defs
 get_build_dir = (build_root) -> path.resolve path.join build_root, BUILD_DIR
 
 
@@ -60,26 +60,24 @@ process_bundle = (modules, build_deps, changed_modules, cached_sources, ctx, opt
             (changed_modules.map (m) -> m.name) else []
 
         was_compiled = (_bundle) ->
-            u.some _bundle.modules_names, (m_name) ->
-                m_name in changed_modules_names
+            any _bundle.modules_names, ((m_name) -> m_name in changed_modules_names)
 
         meta_changed = (modules, build_deps) ->
-            bd_bundle = u.find build_deps, (b) -> b.name is bundle.name
+            bd_bundle = find build_deps, ((b) -> b.name is bundle.name)
 
             if bd_bundle?
                 # check if some module is missing
                 modules_names = modules.map (m) -> m.name
-                deleted_module = u.find(
-                    bd_bundle.modules, (m) -> m.name not in modules_names)
+                deleted_module = find bd_bundle.modules, ((m) -> m.name not in modules_names)
 
                 if deleted_module?
                     ctx.fb.say "Module #{deleted_module.name} was removed from bundle #{bundle.name}. Rebundling ..."
                     delete cached_sources[deleted_module.name] # removing from cache
                     return true
 
-                module_with_changed_deps = u.find modules, (m) ->
+                module_with_changed_deps = find modules, (m) ->
 
-                    bd_module = u.find(bd_bundle.modules, (mod) -> mod.name is m.name)
+                    bd_module = find(bd_bundle.modules, (mod) -> mod.name is m.name)
                     unless bd_module?
                         return false
 
@@ -118,7 +116,7 @@ process_bundle = (modules, build_deps, changed_modules, cached_sources, ctx, opt
 
     _m_fill_modules_sources = ([bundle, modules], fill_sources_cb) ->
         fill_sources = (m, cb) ->
-            compiled_m = u.find changed_modules, (mod) -> mod.name is m.name
+            compiled_m = find changed_modules, ((mod) -> mod.name is m.name)
 
             if compiled_m?
                 m.copy_sources(compiled_m.get_sources())
@@ -159,7 +157,7 @@ process_bundle = (modules, build_deps, changed_modules, cached_sources, ctx, opt
             write_cb [err, false, [bundle, modules, sources]]
 
     # select modules for bundle
-    modules = bundle.modules_names.map (m_name) -> u.find modules, (m) -> m.name is m_name
+    modules = bundle.modules_names.map (m_name) -> find modules, ((m) -> m.name is m_name)
     build_dir = get_build_dir ctx.own_args.build_root
     bundle_dir_path = path.dirname path.join(build_dir, bundle.name)
     bundle_file_path = path.join bundle_dir_path, (path.basename "#{bundle.name}#{BUILD_FILE_EXT}")

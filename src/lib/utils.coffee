@@ -1,11 +1,11 @@
 fs = require 'fs'
 path = require 'path'
 yaml = require 'js-yaml'
-_ = require 'underscore'
-{spawn} = require 'child_process'
-{say, shout, scream, whisper} = (require './logger') 'Utils>'
 
-{CAFE_DIR, JS_PATTERN, SLUG_FN, FILE_ENCODING, CB_SUCCESS} = require '../defs'
+JS_PATTERN = /\.js$/
+FILE_ENCODING = "utf-8"
+CB_SUCCESS = null
+
 
 read_slug = (p) ->
     slug_fn = path.resolve p, SLUG_FN
@@ -46,16 +46,20 @@ flatten = (array, results = []) ->
 
     results
 
-toArray = (value = []) ->
-    if Array.isArray(value) then value else [value]
+
+toArray = (value = []) -> if Array.isArray(value) then value else [value]
+
 
 is_array = (v) -> Array.isArray v
 
+
 mtime_to_unixtime = (mtime_str) -> (new Date(mtime_str)).getTime()
+
 
 get_mtime = (filename) ->
     stat = fs.statSync filename
     mtime_to_unixtime stat.mtime
+
 
 get_mtime.async = (filename, cb) ->
     fs.stat filename, (err, stat) ->
@@ -64,7 +68,9 @@ get_mtime.async = (filename, cb) ->
         else
             cb null, (mtime_to_unixtime stat.mtime)
 
+
 newest = (l) -> Math.max.apply Math, l
+
 
 maybe_build = (build_root, built_file, cb) ->
 
@@ -91,26 +97,6 @@ maybe_build = (build_root, built_file, cb) ->
                 cb? false, built_file
         else
             cb? false, built_file
-
-
-camelize = (str) ->
-    str.replace(/-|_+(.)?/g, (match, chr) ->
-        if chr
-            chr.toUpperCase()
-        else
-            ''
-    ).replace(/^(.)?/, (match, chr) ->
-        if chr
-            chr.toUpperCase()
-        else
-            ''
-    )
-
-expandPath = (_path, dir) ->
-    if path.basename _path is _path
-        _path = dir + _path
-
-    path.normalize _path
 
 
 add = (args...) ->
@@ -156,16 +142,20 @@ is_debug_context = (argv_or_ctx) ->
     else
         argv_or_ctx.global.hasOwnProperty 'debug'
 
-read_json_file = (filename) ->
+read_json_file = (filename, encoding) ->
+
+    encoding or= FILE_ENCODING
+
     if fs.existsSync filename
         try
-            Object.freeze(JSON.parse(fs.readFileSync(filename, FILE_ENCODING)))
+            Object.freeze(JSON.parse(fs.readFileSync(filename, encoding)))
         catch e
             console.log "Error reading #{filename}: #{e}"
             console.log "#{e.stack}"
             undefined
     else
         undefined
+
 
 read_json_file.async = (filename, cb) ->
     fs.readFile filename, FILE_ENCODING, (err, res) ->
@@ -179,7 +169,9 @@ read_json_file.async = (filename, cb) ->
             finally
                 cb err, json_file
 
+
 read_yaml_file = () -> throw "Method read_yaml_file is not implemented"
+
 
 read_yaml_file.async = (filename, cb) ->
     fs.readFile filename, FILE_ENCODING, (err, res) ->
@@ -189,11 +181,12 @@ read_yaml_file.async = (filename, cb) ->
 
 trim = (s) -> s.replace /^\s+|\s+$/g, ''
 
-exists = (fn) ->
-    fs.existsSync fn
 
-exists.async = (fn, cb) ->
-    fs.exists fn, (exs) -> cb CB_SUCCESS, exs
+exists = (fn) -> fs.existsSync fn
+
+
+exists.async = (fn, cb) -> fs.exists fn, (exs) -> cb CB_SUCCESS, exs
+
 
 is_dir = (fn) ->
     if exists fn
@@ -261,40 +254,6 @@ newer = (a, b) ->
     catch e
         true
 
-build_update_reenter_cmd = (ctx) ->
-    arg1 = (arg) -> "-#{arg}"
-    arg2 = (arg, val) -> "--#{arg}#{if val is undefined then '' else '=' + val}"
-    format_arg = (arg, val) -> if val is true then arg1(arg) else arg2(arg, val)
-
-    # we don't want logo to be printed the second time
-    cmd_args = ['--nologo']
-
-    # adding global arguments before all commands
-    cmd_args.push(format_arg(arg, val)) for arg, val of ctx.global when arg isnt 'update'
-
-    # adding commands and their arguments
-    for command, args of filter_dict(ctx, (k, v) -> k isnt 'global')
-        cmd_args.push "#{command}"
-        cmd_args.push(format_arg(arg, val)) for arg, val of args
-
-    cmd_args
-
-reenter = (ctx, cb) ->
-    cmd_args = build_update_reenter_cmd ctx
-
-    run = spawn process.argv[1], cmd_args
-
-    run.stdout.on 'data', (data) -> say "#{data}".replace /\n$/, ''
-    run.stderr.on 'data', (data) -> scream "#{data}".replace /\n$/, ''
-    run.on 'exit', (code) ->
-        shout "=== Re-enter finished with code #{code} ==========="
-        cb? 'stop', code
-
-get_opt = (opt, bundle_opts, recipe_opts) ->
-    switch bundle_opts?[opt]
-        when true then true
-        when false then false
-        else !!recipe_opts?[opt]
 
 get_result_filename = (source_fn, target_fn, src_ext, dst_ext) ->
     """
@@ -353,8 +312,8 @@ get_cake_bin = () ->
         if fs.existsSync val
             return val
 
-get_cafe_dir = (app_root) ->
-    dir = path.join app_root, CAFE_DIR
+get_cafe_dir = (app_root, cafe_dir) ->
+    dir = path.join app_root, cafe_dir
     unless exists dir
         fs.mkdirSync dir
         dir
@@ -365,7 +324,6 @@ fn_without_ext = (filename) ->
     ext_length = (path.extname filename).length
     filename.slice 0, -ext_length
 
-partial = (fn, args...) -> _.bind fn, null, args...
 
 get_legacy_cafe_bin_path = (version) ->
     path.resolve __dirname,"../../legacy/api_version_#{version}/cafe/bin/cafe"
@@ -391,7 +349,17 @@ get_npm_mod_folder = (resolved_path) ->
 
 any = (seq) -> seq.reduce (a, b) -> a or b
 
+
 all = (seq) -> seq.reduce (a, b) -> a and b
+
+
+find = (seq, predicate) ->
+    res = seq.filter predicate
+    if res.length
+        res[0]
+    else
+        undefined
+
 
 module.exports = {
     read_slug
@@ -402,8 +370,6 @@ module.exports = {
     get_mtime
     newest
     maybe_build
-    camelize
-    expandPath
     add
     filter_dict
     is_debug_context
@@ -419,8 +385,6 @@ module.exports = {
     extend
     newer
     is_array
-    reenter
-    get_opt
     get_result_filename
     get_all_relative_files
     get_cake_bin
@@ -428,9 +392,9 @@ module.exports = {
     or_
     get_cafe_dir
     fn_without_ext
-    partial
     get_legacy_cafe_bin_path
     get_npm_mod_folder
     all
     any
+    find
 }

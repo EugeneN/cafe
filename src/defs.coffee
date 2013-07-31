@@ -1,6 +1,6 @@
 fs = require 'fs'
 path = require 'path'
-{extend} = require 'underscore'
+{extend} = require './lib/utils'
 
 CONFIG_FILE = path.resolve process.env.HOME, '.cafe.json'
 
@@ -156,4 +156,4 @@ default_config =
     CAFE_DIR: '.cafe'
     NPM_MODULES_PATH: 'node_modules'
 
-module.exports = extend {}, default_config, user_config
+module.exports = extend default_config, user_config

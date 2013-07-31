@@ -11,14 +11,14 @@ help = [
 {make_skelethon} = require '../lib/skelethon/skelethon'
 {SKELETHON_ASSETS_PATH} = require '../defs'
 {get_adapters} = require '../lib/adapter'
-u = require 'underscore'
+{extend} = require '../lib/utils'
 path = require 'path'
 
 list = (ctx, cb) ->
   skels = get_adapters()
           .map((a) -> a.make_skelethon?())
           .filter((a) -> a?)
-          .reduce((a, b) -> u.extend(a, b))
+          .reduce((a, b) -> extend(a, b))
 
   records = (k for k, v of skels).map((k) -> "  -#{k}").join("  \r\n")
 
