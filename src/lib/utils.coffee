@@ -325,9 +325,6 @@ fn_without_ext = (filename) ->
     filename.slice 0, -ext_length
 
 
-get_legacy_cafe_bin_path = (version) ->
-    path.resolve __dirname,"../../legacy/api_version_#{version}/cafe/bin/cafe"
-
 get_npm_mod_folder = (resolved_path) ->
 
     after_val_reducer = (val) ->
@@ -392,7 +389,6 @@ module.exports = {
     or_
     get_cafe_dir
     fn_without_ext
-    get_legacy_cafe_bin_path
     get_npm_mod_folder
     all
     any
