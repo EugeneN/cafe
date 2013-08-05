@@ -59,7 +59,7 @@ process_bundle = (modules, build_deps, changed_modules, cached_sources, ctx, opt
             (changed_modules.map (m) -> m.name) else []
 
         was_compiled = (_bundle) ->
-            any _bundle.modules_names, ((m_name) -> m_name in changed_modules_names)
+            any _bundle.modules_names.map((m_name) -> m_name in changed_modules_names)
 
         meta_changed = (modules, build_deps) ->
             bd_bundle = find build_deps, ((b) -> b.name is bundle.name)
@@ -83,11 +83,10 @@ process_bundle = (modules, build_deps, changed_modules, cached_sources, ctx, opt
                     deps_count_not_equal = bd_module.deps.length isnt m.deps.length
 
                     if m.deps.length
-                        deps_added = (m.deps.map((d) -> d not in bd_module.deps)
-                                            .reduce((a, b) -> a or b))
+                        deps_added = any m.deps.map((d) -> d not in bd_module.deps)
+                                            
                     if bd_module.deps.length
-                        deps_removed = (bd_module.deps.map(
-                            (d) -> d not in m.deps).reduce((a, b)-> a or b))
+                        deps_removed = any bd_module.deps.map((d) -> d not in m.deps)
 
                     seq = [
                         deps_count_not_equal
@@ -95,7 +94,7 @@ process_bundle = (modules, build_deps, changed_modules, cached_sources, ctx, opt
                         deps_removed
                     ]
 
-                    seq.filter((c) -> c?).reduce((a, b) -> a or b)
+                    any seq.filter((c) -> c?)
 
                 if module_with_changed_deps?
                     ctx.fb.say(
