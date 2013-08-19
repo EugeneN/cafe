@@ -62,6 +62,8 @@ process_bundle = (modules, build_deps, changed_modules, cached_sources, ctx, opt
             any _bundle.modules_names.map((m_name) -> m_name in changed_modules_names)
 
         meta_changed = (modules, build_deps) ->
+            return true unless build_deps
+            
             bd_bundle = find build_deps, ((b) -> b.name is bundle.name)
 
             if bd_bundle?

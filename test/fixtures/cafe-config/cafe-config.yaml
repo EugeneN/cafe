@@ -1,0 +1,8 @@
+adapters:
+    - npm    :   npm://cafe-adapter-npm
+    - module :   npm://cafe-module-adapter
+    - file   :   npm://cafe-single-file-adapter
+
+
+compilers:
+    - base-compiler: [npm://cafe-base-compiler, [coffee, js, eco]]

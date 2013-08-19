@@ -24,6 +24,7 @@
     "libprotein": "*",
     "easy-opts": "*",
     "gimme-deps": ">=0.0.8",
-    "cafe4-utils": "*"
+    "cafe4-utils": "*",
+    "fresh-monads": "*"
   }
 }
