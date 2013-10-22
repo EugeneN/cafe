@@ -1,7 +1,7 @@
 {
   "name": "cafe4",
   "description": "Client-side applications build tool",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "author": "E.Naumenko, A.Mostovenko, B.Larin",
   "repository": {
     "type" : "git",
@@ -9,7 +9,7 @@
   },
   "scripts": {"postinstall": "cake build"},
   "engine" : [ "node >=0.1.102" ],
-  "main" : "./lib/cafe.js",
+  "main" : "./lib-js/cafe.js",
   "bin": { "cafe": "./bin/cafe", "telnet-cafe": "./bin/telnet-cafe"},
   "dependencies" : {
     "eco": "*",
