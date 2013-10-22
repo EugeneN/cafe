@@ -13,7 +13,7 @@ resolve = require '../../../third-party-lib/resolve'
 {toposort} = require './toposort'
 {get_adapters} = require '../adapter'
 {extend, partial, get_cafe_dir, exists, 
-get_legacy_cafe_bin_path, get_npm_mod_folder, is_array} = require '../utils'
+get_npm_mod_folder, is_array} = require '../utils'
 {CB_SUCCESS, RECIPE, BUILD_DIR, BUILD_DEPS_FN,
  RECIPE_API_LEVEL, ADAPTERS_PATH, ADAPTER_FN, BUNDLE_HDR,
  NPM_MODULES_PATH, MINIFY_MIN_SUFFIX, BUILD_FILE_EXT} = require '../../defs'
@@ -357,25 +357,6 @@ _run_build_sequence_monadic_functions =
         init_build_sequence ctx, null, null, (err, init_results) ->
             init_cb [err, false, init_results]
 
-    _m_check_if_old_api_version: (ctx, init_result, check_cb) -> #TOTEST
-        {recipe} = init_result
-        if recipe.abstract.api_version is RECIPE_API_LEVEL
-            check_cb [OK, false, init_result]
-        else
-            legacy_cafe_bin = get_legacy_cafe_bin_path recipe.abstract.api_version
-            exists.async legacy_cafe_bin, (err, status) ->
-                unless status is true
-                    ctx.fb.shout "Unknown api_version recipe #{recipe.abstract.api_version}"
-                    check_cb [OK, true, init_result]
-                else
-                    ctx.fb.shout "Found old api_version #{recipe.abstract.api_version} launching old cafe"
-                    cmd_args = ['--nologo', '--noupdate', '--nogrowl']
-                    run = spawn legacy_cafe_bin, cmd_args.concat(construct_cmd ctx.full_args)
-                    run.stdout.on 'data', (data) -> ctx.fb.say "#{data}".replace /\n$/, ''
-                    run.stderr.on 'data', (data) -> ctx.fb.scream "#{data}".replace /\n$/, ''
-                    run.on 'exit', (code) -> # Handle inner cafe error
-                        check_cb [OK, true, init_result]
-
     _m_parse_modules_and_bundles: (init_result, parse_cb) -> # TOTEST
         """ Parses bundles and modules for sequence """
         {recipe} = init_result
@@ -487,7 +468,6 @@ run_build = (ctx, cb) ->
 
     seq = [
         lift_async(2, mf._m_init_build_sequence)
-        lift_async(3, partial(mf._m_check_if_old_api_version, ctx))
         lift_async(2, mf._m_parse_modules_and_bundles)
         lift_async(3, partial(mf._m_init_modules, ctx))
         lift_async(3, partial(mf._m_modules_processor, ctx))

@@ -1,6 +1,1 @@
-[submodule "legacy/api_version_3/cafe"]
-	path = legacy/api_version_3/cafe
-	url = git://github.com/EugeneN/cafe.git
-[submodule "legacy/api_version_4/cafe"]
-	path = legacy/api_version_4/cafe
-	url = git://github.com/EugeneN/cafe.git
+
