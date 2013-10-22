@@ -5,7 +5,7 @@ node_modules
 *.sublime-project
 *.sublime-workspace
 lib-js/**
-test/**/public/*
+public
 Menufile
 .*
 
