@@ -4,28 +4,39 @@
   "version": "0.1.6",
   "author": "E.Naumenko, A.Mostovenko, B.Larin",
   "repository": {
-    "type" : "git",
+    "type": "git",
     "url": "https://github.com/EugeneN/cafe"
   },
-  "scripts": {"postinstall": "cake build"},
-  "engine" : [ "node >=0.1.102" ],
-  "main" : "./lib-js/cafe.js",
-  "bin": { "cafe": "./bin/cafe", "telnet-cafe": "./bin/telnet-cafe"},
-  "dependencies" : {
+  "engine": [
+    "node >=0.1.102"
+  ],
+  "main": "./lib-js/cafe.js",
+  "bin": {
+    "cafe": "./bin/cafe",
+    "telnet-cafe": "./bin/telnet-cafe"
+  },
+  "dependencies": {
     "eco": "*",
     "uglify-js": "~2.3.6",
-    "coffee-script" : "*",
-    "async" : "*",
+    "coffee-script": "*",
+    "async": "*",
     "ansi-color": "*",
     "underscore": "*",
     "request": "*",
     "chokidar": "*",
     "growl": "*",
-    "wrapper-commonjs":">=0.0.28",
+    "wrapper-commonjs": ">=0.0.28",
     "libmonad": "*",
     "libprotein": "*",
     "js-yaml": "*",
     "easy-opts": "*",
     "gimme-deps": ">=0.0.8"
+  },
+  "devDependencies": {
+    "grunt": "~0.4.1",
+    "grunt-contrib-watch": "~0.5.3",
+    "grunt-contrib-coffee": "~0.7.0",
+    "matchdep": "~0.3.0",
+    "grunt-contrib-nodeunit": "~0.2.2"
   }
 }
