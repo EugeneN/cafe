@@ -1,0 +1,21 @@
+abstract: 
+    api_version: 5
+    # extends:
+
+#opts:
+#    minify: false
+
+
+# modules section is for registering application modules
+# you can read more detailed about modules format here - https://github.com/EugeneN/cafe/wiki/recipe-file
+modules:
+    - module1: module1.coffee
+    - module2: module2.coffee
+
+
+# Section for defining your bundles structure
+bundles:
+    default_bundle:
+        modules:
+            - module1
+            - module2

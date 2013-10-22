@@ -8,6 +8,9 @@ module.exports = (grunt) ->
             src:
                 files: "src/**/*.coffee"
                 tasks: ["build"]
+            tests:
+                files: "test/**/*.coffee"
+                tasks: ["nodeunit"]
             
         coffee:
             src:

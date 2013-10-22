@@ -1,0 +1,23 @@
+[
+    {
+        "name": "default_bundle",
+        "modules": [
+            {
+                "name": "module2",
+                "path": "module2.coffee",
+                "type": "commonjs",
+                "location": "fs",
+                "deps": [],
+                "prefix_meta": {}
+            },
+            {
+                "name": "module1",
+                "path": "module1.coffee",
+                "type": "commonjs",
+                "location": "fs",
+                "deps": [],
+                "prefix_meta": {}
+            }
+        ]
+    }
+]
