@@ -1,6 +1,6 @@
-Cafe is a build tool for client-side applications aiming to be language/module system/architecture agnostic and flexible. Tries hard to be modular and extensible by itself too. 
+Cafe is a build tool for client-side applications aiming to be language/module system/architecture agnostic and flexible. Tries hard to be modular and extensible by itself too.
 
-Current version (cafe4) is a prototype and is written in Coffeescript in functional and asyncronous way (mostly functional and mostly asyncronous :-). 
+Current version (cafe4) is a prototype and is written in Coffeescript in functional and asyncronous way (mostly functional and mostly asyncronous :-).
 
 #Installation
 
@@ -41,8 +41,15 @@ bundles:
 To compile your app run
 
     cafe menu build
-   
+
 For more details look at [getting started page](https://github.com/EugeneN/cafe/wiki/Cafe-get-started).
+
+#Contributing
+Don't forget to check that all tests are passing before commit (grunt nodeunit)
+1. clone this repo git clone https://github.com/EugeneN/cafe.git
+2. cd cafe
+3. grunt install | grunt coffee - to build coffee-script
+4. grunt build
 
 #Changelog
 
