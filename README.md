@@ -48,7 +48,7 @@ For more details look at [getting started page](https://github.com/EugeneN/cafe/
 Don't forget to check that all tests are passing before commit (grunt nodeunit)
 * clone this repo git clone https://github.com/EugeneN/cafe.git
 * cd cafe
-* grunt install | grunt coffee - to build coffee-script
+* grunt install | grunt coffee
 * grunt build
 
 #Changelog
