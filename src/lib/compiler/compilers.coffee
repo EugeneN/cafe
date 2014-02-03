@@ -25,21 +25,38 @@ exports.coffee = ->
 
 exports.eco = ->
     compile = (path) ->
-        if eco.precompile
-            content = eco.precompile fs.readFileSync path, 'utf8'
-            "module.exports = #{content}"
-        else
-            eco.compile fs.readFileSync path, 'utf8'
+        source = fs.readFileSync path, 'utf8'
+        try
+            if eco.precompile
+                content = eco.precompile source
+                "module.exports = #{content}"
+            else
+                eco.compile source
+        catch e
+            throw new Error (CoffeeScript.helpers.prettyErrorMessage e, path, source, true)
 
     compile.async = (path, cb) ->
         if eco.precompile
             fs.readFile path, 'utf8', (err, content) ->
-                compiled = eco.precompile content
-                cb err, "module.exports = #{compiled}"
+                unless err
+                    try
+                        compiled = eco.precompile content
+                        cb err, "module.exports = #{compiled}"
+                    catch e
+                        cb (new Error (CoffeeScript.helpers.prettyErrorMessage e, path, content, true)), null
+                else
+                    cb err, null
+
         else
             fs.readFile path, 'utf8', (err, content) ->
-                compiled = eco.compile content
-                cb err, compiled
+                unless err
+                    try
+                        compiled = eco.compile content
+                        cb err, compiled
+                    catch e
+                        cb (new Error (CoffeeScript.helpers.prettyErrorMessage e, path, content, true))
+                else
+                    cb err, null
 
     {compile, ext: 'eco'}
 

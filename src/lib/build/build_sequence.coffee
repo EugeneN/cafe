@@ -11,6 +11,7 @@ resolve = require '../../../third-party-lib/resolve'
 {wrap_bundle, wrap_modules, wrap_module} = require 'wrapper-commonjs'
 {get_recipe, get_modules, get_bundles, get_modules_and_bundles_for_sequence} = require './recipe_parser'
 {toposort} = require './toposort'
+{gen_libprotocol_cache} = require './asttrans'
 {get_adapters} = require '../adapter'
 {extend, partial, get_cafe_dir, exists, 
 get_npm_mod_folder, is_array} = require '../utils'
@@ -38,9 +39,9 @@ save_results = (modules, bundles, cache, cached_sources, ctx, save_cb) ->
     build_dir = get_build_dir ctx.own_args.build_root
 
     save_build_deps = (cb) ->
-        serrialized_bundles = JSON.stringify((bundles.map (b) ->
+        serialized_bundles = JSON.stringify((bundles.map (b) ->
                                              b.serrialize()), null, 4)
-        fs.writeFile (path.join build_dir, BUILD_DEPS_FN), serrialized_bundles, (err) ->
+        fs.writeFile (path.join build_dir, BUILD_DEPS_FN), serialized_bundles, (err) ->
             cb err
 
     async.parallel(
@@ -154,7 +155,9 @@ process_bundle = (modules, build_deps, changed_modules, cached_sources, ctx, opt
             min_cb [OK, false, [bundle, modules, wrapped_sources]]
 
     _m_write_bundle = (bundle_file_path, [bundle, modules, sources], write_cb) ->
-        fs.writeFile bundle_file_path, sources, (err) ->
+        proto_cache_str =  "window._libprotocol_cache = window._libprotocol_cache || []; window._libprotocol_cache.push(#{JSON.stringify (gen_libprotocol_cache sources)});"
+
+        fs.writeFile bundle_file_path, (proto_cache_str + sources), (err) ->
             err = "Failed to save bundle #{bundle.name}. #{err}" if err?
             write_cb [err, false, [bundle, modules, sources]]
 
@@ -166,12 +169,12 @@ process_bundle = (modules, build_deps, changed_modules, cached_sources, ctx, opt
     minify_file_path = path.join bundle_dir_path, (path.basename "#{bundle.name}#{MINIFY_MIN_SUFFIX}")
 
     seq = [
-        lift_sync(3, partial(_m_check_to_rebuild, modules, build_deps, changed_modules))
-        lift_async(4, partial(_m_make_build_path, ctx, bundle_dir_path))
-        lift_async(2, _m_fill_modules_sources)
-        lift_sync(1, _m_wrap_bundle)
-        lift_async(3, partial(_m_minify, minify_file_path))
-        lift_async(3, partial(_m_write_bundle, bundle_file_path))
+        lift_sync  3, partial(_m_check_to_rebuild, modules, build_deps, changed_modules)
+        lift_async 4, partial(_m_make_build_path, ctx, bundle_dir_path)
+        lift_async 2, _m_fill_modules_sources
+        lift_sync  1, _m_wrap_bundle
+        lift_async 3, partial(_m_minify, minify_file_path)
+        lift_async 3, partial(_m_write_bundle, bundle_file_path)
     ]
 
     (domonad (cont_t skip_or_error_m()), seq, bundle) ([err, skiped, [bundle, modules, sources]]) ->
@@ -457,7 +460,7 @@ _run_build_sequence_monadic_functions =
         for b in proc_bundles
             tmp_bundles_obj[b.name] = b
 
-        merged_bundles = (v for k,v of tmp_bundles_obj)
+        merged_bundles = (v for k, v of tmp_bundles_obj)
 
         save_results changed_modules, merged_bundles, cache, cached_sources, ctx, (err, result) ->
             save_cb [err, false, result]
