@@ -29,6 +29,9 @@ get_npm_mod_folder, is_array} = require '../utils'
 
 CACHE_FN = 'modules'
 
+SKIP = true
+NOSKIP = false
+
 
 get_modules_cache_dir = (app_root) -> path.resolve path.join get_cafe_dir(app_root), 'modules_cache' #move to defs
 get_build_dir = (build_root) -> path.resolve path.join build_root, BUILD_DIR
@@ -51,6 +54,13 @@ save_results = (modules, bundles, cache, cached_sources, ctx, save_cb) ->
         ]
         save_cb
     )
+
+
+# ======================== AST PROCESSING ==========================================================
+
+generate_libprotocol_cache = (sources) ->
+    proto_cache_str =  "window._libprotocol_cache = window._libprotocol_cache || []; window._libprotocol_cache.push(#{JSON.stringify (gen_libprotocol_cache sources)});"
+    proto_cache_str + sources
 
 
 # ======================== BUNDLES PROCESSING ======================================================
@@ -108,14 +118,14 @@ process_bundle = (modules, build_deps, changed_modules, cached_sources, ctx, opt
             false
 
         if was_compiled(bundle)
-            [OK, false, [bundle, modules]]
+            [OK, NOSKIP, [bundle, modules]]
         else if meta_changed(modules, build_deps)
-            [OK, false, [bundle, modules]]
+            [OK, NOSKIP, [bundle, modules]]
         else
-            [OK, true, [bundle, modules]]
+            [OK, SKIP, [bundle, modules]]
 
     _m_make_build_path = (ctx, bundle_dir_path, [bundle, modules], build_path_cb)->
-        mkdirp bundle_dir_path, (err) -> build_path_cb [err, false, [bundle, modules]]
+        mkdirp bundle_dir_path, (err) -> build_path_cb [err, NOSKIP, [bundle, modules]]
 
     _m_fill_modules_sources = ([bundle, modules], fill_sources_cb) ->
         fill_sources = (m, cb) ->
@@ -130,7 +140,7 @@ process_bundle = (modules, build_deps, changed_modules, cached_sources, ctx, opt
 
         async.map modules, fill_sources, (err, modules_with_sources) ->
             bundle.set_modules modules_with_sources
-            fill_sources_cb [err, false, [bundle, modules_with_sources]]
+            fill_sources_cb [err, NOSKIP, [bundle, modules_with_sources]]
 
     _m_wrap_bundle = ([bundle, modules]) ->
         sources = (modules.map (m) -> m.get_sources())
@@ -145,21 +155,30 @@ process_bundle = (modules, build_deps, changed_modules, cached_sources, ctx, opt
         catch ex
             err = "Failed to wrap bundle. #{ex}"
 
-        [err, false, [bundle, modules, wrapped_sources]]
+        [err, NOSKIP, [bundle, modules, wrapped_sources]]
+
+    _m_asttrans_bundle = ([bundle, modules, sources]) ->
+        try
+            # TODO run sequence of transformers configured in recipe in appropriate order
+            transformed_sources = generate_libprotocol_cache sources
+
+        catch ex
+            err = "Error during ast transformations: #{ex}"
+
+        [err, NOSKIP, [bundle, modules, transformed_sources]]
+
 
     _m_minify = (minify_fn, [bundle, modules, wrapped_sources], min_cb) ->
         if opts?.minify is true
             ctx.fb.say "Minify bundle #{bundle.name} ..."
             minify minify_fn, [bundle, modules, wrapped_sources], min_cb
         else
-            min_cb [OK, false, [bundle, modules, wrapped_sources]]
+            min_cb [OK, NOSKIP, [bundle, modules, wrapped_sources]]
 
     _m_write_bundle = (bundle_file_path, [bundle, modules, sources], write_cb) ->
-        proto_cache_str =  "window._libprotocol_cache = window._libprotocol_cache || []; window._libprotocol_cache.push(#{JSON.stringify (gen_libprotocol_cache sources)});"
-
-        fs.writeFile bundle_file_path, (proto_cache_str + sources), (err) ->
+        fs.writeFile bundle_file_path, sources, (err) ->
             err = "Failed to save bundle #{bundle.name}. #{err}" if err?
-            write_cb [err, false, [bundle, modules, sources]]
+            write_cb [err, NOSKIP, [bundle, modules, sources]]
 
     # select modules for bundle
     modules = bundle.modules_names.map (m_name) -> u.find modules, (m) -> m.name is m_name
@@ -173,12 +192,13 @@ process_bundle = (modules, build_deps, changed_modules, cached_sources, ctx, opt
         lift_async 4, partial(_m_make_build_path, ctx, bundle_dir_path)
         lift_async 2, _m_fill_modules_sources
         lift_sync  1, _m_wrap_bundle
+        lift_sync  1, _m_asttrans_bundle
         lift_async 3, partial(_m_minify, minify_file_path)
         lift_async 3, partial(_m_write_bundle, bundle_file_path)
     ]
 
-    (domonad (cont_t skip_or_error_m()), seq, bundle) ([err, skiped, [bundle, modules, sources]]) ->
-        bundle = null if skiped is true
+    (domonad (cont_t skip_or_error_m()), seq, bundle) ([err, skip, [bundle, modules, sources]]) ->
+        bundle = null if skip is true
         bundle_cb err, bundle
 
 
