@@ -1,6 +1,6 @@
 Cafe is a build tool for client-side applications aiming to be language/module system/architecture agnostic and flexible. Tries hard to be modular and extensible by itself too.
 
-Current version (cafe4) is a prototype and is written in Coffeescript in functional and asyncronous way (mostly functional and mostly asyncronous :-).
+Current version (cafe4) is a prototype and is written in Coffeescript in functional and asynchronous way (mostly functional and mostly asynchronous :-).
 
 #Installation
 
