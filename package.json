@@ -1,7 +1,7 @@
 {
   "name": "cafe4",
   "description": "Client-side applications build tool",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "author": "E.Naumenko, A.Mostovenko, B.Larin",
   "repository": {
     "type": "git",
@@ -14,6 +14,9 @@
   "bin": {
     "cafe": "./bin/cafe",
     "telnet-cafe": "./bin/telnet-cafe"
+  },
+  "scripts": {
+      "prepublish": "grunt build"
   },
   "dependencies": {
     "eco": "*",
