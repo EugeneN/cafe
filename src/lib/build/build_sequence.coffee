@@ -59,7 +59,7 @@ save_results = (modules, bundles, cache, cached_sources, ctx, save_cb) ->
 # ======================== AST PROCESSING ==========================================================
 
 generate_libprotocol_cache = (sources) ->
-    proto_cache_str =  "window._libprotocol_cache = window._libprotocol_cache || []; window._libprotocol_cache.push(#{JSON.stringify (gen_libprotocol_cache sources)});"
+    proto_cache_str =  "window._libprotocol_cache = window._libprotocol_cache || []; window._libprotocol_cache.push(#{JSON.stringify (gen_libprotocol_cache sources)});\n"
     proto_cache_str + sources
 
 
