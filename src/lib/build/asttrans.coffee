@@ -48,23 +48,21 @@ gen_libprotocol_cache = (source) ->
             node.value.properties
 
     map ast.body, (bi) ->
+        # find require.define-d modules
         switch bi.type
             when 'ExpressionStatement'
                 {type, callee} = bi.expression
-                arguments_ = bi.expression.arguments
-                if type is 'CallExpression'
-                    if is_require_define callee
-                        mod = arguments_[0]
-                        modname = if mod.type is 'Literal' and mod.value isnt ''
-                            mod.value
-                        else
-                            mod = arguments_[1].properties[0].key
-                            if mod.type is 'Literal' and mod.value isnt ''
-                                mod.value
-                            else
-                                throw "No mod name"
+                arguments_ = bi.expression.arguments # BTW: can't untuple into a reserved word
 
-                        mapT arguments_, (partial handle_protocols, modname)
+                if (type is 'CallExpression') and (is_require_define callee)
+                    [ns, files] = arguments_
+                    ns_name = ns.value
+
+                    files.properties.map ({key, value}) ->
+                        file_name = key.value
+                        mod_name = [ns_name, file_name].filter((i) -> !!i).join '/'
+
+                        mapT value.body, (partial handle_protocols, mod_name)
 
     join res.definitions, res.implementations
 
