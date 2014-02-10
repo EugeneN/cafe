@@ -41,6 +41,6 @@ minify = switch MINIFIER
     when 'closure-compiler'
         minify_with_closure_compiler
     else
-        throw "Unknown minifier #{MINIFIER}"
+        minify_with_uglify
 
 module.exports = {minify}

@@ -83,7 +83,7 @@ default_config =
     MENU_FILENAME: './Menufile'
 
     CLEANUP_CMD: 'sudo npm remove -g cafe'
-    UPDATE_CMD: 'sudo npm update -g cafe4'
+    UPDATE_CMD: 'sudo npm update -g cafe4@stable'
 
     EVENT_CAFE_DONE: 'CAFE_DONE'
     EVENT_BUNDLE_CREATED: 'CAFE.BUNDLE.CREATED'

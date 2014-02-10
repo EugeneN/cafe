@@ -23,4 +23,4 @@ module.exports = (grunt) ->
         nodeunit:
             all: ['test/**/test*.coffee']
 
-    grunt.registerTask 'build', ['nodeunit', 'coffee']
+    grunt.registerTask 'build', ['coffee']
