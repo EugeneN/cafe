@@ -160,7 +160,7 @@ process_bundle = (modules, build_deps, changed_modules, cached_sources, ctx, opt
         [err, NOSKIP, [bundle, modules, wrapped_sources]]
 
     _m_asttrans_bundle = ([bundle, modules, sources], cb) ->
-        cafe_api = {mapT, map, join}
+        cafe_api = {mapT, map, join, ctx}
         _lift = (f) ->
             if f.async
                 lift_async 2, (partial f, cafe_api)
