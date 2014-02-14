@@ -14,15 +14,14 @@ estraverse = require 'estraverse'
 esprima = require 'esprima'
 
 replacement_src = "console.log('Fuck you')"
-replacement_ast = esprima.parse replacement_src, { tolerant: true, loc: false, range: false }
+replacement_ast = (esprima.parse replacement_src, { tolerant: true, loc: false, range: false }).body[0].expression
 
 
 is_console_log = (node) ->
-    (node.type is 'ExpressionStatement') \
-        and (node.expression.type is 'CallExpression') \
-        and (node.expression.callee.type is 'MemberExpression') \
-        and ((node.expression.callee.object.type is 'Identifier') and (node.expression.callee.object.name is 'console')) \
-        and ((node.expression.callee.property.type is 'Identifier') and (node.expression.callee.property.name in CONSOLE))
+    (node.type is 'CallExpression') \
+        and (node.callee.type is 'MemberExpression') \
+        and ((node.callee.object.type is 'Identifier') and (node.callee.object.name is 'console')) \
+        and ((node.callee.property.type is 'Identifier') and (node.callee.property.name in CONSOLE))
     
 # :: CafeApi -> BundleAst -> ErrorMonad SkipMonad BundleAst
 mute = (cafe_api, ast) ->
@@ -30,7 +29,7 @@ mute = (cafe_api, ast) ->
     res_ast = estraverse.replace(ast, {
         enter: (node) ->
             if is_console_log node
-                replacement_ast.body[0]
+                replacement_ast
             else
                 node
     })
