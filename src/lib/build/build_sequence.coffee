@@ -4,6 +4,8 @@ u = require 'underscore'
 path = require 'path'
 mkdirp = require '../../../third-party-lib/mkdirp'
 resolve = require '../../../third-party-lib/resolve'
+esprima = require 'esprima'
+escodegen = require 'escodegen'
 
 {domonad, cont_t, lift_async, lift_sync} = require 'libmonad'
 {spawn} = require 'child_process'
@@ -23,6 +25,7 @@ get_npm_mod_folder, is_array} = require '../utils'
 {minify} = require './cafe_minify'
 {install_module} = require '../npm_tasks'
 {watcher} = require '../cafe-watch'
+{mapT, map, join} = require './ast-api'
 
 # TODO: check if bundle path changed (compile if need and then save in new path)
 # TODO: nothing happens when recipe is empty
@@ -31,6 +34,16 @@ CACHE_FN = 'modules'
 
 SKIP = true
 NOSKIP = false
+
+m =
+    seq: (seq, input, cont) ->
+        (domonad (cont_t skip_or_error_m()), seq, input) cont
+
+    par: (par, input, cont) ->
+        async.parallel par, cont
+
+get_plugin = (name) ->
+    require "../ast/#{name}"
 
 
 get_modules_cache_dir = (app_root) -> path.resolve path.join get_cafe_dir(app_root), 'modules_cache' #move to defs
@@ -42,26 +55,15 @@ save_results = (modules, bundles, cache, cached_sources, ctx, save_cb) ->
     build_dir = get_build_dir ctx.own_args.build_root
 
     save_build_deps = (cb) ->
-        serialized_bundles = JSON.stringify((bundles.map (b) ->
-                                             b.serrialize()), null, 4)
-        fs.writeFile (path.join build_dir, BUILD_DEPS_FN), serialized_bundles, (err) ->
-            cb err
+        serialized_bundles = JSON.stringify((bundles.map (b) -> b.serrialize()), null, 4)
+        fs.writeFile (path.join build_dir, BUILD_DEPS_FN), serialized_bundles, (err) -> cb err
 
-    async.parallel(
-        [
-            save_build_deps
-            partial(cache.save_modules_async, modules, cached_sources, CACHE_FN)
-        ]
+    m.par(
+        [ save_build_deps
+          partial cache.save_modules_async, modules, cached_sources, CACHE_FN ]
+        undefined
         save_cb
     )
-
-
-# ======================== AST PROCESSING ==========================================================
-
-generate_libprotocol_cache = (sources) ->
-    proto_cache_str =  "window._libprotocol_cache = window._libprotocol_cache || []; window._libprotocol_cache.push(#{JSON.stringify (gen_libprotocol_cache sources)});\n"
-    proto_cache_str + sources
-
 
 # ======================== BUNDLES PROCESSING ======================================================
 process_bundle = (modules, build_deps, changed_modules, cached_sources, ctx, opts, bundle, bundle_cb) ->
@@ -157,15 +159,27 @@ process_bundle = (modules, build_deps, changed_modules, cached_sources, ctx, opt
 
         [err, NOSKIP, [bundle, modules, wrapped_sources]]
 
-    _m_asttrans_bundle = ([bundle, modules, sources]) ->
-        try
-            # TODO run sequence of transformers configured in recipe in appropriate order
-            transformed_sources = generate_libprotocol_cache sources
+    _m_asttrans_bundle = ([bundle, modules, sources], cb) ->
+        cafe_api = {mapT, map, join}
+        _lift = (f) ->
+            if f.async
+                lift_async 2, (partial f, cafe_api)
+            else
+                lift_sync 2, (partial f, cafe_api)
 
-        catch ex
-            err = "Error during ast transformations: #{ex}"
+        ast_seq = if opts.ast_transformations?.bundle
+            opts.ast_transformations.bundle.map (n) -> _lift get_plugin n
+        else
+            []
 
-        [err, NOSKIP, [bundle, modules, transformed_sources]]
+        if ast_seq.length
+            ctx.fb.say "AST transforming #{bundle.name} with [#{opts.ast_transformations.bundle}] transformers"
+
+            ast = esprima.parse sources, { tolerant: true, loc: false, range: false }
+            m.seq ast_seq, ast, ([err, skip, transformed_ast]) ->
+                cb [OK, NOSKIP, [bundle, modules, (escodegen.generate transformed_ast)]]
+        else
+            cb [OK, NOSKIP, [bundle, modules, sources]]
 
 
     _m_minify = (minify_fn, [bundle, modules, wrapped_sources], min_cb) ->
@@ -192,12 +206,12 @@ process_bundle = (modules, build_deps, changed_modules, cached_sources, ctx, opt
         lift_async 4, partial(_m_make_build_path, ctx, bundle_dir_path)
         lift_async 2, _m_fill_modules_sources
         lift_sync  1, _m_wrap_bundle
-        lift_sync  1, _m_asttrans_bundle
+        lift_async 2, _m_asttrans_bundle
         lift_async 3, partial(_m_minify, minify_file_path)
         lift_async 3, partial(_m_write_bundle, bundle_file_path)
     ]
 
-    (domonad (cont_t skip_or_error_m()), seq, bundle) ([err, skip, [bundle, modules, sources]]) ->
+    m.seq seq, bundle, ([err, skip, [bundle, modules, sources]]) ->
         bundle = null if skip is true
         bundle_cb err, bundle
 
@@ -229,7 +243,7 @@ process_module = (adapters, cached_sources, build_deps, ctx, modules, module, mo
             module_path = path.join ctx.own_args.app_root, module.path
         exists.async module_path, (err, exists) ->
             if exists is true
-                cb [OK, false, module]
+                cb [OK, NOSKIP, module]
             else
                 cb ["Module path #{module_path} for module #{module.name} was not found", false, undefined]
 
@@ -243,7 +257,7 @@ process_module = (adapters, cached_sources, build_deps, ctx, modules, module, mo
             unless adapter?
                 cb ["No adapter found for #{module.name}", false, undefined]
             else
-                cb [OK, false, [module, adapter]]
+                cb [OK, NOSKIP, [module, adapter]]
 
     _m_update_if_need = ([module, adapter], cb) ->
         _adapter_ctx = extend ctx, {module}
@@ -252,7 +266,7 @@ process_module = (adapters, cached_sources, build_deps, ctx, modules, module, mo
         if _adapter.hasOwnProperty "update"
             _adapter.update (err) -> cb [err, false, [module, adapter]]
         else
-            cb [OK, false, [module, adapter]]
+            cb [OK, NOSKIP, [module, adapter]]
 
     _m_build_if_force = (ctx, [module, adapter], cb) ->
         if ctx.own_args.f? or (not build_deps)
@@ -262,25 +276,25 @@ process_module = (adapters, cached_sources, build_deps, ctx, modules, module, mo
 
             harvest_module adapter, module, ctx, message, (err, module) ->
                 unless err?
-                    cb [OK, true, module]
+                    cb [OK, SKIP, module]
                 else
                     cb ["Module compile error.\n Module - #{module.name}.\n #{err}", false, undefined]
         else
-            cb [OK, false, [module, adapter]]
+            cb [OK, NOSKIP, [module, adapter]]
 
 
     _m_build_if_changed = (ctx, cached_sources, [module, adapter], build_cb) ->
         _adapter_ctx = extend ctx, {module}
 
         _m_get_adapter = (adapter_ctx, adapter) -> # TODO: move to upper _m_get_adapter
-            [OK, false, (adapter.make_adaptor adapter_ctx, modules)] # TODO: pass modules as partial
+            [OK, NOSKIP, (adapter.make_adaptor adapter_ctx, modules)] # TODO: pass modules as partial
 
         _m_get_adapter_last_modified = (adapter, cb) ->
             adapter.last_modified (err, mtime) ->
                 if err?
                     return (cb ["Failed to retrieve module mtime. #{module.name}", false, undefined])
                 else
-                    cb [OK, false, [adapter, mtime]]
+                    cb [OK, NOSKIP, [adapter, mtime]]
 
         _m_harvest = (module, ctx, cached_sources, [adapter, mtime], cb) ->
             if cached_sources?
@@ -291,15 +305,15 @@ process_module = (adapters, cached_sources, build_deps, ctx, modules, module, mo
                     message = "Module #{module.name} was modified, harvesting ..."
                     harvest_module adapter, module, ctx, message, (err, module) ->
                         unless err?
-                            cb [OK, true, module]
+                            cb [OK, SKIP, module]
                         else
                             cb ["Module compile error.\n Module - #{module.name}.\n #{err}", false, undefined]
                 else
-                    cb [OK, true, undefined]
+                    cb [OK, SKIP, undefined]
             else
                 harvest_module adapter, module, ctx, message, (err, module) ->
                     unless err?
-                        cb [OK, true, module]
+                        cb [OK, SKIP, module]
                     else
                         cb ["Module compile error 3. Module - #{module.name}. #{err}", false, undefined]
 
@@ -309,7 +323,7 @@ process_module = (adapters, cached_sources, build_deps, ctx, modules, module, mo
             lift_async(5, partial(_m_harvest, module, ctx, cached_sources))
         ]
 
-        (domonad (cont_t skip_or_error_m()), seq, adapter) build_cb
+        m.seq seq, adapter, build_cb
 
     seq = [
         lift_async(3, partial(_m_module_path_exists, ctx))
@@ -319,8 +333,7 @@ process_module = (adapters, cached_sources, build_deps, ctx, modules, module, mo
         lift_async(4, partial(_m_build_if_changed, ctx, cached_sources))
     ]
 
-    (domonad (cont_t skip_or_error_m()), seq, module) ([err, skiped, module]) ->
-        module_cb err, module
+    m.seq seq, module, ([err, skiped, module]) -> module_cb err, module
 
 
 # ====================================================================================
@@ -364,13 +377,14 @@ init_build_sequence = (ctx, adapters_path, adapters_fn, init_cb) -> # TOTEST
     get_modules_cache get_modules_cache_dir(ctx.own_args.app_root), (err, cache) ->
         (return init_cb err) if err
 
-        async.parallel(
+        m.par(
             [
                 _read_recipe_async
                 partial(_get_adapters_async, adapters_path, adapters_fn)
                 partial(_get_cache_modules_async, cache)
                 _get_build_deps_async
             ]
+            undefined
             (err, results) -> init_cb err, results.reduce (a, b) -> extend a, b
         )
 
@@ -427,9 +441,9 @@ _run_build_sequence_monadic_functions =
 
         if npm_modules.length
             async.map npm_modules, npm_mod_initializer, (err, data) ->
-                init_cb [err, false, init_result]
+                init_cb [err, NOSKIP, init_result]
         else
-            init_cb [OK, false, init_result]
+            init_cb [OK, NOSKIP, init_result]
 
 
     _m_modules_processor: (ctx, init_results, module_proc_cb) ->
@@ -440,9 +454,9 @@ _run_build_sequence_monadic_functions =
 
         async.map modules, _modules_iterator, (err, changed_modules) ->
             unless changed_modules.length
-                module_proc_cb [OK, true, undefined]
+                module_proc_cb [OK, SKIP, undefined]
             else
-                module_proc_cb [err, false, [init_results, changed_modules]]
+                module_proc_cb [err, NOSKIP, [init_results, changed_modules]]
 
     _m_bundles_processor: (ctx, [init_results, changed_modules], bundles_proc_cb) ->
         {cached_sources, build_deps, recipe, adapters, modules, bundles} = init_results
@@ -462,11 +476,11 @@ _run_build_sequence_monadic_functions =
             proc_bundles = proc_bundles.filter (b) -> b?
             unless proc_bundles.length
                 ctx.fb.shout "No changes detected, skip build."
-                bundles_proc_cb [OK, true, undefined]
+                bundles_proc_cb [OK, SKIP, undefined]
             else
                 bundle_names = proc_bundles.map (b) -> b.name
                 ctx.fb.say "Bundles [#{bundle_names}] were build successfully"
-                bundles_proc_cb [err, false, [init_results, changed_modules, proc_bundles]]
+                bundles_proc_cb [err, NOSKIP, [init_results, changed_modules, proc_bundles]]
 
     _m_save_results: (ctx, [init_results, changed_modules, proc_bundles], save_cb) ->
         {cached_sources, cache, modules, bundles} = init_results
@@ -498,8 +512,7 @@ run_build = (ctx, cb) ->
         lift_async(3, partial(mf._m_save_results, ctx))
     ]
 
-    (domonad (cont_t skip_or_error_m()), seq, ctx) ([err, skip, result]) ->
-        cb err, OK
+    m.seq seq, ctx, ([err, skip, result]) -> cb err, OK
 
 
 run_build_sequence = (ctx, sequence_cb) ->

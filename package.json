@@ -36,7 +36,9 @@
     "gimme-deps": ">=0.0.8",
     "temp": "*",
     "mv": "*",
-    "esprima": "*"
+    "esprima": "*",
+    "estraverse": "*",
+    "escodegen": "*"
   },
   "devDependencies": {
     "grunt": "~0.4.1",
