@@ -13,7 +13,6 @@ escodegen = require 'escodegen'
 {wrap_bundle, wrap_modules, wrap_module} = require 'wrapper-commonjs'
 {get_recipe, get_modules, get_bundles, get_modules_and_bundles_for_sequence} = require './recipe_parser'
 {toposort} = require './toposort'
-{gen_libprotocol_cache} = require './asttrans'
 {get_adapters} = require '../adapter'
 {extend, partial, get_cafe_dir, exists, 
 get_npm_mod_folder, is_array} = require '../utils'
