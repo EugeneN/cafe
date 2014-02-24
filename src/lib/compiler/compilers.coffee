@@ -8,7 +8,7 @@ exports.coffee = ->
         try
             CoffeeScript.compile fs.readFileSync path, 'utf8'
         catch err
-            throw new Error (CoffeeScript.helpers.prettyErrorMessage err, path, code, true)
+            throw new Error (err.stack or "#{err}")
 
     compile.async = (path, cb) ->
         fs.readFile path, 'utf8', (err, source) ->
@@ -16,7 +16,7 @@ exports.coffee = ->
                 try
                     result = CoffeeScript.compile source
                 catch errM
-                    err = new Error (CoffeeScript.helpers.prettyErrorMessage errM, path, source, true)
+                    err = new Error (errM.stack or "#{errM}")
 
             cb err, result
 
@@ -33,7 +33,7 @@ exports.eco = ->
             else
                 eco.compile source
         catch e
-            throw new Error (CoffeeScript.helpers.prettyErrorMessage e, path, source, true)
+            throw new Error (e.stack or "#{e}")
 
     compile.async = (path, cb) ->
         if eco.precompile
@@ -43,7 +43,7 @@ exports.eco = ->
                         compiled = eco.precompile content
                         cb err, "module.exports = #{compiled}"
                     catch e
-                        cb (new Error (CoffeeScript.helpers.prettyErrorMessage e, path, content, true)), null
+                        cb (new Error (e.stack or "#{e}")), null
                 else
                     cb err, null
 
@@ -54,7 +54,7 @@ exports.eco = ->
                         compiled = eco.compile content
                         cb err, compiled
                     catch e
-                        cb (new Error (CoffeeScript.helpers.prettyErrorMessage e, path, content, true))
+                        cb (new Error (e.stack or "#{e}"))
                 else
                     cb err, null
 
