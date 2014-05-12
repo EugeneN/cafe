@@ -38,7 +38,8 @@
     "mv": "*",
     "esprima": "*",
     "estraverse": "*",
-    "escodegen": "*"
+    "escodegen": "*",
+    "node-gettext"
   },
   "devDependencies": {
     "grunt": "~0.4.1",
