@@ -16,30 +16,31 @@
     "telnet-cafe": "./bin/telnet-cafe"
   },
   "scripts": {
-      "prepublish": "grunt build"
+    "prepublish": "grunt build"
   },
   "dependencies": {
-    "eco": "*",
-    "uglify-js": "~2.3.6",
-    "coffee-script": "*",
-    "async": "*",
     "ansi-color": "*",
-    "underscore": "*",
-    "request": "*",
+    "async": "*",
     "chokidar": "*",
-    "growl": "*",
-    "wrapper-commonjs": ">=0.0.28",
-    "libmonad": "*",
-    "libprotein": "*",
-    "js-yaml": "*",
+    "coffee-script": "*",
     "easy-opts": "*",
-    "gimme-deps": ">=0.0.8",
-    "temp": "*",
-    "mv": "*",
+    "eco": "*",
+    "escodegen": "*",
     "esprima": "*",
     "estraverse": "*",
-    "escodegen": "*",
-    "node-gettext": "*"
+    "gimme-deps": ">=0.0.8",
+    "growl": "*",
+    "js-yaml": "*",
+    "libmonad": "*",
+    "libprotein": "*",
+    "mv": "*",
+    "node-gettext": "*",
+    "react-tools": "^0.10.0",
+    "request": "*",
+    "temp": "*",
+    "uglify-js": "~2.3.6",
+    "underscore": "*",
+    "wrapper-commonjs": ">=0.0.28"
   },
   "devDependencies": {
     "grunt": "~0.4.1",

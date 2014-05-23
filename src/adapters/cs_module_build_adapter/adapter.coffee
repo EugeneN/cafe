@@ -46,14 +46,14 @@ build_factory = (mod_src, ctx) ->
         slug = ctx.cafelib.utils.read_slug(mod_src, ctx.cafelib.utils.slug)
         slug.paths = slug.paths.map (p) -> path.resolve(path.join mod_src, p)
 
-        {coffee, eco, js} = require '../../lib/compiler/compilers'
-        compiler = ctx.cafelib.make_compiler [coffee, eco, js]
+        {coffee, eco, js, jsx} = require '../../lib/compiler/compilers'
+        compiler = ctx.cafelib.make_compiler [coffee, eco, js, jsx]
 
         slug_path_iterator = (slug_path, slug_path_cb) ->
             paths = ctx.cafelib.utils.get_all_relative_files(
                 slug_path
                 null
-                /^[^\.].+\.coffee$|^[^\.].+\.js$|^[^\.].+\.eco$/i)
+                /^[^\.].+\.coffee$|^[^\.].+\.js$|^[^\.].+\.eco$|^[^\.].+\.jsx$/i)
 
             compiler.compile.async paths, (err, compiled_paths) ->
                 return slug_path_cb(err) if err

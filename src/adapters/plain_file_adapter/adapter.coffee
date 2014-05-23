@@ -20,12 +20,12 @@ module.exports = do ->
 
     match = (ctx) ->
         {source_fn} = get_paths ctx
-        (is_file source_fn) and ((path.extname source_fn) in ['.coffee', '.js', '.eco'])
+        (is_file source_fn) and ((path.extname source_fn) in ['.coffee', '.js', '.eco', '.jsx'])
 
     match.async = (ctx, cb) ->
         {source_fn} = get_paths ctx
         async.parallel [((is_file_cb) -> is_file.async source_fn, is_file_cb),
-            ((is_file_cb) -> is_file_cb CB_SUCCESS, (path.extname source_fn) in ['.coffee', '.js', '.eco'])],
+            ((is_file_cb) -> is_file_cb CB_SUCCESS, (path.extname source_fn) in ['.coffee', '.js', '.eco', '.jsx'])],
         (err, res) ->
             if not err and (and_ res...)
                 cb CB_SUCCESS, true
@@ -50,8 +50,8 @@ module.exports = do ->
 
             if is_file target_fn
 
-                {coffee, eco, js} = require '../../lib/compiler/compilers'
-                compiler = ctx.cafelib.make_compiler [coffee, eco, js]
+                {coffee, eco, js, jsx} = require '../../lib/compiler/compilers'
+                compiler = ctx.cafelib.make_compiler [coffee, eco, js, jsx]
                 compiler.compile.async [target_fn], (err, compiled) ->
                     unless err
                         compiled_result = compiled.map ({path: p, source}) ->

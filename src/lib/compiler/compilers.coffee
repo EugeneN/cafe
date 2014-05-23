@@ -1,10 +1,10 @@
 CoffeeScript = require 'coffee-script'
 eco = require 'eco'
 fs = require 'fs'
+transform = (require 'react-tools').transform
 
 exports.coffee = ->
     compile = (path) ->
-        code = fs.readFileSync path, 'utf8'
         try
             CoffeeScript.compile fs.readFileSync path, 'utf8'
         catch err
@@ -67,3 +67,23 @@ exports.js = ->
     compile.async = (path, cb) -> fs.readFile path, cb
 
     {ext: 'js', compile}
+
+
+exports.jsx = ->
+    compile = (path) ->
+        try
+            transform (fs.readFileSync path, 'utf8').toString()
+        catch err
+            throw new Error (err.stack or "#{err}")
+
+    compile.async = (path, cb) ->
+        fs.readFile path, 'utf8', (err, content) ->
+            (cb err, null) if err
+            try
+                cb err, transform(content.toString())
+            catch e
+                message = "JSX compile error #{path}\n #{e}"
+                cb (new Error message)
+
+
+    {ext: 'jsx', compile}
