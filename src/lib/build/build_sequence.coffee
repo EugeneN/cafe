@@ -4,6 +4,7 @@ u = require 'underscore'
 path = require 'path'
 mkdirp = require '../../../third-party-lib/mkdirp'
 resolve = require '../../../third-party-lib/resolve'
+uuid = require '../../../third-party-lib/node-uuid'
 esprima = require 'esprima'
 escodegen = require 'escodegen'
 
@@ -16,7 +17,7 @@ escodegen = require 'escodegen'
 {get_adapters} = require '../adapter'
 {extend, partial, get_cafe_dir, exists, 
 get_npm_mod_folder, is_array} = require '../utils'
-{CB_SUCCESS, RECIPE, BUILD_DIR, BUILD_DEPS_FN,
+{CB_SUCCESS, RECIPE, BUILD_DIR, BUILD_DEPS_FN, BUILD_ID_FN,
  RECIPE_API_LEVEL, ADAPTERS_PATH, ADAPTER_FN, BUNDLE_HDR,
  NPM_MODULES_PATH, MINIFY_MIN_SUFFIX, BUILD_FILE_EXT} = require '../../defs'
 {get_modules_cache} = require '../modules_cache'
@@ -25,6 +26,7 @@ get_npm_mod_folder, is_array} = require '../utils'
 {install_module} = require '../npm_tasks'
 {watcher} = require '../cafe-watch'
 {mapT, map, join} = require './ast-api'
+
 
 # TODO: check if bundle path changed (compile if need and then save in new path)
 # TODO: nothing happens when recipe is empty
@@ -53,12 +55,18 @@ get_build_dir = (build_root) -> path.resolve path.join build_root, BUILD_DIR
 save_results = (modules, bundles, cache, cached_sources, ctx, save_cb) ->
     build_dir = get_build_dir ctx.own_args.build_root
 
-    save_build_deps = (cb) ->
+    write_build_deps = (cb) ->
         serialized_bundles = JSON.stringify((bundles.map (b) -> b.serrialize()), null, 4)
         fs.writeFile (path.join build_dir, BUILD_DEPS_FN), serialized_bundles, (err) -> cb err
 
+    write_build_id = (cb) ->
+        build_id = JSON.stringify({buildid: uuid.v4(), date: (new Date).toString()}, null, 4)
+        build_id_filename = path.join build_dir, BUILD_ID_FN
+        fs.writeFile build_id_filename, build_id, (err) -> cb err
+
     m.par(
-        [ save_build_deps
+        [ write_build_deps
+          write_build_id
           partial cache.save_modules_async, modules, cached_sources, CACHE_FN ]
         undefined
         save_cb

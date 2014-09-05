@@ -1,7 +1,7 @@
 {
   "name": "cafe4",
   "description": "Client-side applications build tool",
-  "version": "0.1.11",
+  "version": "0.1.14-localdev",
   "author": "E.Naumenko, A.Mostovenko, B.Larin",
   "repository": {
     "type": "git",
@@ -34,7 +34,6 @@
     "libmonad": "*",
     "libprotein": "*",
     "mv": "*",
-    "node-gettext": "*",
     "react-tools": "^0.10.0",
     "request": "*",
     "temp": "*",

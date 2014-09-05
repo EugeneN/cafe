@@ -78,6 +78,7 @@ default_config =
     RECIPE_EXT: '.json'
     RECIPE: "recipe.json"
     BUILD_DEPS_FN: 'build_deps.json'
+    BUILD_ID_FN: 'build_id.json'
     RECIPE_API_LEVEL: 5
 
     MENU_FILENAME: './Menufile'
