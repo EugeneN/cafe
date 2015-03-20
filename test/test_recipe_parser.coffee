@@ -25,6 +25,8 @@ recipe_deps_exists = path.join fixtures_path, "recipe_deps_existance.yaml"
 recipe_without_modules = path.join fixtures_path, "recipe_without_modules.yaml"
 recipe_abstract_check = path.join fixtures_path, "recipe_abstract_section.yaml"
 recipe_bundle_modules_empty = path.join fixtures_path, "bundle_modules_empty.yaml"
+base_recipe_yaml = path.join fixtures_path, "recipe_base.yaml"
+child_recipe_json = path.join fixtures_path, "child_recipe.json"
 
 
 exports.test_recipe_read_basic_validation = (test) ->
@@ -44,12 +46,22 @@ exports.test_recipe_read_basic_validation = (test) ->
 exports.test_recipe_inheritance = (test) ->
     [error, recipe] = read_recipe recipe2_path
     test.ok (error is undefined), "some error occured while reading recipe #{error}"
-    test.ok (recipe.hasOwnProperty "opts"), "recipe was not inherited properly"
-    test.ok (recipe.opts.minify is true), "recipe was not inherited properly"
+    test.ok (recipe.hasOwnProperty "opts"), "recipe was not inherited properly has no opts"
+    test.ok (recipe.opts.minify is true), "recipe was not inherited properly, wronk minify"
     [error, recipe] = read_recipe recipe3_path
     test.ok error, "Succed to read recipe that inherits from itself"
     test.done()
 
+exports.test_recipe_inheritance_async = (test) ->
+
+    read_cb = ([err, recipe]) ->
+        test.ok(!err, "must read async recipe without errors")
+        test.ok (recipe.hasOwnProperty "opts"), "recipe was not inherited properly has no opts"
+        test.ok recipe.opts.minify, "minify must be overwriten to true"
+        test.done()    
+
+    read_recipe.async(child_recipe_json, 0, read_cb)
+    
 
 exports.test_recipe_modules_read = (test) ->
     # TODO add test when recipe format is invalid.

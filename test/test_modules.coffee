@@ -1,4 +1,4 @@
-{construct_module} = require '../src/lib/build/modules'
+{construct_module, merge_modules, make_modules_dict} = require '../src/lib/build/modules'
 {NPM_MODULES_PATH} = require '../src/defs'
 
 exports.test_modules_creation_from_string = (test) ->
@@ -119,4 +119,48 @@ exports.test_npm_prefix_parse = (test) ->
     test.done()
 
 
+exports.test_make_modules_dict = (test) ->
+    modules1 = [
+        {module1: "module1.coffee"},
+        {module2: ["module2", "plainjs"]},
+        {module3: {path: "module3", type: "commonjs"}}
+    ]
 
+    expected =
+        module1: {module1: "module1.coffee"}
+        module2: {module2: ["module2", "plainjs"]}
+        module3: {module3: {path: "module3", type: "commonjs"}}
+
+    result = make_modules_dict modules1
+    test.deepEqual result, expected, "must make modules dict"
+    test.done()
+
+
+exports.test_merge_modules = (test) ->
+    modules1 = [
+        {module1: "module1.coffee"},
+        {module2: ["module2", "plainjs"]},
+        {module3: {path: "module3", type: "commonjs"}}
+    ]
+
+    modules2 = [
+        {module2: ["module2_modified", "plainjs"]},
+    ]
+
+    expected_result =
+        module1: module1: "module1.coffee"
+        module2: module2: ["module2_modified", "plainjs"]
+        module3: module3: {path: "module3", type: "commonjs"}
+
+    merge_result = merge_modules(modules1, modules2)
+    result = make_modules_dict(merge_result)
+    test.deepEqual(result, expected_result, "must merge modules")
+
+    expected_result2 =
+        module1: module1: "module1.coffee"
+        module2: module2: ["module2", "plainjs"]
+        module3: module3: {path: "module3", type: "commonjs"}
+
+    result2 = make_modules_dict(merge_modules(modules2, modules1))
+    test.deepEqual(result2, expected_result2, "must merge modules")
+    test.done()

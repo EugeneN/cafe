@@ -6,7 +6,7 @@ is_file, toArray, partial,
 read_yaml_file} = require '../../lib/utils'
 {error_m, OK, ok, nok}  = require '../../lib/monads'
 {toposort} = require '../../lib/build/toposort'
-{construct_module, modules_equals} = require './modules'
+{construct_module, modules_equals, merge_modules} = require './modules'
 {construct_realm_bundle, construct_bundle} = require './bundles'
 
 {
@@ -71,7 +71,10 @@ check_for_inheritance = (level, recipe_path, read_recipe_fn, recipe) ->
             if error
                 nok error 
             else 
-                ok (extend base_recipe, recipe)
+                new_recipe = u.clone base_recipe
+                new_recipe.opts = u.extend((base_recipe.opts or {}), (recipe.opts or {}))
+                new_recipe.modules = merge_modules base_recipe.modules, recipe.modules
+                ok new_recipe
         else
             nok "Recipe #{recipe_path} can not inherit from itself"
     else
@@ -86,7 +89,10 @@ check_for_inheritance.async = (level, recipe_path, read_recipe_fn, recipe, cb) -
                 if err
                     cb (nok err)
                 else
-                    cb (ok (extend base_recipe, recipe))
+                    new_recipe = u.clone base_recipe
+                    new_recipe.opts = u.extend((base_recipe.opts or {}), (recipe.opts or {}))
+                    new_recipe.modules = merge_modules base_recipe.modules, recipe.modules
+                    cb (ok new_recipe)
         else
             cb (nok "Recipe #{recipe_path} can not inherit from itself")
     else

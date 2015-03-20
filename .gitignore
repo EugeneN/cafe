@@ -1,0 +1,6 @@
+node_modules/**
+lib-js/**
+.cafe
+test/fixtures/build/single_file_modules/public/
+test/fixtures/build/slug_modules_build/public/
+

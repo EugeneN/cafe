@@ -1,5 +1,4 @@
 abstract: {api_version: 5}
-opts: {minify: false}
 
 modules:
     - module1: module1.coffee

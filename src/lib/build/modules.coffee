@@ -5,6 +5,7 @@ u = require 'underscore'
 {skip_or_error_m, OK} = require '../monads'
 {domonad} = require 'libmonad'
 
+
 get_module = ({path, name, deps, type, location, prefix_meta}) ->
 
     location or= "fs"
@@ -182,4 +183,27 @@ construct_module = (meta, ctx) ->
         
     [err, skip, module]
 
-module.exports = {construct_module, get_module, modules_equals}
+
+make_modules_dict = (modules) ->
+    modules_dict = {}
+    for module in modules
+        key = u.keys(module)[0]
+        modules_dict[key] = module
+    modules_dict
+
+
+merge_modules = (modules1, modules2) ->
+    modules1 or=[]
+    modules2 or= []
+
+    modules_dict1 = make_modules_dict modules1
+    modules_dict2 = make_modules_dict modules2
+    
+    for k, v of modules_dict2
+        modules_dict1[k] = v
+
+    (v for k, v of modules_dict1)
+
+
+module.exports = {construct_module, get_module, modules_equals, merge_modules,
+make_modules_dict}

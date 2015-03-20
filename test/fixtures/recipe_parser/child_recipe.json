@@ -1,0 +1,15 @@
+{
+    "abstract": {
+        "api_version": 4,
+        "extends": "recipe.yaml"
+    },
+
+    "modules": [
+    	{"module2": ["cs/module2_extended", "plainjs"]}
+    ],
+
+    "opts": {
+      "minify": true
+    }
+
+}
